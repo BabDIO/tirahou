@@ -1,0 +1,312 @@
+Backend endpoints: 193
+Frontend API calls: 118
+
+=== APPELS FRONTEND PAR MODULE ===
+
+  [absence-summaries] (1 appels)
+    GET /absence-summaries/
+
+  [academic-years] (2 appels)
+    GET /academic-years/
+    POST /academic-years/
+
+  [activities] (1 appels)
+    GET /analytics/activities/
+
+  [admin-enrollments] (1 appels)
+    GET /admin-enrollments/
+
+  [admin-staff] (2 appels)
+    GET /admin-staff/
+    POST /admin-staff/
+
+  [announcements] (2 appels)
+    GET /announcements/
+    POST /announcements/
+
+  [application-documents] (2 appels)
+    GET /application-documents/
+    POST /application-documents/
+
+  [applications] (1 appels)
+    POST /applications/
+
+  [apply_discount] (1 appels)
+    POST /invoices/apply_discount/
+
+  [assignments] (2 appels)
+    GET /assignments/
+    POST /assignments/
+
+  [attendance-records] (2 appels)
+    GET /attendance-records/
+    POST /attendance-records/
+
+  [attendance-sheets] (2 appels)
+    GET /attendance-sheets/
+    POST /attendance-sheets/
+
+  [audit-logs] (1 appels)
+    GET /audit-logs/
+
+  [available] (1 appels)
+    GET /rooms/available/
+
+  [bulk_import] (1 appels)
+    POST /grades/bulk_import/
+
+  [cash-journal] (1 appels)
+    GET /finance/cash-journal/
+
+  [categories] (1 appels)
+    GET /documents/categories/
+
+  [change-password] (1 appels)
+    POST /auth/change-password/
+
+  [compute-results] (1 appels)
+    POST /documents/compute-results/
+
+  [course-modules] (2 appels)
+    GET /course-modules/
+    POST /course-modules/
+
+  [course-resources] (2 appels)
+    GET /course-resources/
+    POST /course-resources/
+
+  [course-spaces] (2 appels)
+    GET /course-spaces/
+    POST /course-spaces/
+
+  [dashboard-stats] (1 appels)
+    GET /analytics/dashboard-stats/
+
+  [defenses] (2 appels)
+    GET /defenses/
+    POST /defenses/
+
+  [departments] (1 appels)
+    POST /departments/
+
+  [ecs] (2 appels)
+    GET /ecs/
+    POST /ecs/
+
+  [engagement-scores] (2 appels)
+    GET /analytics/engagement-scores/
+    GET /analytics/engagement-scores/at_risk/
+
+  [exam-sessions] (2 appels)
+    GET /exam-sessions/
+    POST /exam-sessions/
+
+  [export] (4 appels)
+    GET /analytics/export/grades/
+    GET /analytics/export/payments/
+    GET /analytics/export/students/
+    GET /grades/export/
+
+  [faculties] (1 appels)
+    POST /faculties/
+
+  [featured] (1 appels)
+    GET /library/featured/
+
+  [fee-types] (2 appels)
+    GET /fee-types/
+    POST /fee-types/
+
+  [forum-posts] (2 appels)
+    GET /forum-posts/
+    POST /forum-posts/
+
+  [forums] (2 appels)
+    GET /forums/
+    POST /forums/
+
+  [generated-documents] (2 appels)
+    GET /documents/generated-documents/
+    POST /documents/generated-documents/
+
+  [grade-contests] (2 appels)
+    GET /grade-contests/
+    POST /grade-contests/
+
+  [grades] (2 appels)
+    GET /grades/
+    POST /grades/
+
+  [groups] (2 appels)
+    GET /groups/
+    POST /groups/
+
+  [inbox] (1 appels)
+    GET /messages/inbox/
+
+  [installments] (2 appels)
+    GET /installments/
+    POST /installments/
+
+  [internships] (2 appels)
+    GET /internships/
+    POST /internships/
+
+  [invoices] (1 appels)
+    GET /invoices/
+
+  [juries] (2 appels)
+    GET /juries/
+    POST /juries/
+
+  [library] (2 appels)
+    GET /library/
+    POST /library/
+
+  [lmd-regulations] (2 appels)
+    GET /lmd-regulations/
+    POST /lmd-regulations/
+
+  [lms-stats] (1 appels)
+    GET /analytics/lms-stats/
+
+  [logout] (1 appels)
+    POST /auth/logout/
+
+  [mark_all_read] (1 appels)
+    POST /notifications/mark_all_read/
+
+  [me] (1 appels)
+    GET /auth/me/
+
+  [messages] (1 appels)
+    POST /messages/
+
+  [notifications] (1 appels)
+    GET /notifications/
+
+  [payments] (1 appels)
+    GET /payments/
+
+  [peda-enrollments] (2 appels)
+    GET /peda-enrollments/
+    POST /peda-enrollments/
+
+  [programs] (1 appels)
+    GET /programs/
+
+  [publish_all] (1 appels)
+    POST /semester-results/publish_all/
+
+  [pv] (1 appels)
+    GET /semester-results/pv/
+
+  [quizzes] (2 appels)
+    GET /quizzes/
+    POST /quizzes/
+
+  [report] (1 appels)
+    GET /analytics/report/
+
+  [roles] (1 appels)
+    GET /roles/
+
+  [rooms] (2 appels)
+    GET /rooms/
+    POST /rooms/
+
+  [scholarships] (2 appels)
+    GET /scholarships/
+    POST /scholarships/
+
+  [semester-results] (1 appels)
+    GET /semester-results/
+
+  [semesters] (1 appels)
+    GET /semesters/
+
+  [sent] (1 appels)
+    GET /messages/sent/
+
+  [sessions] (2 appels)
+    GET /sessions/
+    POST /sessions/
+
+  [stats] (1 appels)
+    GET /library/stats/
+
+  [student-documents] (2 appels)
+    GET /documents/student-documents/
+    POST /documents/student-documents/
+
+  [student-progress] (1 appels)
+    GET /student-progress/
+
+  [students] (1 appels)
+    GET /students/
+
+  [summary] (1 appels)
+    GET /invoices/summary/
+
+  [template] (1 appels)
+    GET /grades/template/
+
+  [theses] (2 appels)
+    GET /theses/
+    POST /theses/
+
+  [timetables] (1 appels)
+    GET /timetables/
+
+  [ue-enrollments] (1 appels)
+    GET /ue-enrollments/
+
+  [ues] (2 appels)
+    GET /ues/
+    POST /ues/
+
+  [universities] (2 appels)
+    GET /universities/
+    POST /universities/
+
+  [users] (2 appels)
+    GET /users/
+    POST /users/
+
+  [virtual-sessions] (2 appels)
+    GET /virtual-sessions/
+    POST /virtual-sessions/
+
+=== ENDPOINTS BACKEND NON APPELÉS PAR LE FRONTEND ===
+  MISSING: /
+  MISSING: /absence-summaries/<id>/
+  MISSING: /academic-years/<id>/
+  MISSING: /admin-enrollments/<id>/
+  MISSING: /admin-enrollments/<id>/validate/
+  MISSING: /admin-enrollments/<id>/validate_payment/
+  MISSING: /admin-staff/<id>/
+  MISSING: /analytics/
+  MISSING: /analytics/activities/<id>/
+  MISSING: /analytics/dashboard-stats/<id>/
+  MISSING: /analytics/dashboard/
+  MISSING: /analytics/engagement-scores/<id>/
+  MISSING: /announcements/<id>/
+  MISSING: /announcements/<id>/publish/
+  MISSING: /application-documents/<id>/
+  MISSING: /application-documents/<id>/reject/
+  MISSING: /application-documents/<id>/validate/
+  MISSING: /applications/<id>/
+  MISSING: /applications/<id>/decide/
+  MISSING: /applications/<id>/start_review/
+  MISSING: /applications/<id>/submit/
+  MISSING: /assignments/<id>/
+  MISSING: /assignments/<id>/submissions/
+  MISSING: /assignments/<id>/submit/
+  MISSING: /attendance-records/<id>/
+  MISSING: /attendance-sheets/<id>/
+  MISSING: /attendance-sheets/<id>/close/
+  MISSING: /attendance-sheets/<id>/mark_by_code/
+  MISSING: /attendance-sheets/<id>/open/
+  MISSING: /auth/login/
+
+Total manquants: 113

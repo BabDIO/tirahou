@@ -1,0 +1,245 @@
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { BookOpen, Upload, Plus, Eye, Users, TrendingUp, FileText, Edit3 } from 'lucide-react'
+import { Card, Spinner, Badge, Empty, Modal, Progress } from '../../components/ui'
+import api from '../../lib/axios'
+import toast from 'react-hot-toast'
+
+export default function TeacherCoursesPage() {
+  const qc = useQueryClient()
+  const [selectedSpace, setSelectedSpace] = useState<string | null>(null)
+  const [showUpload, setShowUpload] = useState(false)
+  const [resourceForm, setResourceForm] = useState({ title: '', type: 'pdf', module: '', file: null as File | null, external_url: '', is_downloadable: true })
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['teacher-courses'],
+    queryFn: () => api.get('/course-spaces/').then(r => r.data),
+  })
+
+  const { data: modules } = useQuery({
+    queryKey: ['modules', selectedSpace],
+    queryFn: () => api.get('/course-modules/', { params: { course_space: selectedSpace } }).then(r => r.data),
+    enabled: !!selectedSpace,
+  })
+
+  const { data: progress } = useQuery({
+    queryKey: ['course-progress', selectedSpace],
+    queryFn: () => api.get('/student-progress/', { params: { course_space: selectedSpace } }).then(r => r.data),
+    enabled: !!selectedSpace,
+  })
+
+  const publishMut = useMutation({
+    mutationFn: (id: string) => api.post(`/course-spaces/${id}/publish/`),
+    onSuccess: () => { toast.success('Cours publié'); qc.invalidateQueries({ queryKey: ['teacher-courses'] }) },
+  })
+
+  const addModuleMut = useMutation({
+    mutationFn: (data: object) => api.post('/course-modules/', data),
+    onSuccess: () => { toast.success('Module créé'); qc.invalidateQueries({ queryKey: ['modules', selectedSpace] }) },
+  })
+
+  const uploadResourceMut = useMutation({
+    mutationFn: (fd: FormData) => api.post('/course-resources/', fd, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    onSuccess: () => { toast.success('Ressource ajoutée'); setShowUpload(false); qc.invalidateQueries({ queryKey: ['modules', selectedSpace] }) },
+    onError: () => toast.error('Erreur lors du téléversement'),
+  })
+
+  const courses = data?.results ?? []
+  const mods = modules?.results ?? []
+  const progressList = progress?.results ?? []
+  const avgCompletion = progressList.length
+    ? Math.round(progressList.reduce((s: number, p: { completion_rate: number }) => s + p.completion_rate, 0) / progressList.length)
+    : 0
+
+  const handleUpload = () => {
+    if (!resourceForm.title || !resourceForm.module) return
+    const fd = new FormData()
+    fd.append('title', resourceForm.title)
+    fd.append('type', resourceForm.type)
+    fd.append('module', resourceForm.module)
+    fd.append('is_downloadable', String(resourceForm.is_downloadable))
+    fd.append('is_published', 'true')
+    if (resourceForm.file) fd.append('file', resourceForm.file)
+    if (resourceForm.external_url) fd.append('external_url', resourceForm.external_url)
+    uploadResourceMut.mutate(fd)
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="page-title">Mes Espaces de Cours</h1>
+        <p className="text-gray-400 text-sm mt-0.5">Gérez vos cours, ressources et suivez la progression des étudiants</p>
+      </div>
+
+      {isLoading ? <Spinner /> : !courses.length ? (
+        <Empty icon={<BookOpen className="w-8 h-8" />} message="Aucun espace de cours"
+          description="Les espaces sont créés par l'administration et vous sont assignés." />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Liste des cours */}
+          <div className="space-y-3">
+            {courses.map((c: { id: string; title: string; ue_code: string; is_published: boolean; mode_display: string }) => (
+              <Card key={c.id} hover onClick={() => setSelectedSpace(c.id)}
+                className={`cursor-pointer transition ${selectedSpace === c.id ? 'ring-2 ring-primary-500' : ''}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-4 h-4 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-gray-900">{c.title}</p>
+                      <p className="text-xs text-gray-400">{c.ue_code}</p>
+                    </div>
+                  </div>
+                  {!c.is_published && (
+                    <button onClick={e => { e.stopPropagation(); publishMut.mutate(c.id) }}
+                      className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-200 transition">
+                      Publier
+                    </button>
+                  )}
+                </div>
+                {c.is_published && <Badge label="Publié" className="badge-green mt-2" />}
+              </Card>
+            ))}
+          </div>
+
+          {/* Détail du cours sélectionné */}
+          {selectedSpace ? (
+            <div className="lg:col-span-2 space-y-4">
+              {/* Stats progression */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-primary-600">{progressList.length}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Étudiants actifs</p>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-emerald-600">{avgCompletion}%</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Complétion moy.</p>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-amber-600">
+                    {progressList.filter((p: { completion_rate: number }) => p.completion_rate < 30).length}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Peu avancés</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={() => addModuleMut.mutate({ course_space: selectedSpace, title: `Module ${mods.length + 1}`, order: mods.length + 1, is_published: true })}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition">
+                  <Plus className="w-4 h-4" /> Ajouter un module
+                </button>
+                <button onClick={() => setShowUpload(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">
+                  <Upload className="w-4 h-4" /> Déposer une ressource
+                </button>
+              </div>
+
+              {/* Modules */}
+              <div className="space-y-2">
+                {mods.map((mod: { id: string; title: string; order: number; resources?: { id: string; title: string; type: string }[] }) => (
+                  <Card key={mod.id} noPadding>
+                    <div className="p-3">
+                      <p className="font-semibold text-sm text-gray-900 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-primary-100 text-primary-700 text-xs font-black flex items-center justify-center">{mod.order}</span>
+                        {mod.title}
+                        <span className="text-xs text-gray-400 font-normal">{mod.resources?.length ?? 0} ressource(s)</span>
+                      </p>
+                      {mod.resources?.map(r => (
+                        <div key={r.id} className="ml-8 mt-1.5 flex items-center gap-2 text-xs text-gray-600">
+                          <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <span>{r.title}</span>
+                          <Badge label={r.type} className="badge-gray" />
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Top progression étudiants */}
+              {progressList.length > 0 && (
+                <Card title="Progression des étudiants" subtitle="Top 10">
+                  <div className="space-y-2">
+                    {progressList.slice(0, 10).map((p: { student_name?: string; completion_rate: number }) => (
+                      <div key={Math.random()} className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <Users className="w-3.5 h-3.5 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-gray-700 font-medium truncate">{p.student_name ?? 'Étudiant'}</span>
+                            <span className="text-gray-500 flex-shrink-0">{Math.round(p.completion_rate)}%</span>
+                          </div>
+                          <Progress value={p.completion_rate} size="sm"
+                            color={p.completion_rate >= 75 ? 'bg-emerald-500' : p.completion_rate >= 40 ? 'bg-amber-500' : 'bg-red-500'} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <div className="lg:col-span-2 flex items-center justify-center text-gray-400 text-sm">
+              ← Sélectionnez un cours pour le gérer
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal upload ressource */}
+      <Modal open={showUpload} onClose={() => setShowUpload(false)} title="Déposer une ressource" size="md">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Titre *</label>
+            <input className="input" value={resourceForm.title}
+              onChange={e => setResourceForm(f => ({ ...f, title: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Type</label>
+              <select className="input" value={resourceForm.type} onChange={e => setResourceForm(f => ({ ...f, type: e.target.value }))}>
+                {['pdf', 'video', 'audio', 'ppt', 'doc', 'link', 'notebook', 'image'].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Module *</label>
+              <select className="input" value={resourceForm.module} onChange={e => setResourceForm(f => ({ ...f, module: e.target.value }))}>
+                <option value="">— Choisir —</option>
+                {mods.map((m: { id: string; title: string }) => <option key={m.id} value={m.id}>{m.title}</option>)}
+              </select>
+            </div>
+          </div>
+          {resourceForm.type === 'link' ? (
+            <div>
+              <label className="label">URL externe</label>
+              <input className="input" type="url" value={resourceForm.external_url}
+                onChange={e => setResourceForm(f => ({ ...f, external_url: e.target.value }))} placeholder="https://..." />
+            </div>
+          ) : (
+            <div>
+              <label className="label">Fichier</label>
+              <input type="file" className="input file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-100 file:text-primary-700 file:text-sm"
+                onChange={e => setResourceForm(f => ({ ...f, file: e.target.files?.[0] ?? null }))} />
+            </div>
+          )}
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={resourceForm.is_downloadable}
+              onChange={e => setResourceForm(f => ({ ...f, is_downloadable: e.target.checked }))} />
+            Permettre le téléchargement
+          </label>
+          <div className="flex gap-3 pt-2">
+            <button onClick={() => setShowUpload(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+            <button onClick={handleUpload}
+              disabled={!resourceForm.title || !resourceForm.module || uploadResourceMut.isPending}
+              className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
+              {uploadResourceMut.isPending ? 'Téléversement...' : 'Déposer'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
+}
