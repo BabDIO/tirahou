@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'SIGUVH — Université Virtuelle Hybride',
-        short_name: 'SIGUVH',
-        description: 'Système Intégré de Gestion d\'Université Virtuelle Hybride',
+        name: 'TIRAHOU — Gestion Universitaire',
+        short_name: 'TIRAHOU',
+        description: 'Plateforme Intégrée de Gestion Universitaire — LMD, LMS, Finance, Analytics',
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',

@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'siguvh-auth',
+      name: 'tirahou-auth',
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,

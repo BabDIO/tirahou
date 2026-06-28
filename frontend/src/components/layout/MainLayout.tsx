@@ -356,8 +356,8 @@ export default function MainLayout() {
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
-              <p className="text-white font-bold text-sm leading-tight tracking-tight">SIGUVH</p>
-              <p className="text-slate-500 text-[10px] leading-tight">Université Virtuelle</p>
+              <p className="text-white font-bold text-sm leading-tight tracking-tight">TIRAHOU</p>
+              <p className="text-slate-500 text-[10px] leading-tight">Plateforme Universitaire</p>
             </div>
           )}
         </div>
@@ -468,7 +468,7 @@ export default function MainLayout() {
               <Menu className="w-4 h-4" />
             </button>
             <div className="hidden sm:flex items-center gap-1.5 text-sm min-w-0">
-              <span className="text-gray-400 text-xs">SIGUVH</span>
+              <span className="text-gray-400 text-xs">TIRAHOU</span>
               <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
               <span className="font-semibold text-gray-800 truncate">{currentLabel}</span>
             </div>

@@ -78,12 +78,12 @@ export const CertificatScolarite = ({ student, university, verificationCode, dat
         <Text style={{ fontSize: 9, color: '#6b7280', marginBottom: 5 }}>Code de vérification</Text>
         <Text style={S.verifyCode}>{verificationCode}</Text>
         <Text style={{ fontSize: 8, color: '#9ca3af', marginTop: 4 }}>
-          Vérifiez sur : siguvh.edu/verify/{verificationCode}
+          Vérifiez sur : TIRAHOU.edu/verify/{verificationCode}
         </Text>
       </View>
 
       <View style={S.footer}>
-        <Text>Document généré par SIGUVH · {university} · {date}</Text>
+        <Text>Document généré par TIRAHOU · {university} · {date}</Text>
       </View>
     </Page>
   </Document>
@@ -173,7 +173,7 @@ export const ReleveNotes = ({ student, results, semester, university, verificati
         </View>
 
         <View style={S.footer}>
-          <Text>Document généré par SIGUVH · {university} · {date}</Text>
+          <Text>Document généré par TIRAHOU · {university} · {date}</Text>
         </View>
       </Page>
     </Document>
