@@ -8,7 +8,7 @@ import dj_database_url
 
 # ── Sécurité ──────────────────────────────────────────────────────────────────
 DEBUG = False
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-insecure-key-replace-me-in-render')
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS',
