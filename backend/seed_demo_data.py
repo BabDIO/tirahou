@@ -1,4 +1,4 @@
-"""
+﻿"""
 TIRAHOU — Script de données de démonstration
 Exécuter : python seed_demo_data.py
 Peuple la base avec des données réalistes pour les captures d'écran du mémoire.
@@ -16,7 +16,7 @@ from datetime import date, timedelta
 import random
 
 print("=" * 60)
-print("TIRAHOU — Chargement des données de démonstration")
+print("TIRAHOU  Chargement des donnes de dmonstration")
 print("=" * 60)
 
 # ── 1. ROLES ─────────────────────────────────────────────────────────────────
@@ -33,14 +33,22 @@ for r in ROLES:
     obj, _ = Role.objects.get_or_create(name=r)
     roles[r] = obj
     print(f"  Role : {r}")
-print(f"✓ {len(roles)} rôles créés")
+print(f"OK {len(roles)} rles crs")
 
 # ── 2. UTILISATEURS ──────────────────────────────────────────────────────────
 def create_user(email, first, last, role_key, password='Test@2024'):
+    # Générer un username unique basé sur l'email
+    base_username = email.split('@')[0]
+    username = base_username
+    counter = 1
+    while User.objects.filter(username=username).exclude(email=email).exists():
+        username = f"{base_username}{counter}"
+        counter += 1
+
     user, created = User.objects.get_or_create(
         email=email,
         defaults={
-            'username': email.split('@')[0],
+            'username': username,
             'first_name': first,
             'last_name': last,
             'is_active': True,
@@ -69,7 +77,7 @@ etudiant4_user = create_user('etudiant4@tirahou.edu',     'Aminata',   'BALDE', 
 etudiant5_user = create_user('etudiant5@tirahou.edu',     'Ibrahim',   'TOURE',      'etudiant')
 doctorant_user = create_user('doctorant@tirahou.edu',     'Dr. Sékou', 'FOFANA',     'doctorant')
 
-print(f"✓ Utilisateurs créés (admin: admin@tirahou.edu / Admin@2024)")
+print(f"OK Utilisateurs crs (admin: admin@tirahou.edu / Admin@2024)")
 
 # ── 3. STRUCTURE ACADÉMIQUE ──────────────────────────────────────────────────
 from apps.academic.models import University, Faculty, Department, AcademicYear, LMDRegulation
@@ -147,7 +155,7 @@ reg_master, _ = LMDRegulation.objects.get_or_create(
     }
 )
 
-print(f"✓ Structure académique : {univ.acronym}, {Faculty.objects.count()} facultés, {Department.objects.count()} départements")
+print(f"OK Structure acadmique : {univ.acronym}, {Faculty.objects.count()} facults, {Department.objects.count()} dpartements")
 
 # ── 4. PROGRAMMES & MAQUETTES LMD ────────────────────────────────────────────
 from apps.programs.models import Program, Semester, UE, EC, Group
@@ -214,7 +222,7 @@ grp_l3a, _ = Group.objects.get_or_create(program=prog_gl, academic_year=year, na
 grp_l3b, _ = Group.objects.get_or_create(program=prog_gl, academic_year=year, name='L3-GL-B', defaults={'type': 'promotion', 'capacity': 30})
 grp_td1, _ = Group.objects.get_or_create(program=prog_gl, academic_year=year, name='TD-GL-1', defaults={'type': 'td', 'capacity': 15})
 
-print(f"✓ Programmes : {Program.objects.count()} | Semestres : {Semester.objects.count()} | UE : {UE.objects.count()} | EC : {EC.objects.count()}")
+print(f"OK Programmes : {Program.objects.count()} | Semestres : {Semester.objects.count()} | UE : {UE.objects.count()} | EC : {EC.objects.count()}")
 
 # ── 5. PROFILS PERSONNES ─────────────────────────────────────────────────────
 from apps.people.models import Student, Teacher, AdminStaff
@@ -268,7 +276,7 @@ staff1, _ = AdminStaff.objects.get_or_create(user=scolarite_user, defaults={'sta
 staff2, _ = AdminStaff.objects.get_or_create(user=financier_user, defaults={'staff_id': 'ADM-2024-002', 'service': 'finance', 'position': 'Gestionnaire financier'})
 staff3, _ = AdminStaff.objects.get_or_create(user=biblio_user, defaults={'staff_id': 'ADM-2024-003', 'service': 'bibliotheque', 'position': 'Bibliothécaire principale'})
 
-print(f"✓ Étudiants : {Student.objects.count()} | Enseignants : {Teacher.objects.count()} | Personnel : {AdminStaff.objects.count()}")
+print(f"OK tudiants : {Student.objects.count()} | Enseignants : {Teacher.objects.count()} | Personnel : {AdminStaff.objects.count()}")
 
 # ── 6. ADMISSIONS ────────────────────────────────────────────────────────────
 from apps.admissions.models import Application, AdmissionDecision
@@ -324,7 +332,7 @@ app_pending = Application.objects.get_or_create(
     }
 )[0]
 
-print(f"✓ Candidatures : {Application.objects.count()}")
+print(f"OK Candidatures : {Application.objects.count()}")
 
 # ── 7. INSCRIPTIONS ──────────────────────────────────────────────────────────
 from apps.enrollment.models import AdminEnrollment, PedaEnrollment, UEEnrollment
@@ -358,7 +366,7 @@ enr2, penr2 = make_enrollment(etu2, prog_gl, grp_l3a)
 enr3, penr3 = make_enrollment(etu3, prog_gl, grp_l3b)
 enr4, penr4 = make_enrollment(etu4, prog_gl, grp_l3b)
 
-print(f"✓ Inscriptions admin : {AdminEnrollment.objects.count()} | Péda : {PedaEnrollment.objects.count()}")
+print(f"OK Inscriptions admin : {AdminEnrollment.objects.count()} | Pda : {PedaEnrollment.objects.count()}")
 
 # ── 8. FINANCE ───────────────────────────────────────────────────────────────
 from apps.finance.models import FeeType, Invoice, InvoiceItem, Payment, Scholarship
@@ -418,7 +426,7 @@ Scholarship.objects.get_or_create(
     }
 )
 
-print(f"✓ Factures : {Invoice.objects.count()} | Paiements : {Payment.objects.count()} | Bourses : {Scholarship.objects.count()}")
+print(f"OK Factures : {Invoice.objects.count()} | Paiements : {Payment.objects.count()} | Bourses : {Scholarship.objects.count()}")
 
 # ── 9. LMS — ESPACES DE COURS ────────────────────────────────────────────────
 from apps.lms.models import CourseSpace, CourseModule, CourseResource, Assignment, StudentProgress
@@ -541,4 +549,420 @@ for stu, cs, comp_rate, time_min in progress_data:
         }
     )
 
-print(f"✓ Espaces cours : {CourseSpace.objects.count()} | Modules : {CourseModule.objects.count()} | Ressources : {CourseResource.objects.count()}")
+print(f"OK Espaces cours : {CourseSpace.objects.count()} | Modules : {CourseModule.objects.count()} | Ressources : {CourseResource.objects.count()}")
+
+# ── 10. ÉVALUATION — NOTES ───────────────────────────────────────────────────
+from apps.evaluation.models import ExamSession, Grade, UEResult, SemesterResult
+
+session1, _ = ExamSession.objects.get_or_create(
+    semester=s5, academic_year=year, session_type='session1',
+    defaults={'start_date': date(2025, 1, 6), 'end_date': date(2025, 1, 17), 'is_open': False}
+)
+
+grades_data = [
+    # (étudiant, ec, cc, exam, absent)
+    (etu1, ec1, 14.5, 13.0, False), (etu1, ec2, 15.0, 16.0, False),
+    (etu1, ec3, 13.5, 12.5, False), (etu1, ec4, 14.0, 15.0, False),
+    (etu1, ec5, 16.0, 17.5, False), (etu1, ec6, 15.5, 14.0, False),
+    (etu2, ec1, 11.0,  9.5, False), (etu2, ec2, 12.0, 10.0, False),
+    (etu2, ec3, 10.5, 11.0, False), (etu2, ec4,  9.0, 10.5, False),
+    (etu2, ec5, 13.0, 12.0, False), (etu2, ec6, 11.5, 10.0, False),
+    (etu3, ec1, 18.0, 17.0, False), (etu3, ec2, 16.5, 18.0, False),
+    (etu3, ec3, 17.0, 16.5, False), (etu3, ec4, 15.5, 17.0, False),
+    (etu3, ec5, 19.0, 18.5, False), (etu3, ec6, 17.5, 16.0, False),
+    (etu4, ec1,  8.5,  7.0, False), (etu4, ec2,  9.0,  8.5, False),
+    (etu4, ec3,  7.5,  8.0, False), (etu4, ec4,  6.0,  0.0, True),
+    (etu4, ec5, 10.0,  9.5, False), (etu4, ec6,  8.0,  7.5, False),
+]
+
+from decimal import Decimal as D
+for stu, ec, cc, exam, absent in grades_data:
+    g, created = Grade.objects.get_or_create(
+        student=stu, ec=ec, exam_session=session1,
+        defaults={
+            'cc_grade': D(str(cc)),
+            'exam_grade': D(str(exam)) if not absent else None,
+            'is_absent': absent,
+            'status': 'publiee',
+            'entered_by': enseignant1,
+            'validated_by': resp_user,
+            'validated_at': timezone.now() - timedelta(days=5),
+            'published_to_student': True,
+            'published_at': timezone.now() - timedelta(days=3),
+        }
+    )
+    if created:
+        g.calculate_final_grade()
+        g.save()
+
+# Résultats d'UE
+for stu, avg, credits, decision in [
+    (etu1, D('14.3'), 6, 'valide'),
+    (etu2, D('10.8'), 6, 'valide'),
+    (etu3, D('17.4'), 6, 'valide'),
+    (etu4, D('8.2'),  0, 'ajourné'),
+]:
+    UEResult.objects.get_or_create(
+        student=stu, ue=ue_archi, exam_session=session1,
+        defaults={'average': avg, 'credits_obtained': credits, 'decision': decision}
+    )
+
+# Résultats semestriels
+for stu, avg, credits, decision, mention, rank in [
+    (etu1, D('14.1'), 27, 'admis',  'Bien',       2),
+    (etu2, D('11.2'), 24, 'admis',  'Passable',    3),
+    (etu3, D('17.2'), 30, 'admis',  'Très Bien',   1),
+    (etu4, D('8.4'),   6, 'ajourné', '',            4),
+]:
+    SemesterResult.objects.get_or_create(
+        student=stu, semester=s5, exam_session=session1,
+        defaults={
+            'average': avg,
+            'total_credits': 30,
+            'credits_obtained': credits,
+            'decision': decision,
+            'mention': mention,
+            'gpa': D(str(round(float(avg)/20*4, 2))),
+            'rank': rank,
+            'total_students_in_semester': 4,
+            'published': True,
+            'published_at': timezone.now() - timedelta(days=3),
+        }
+    )
+
+print(f"OK Notes : {Grade.objects.count()} | Rsultats UE : {UEResult.objects.count()} | Rsultats sem : {SemesterResult.objects.count()}")
+
+# ── 11. PRÉSENCES & EMPLOI DU TEMPS ─────────────────────────────────────────
+from apps.scheduling_app.models import Room, ScheduledSession, Timetable
+from apps.attendance.models import AttendanceSheet, AttendanceRecord, AbsenceSummary
+
+salle_a1, _ = Room.objects.get_or_create(code='A101', defaults={'name': 'Amphi A - Bloc Informatique', 'type': 'amphi', 'capacity': 80, 'building': 'Bloc A', 'has_projector': True, 'has_internet': True})
+salle_td1, _ = Room.objects.get_or_create(code='TD201', defaults={'name': 'Salle TD-201', 'type': 'salle_td', 'capacity': 25, 'building': 'Bloc B', 'has_projector': True})
+salle_info, _ = Room.objects.get_or_create(code='INFO301', defaults={'name': 'Salle Informatique 301', 'type': 'salle_info', 'capacity': 30, 'building': 'Bloc C', 'has_computer': True, 'has_internet': True})
+salle_virt, _ = Room.objects.get_or_create(code='VIRT01', defaults={'name': 'Salle Virtuelle 1', 'type': 'virtuelle', 'capacity': 100, 'is_virtual': True})
+
+from datetime import datetime
+def dt(d, h, m): return timezone.make_aware(datetime(2025, d[0], d[1], h, m))
+
+sessions_data = [
+    (ec1, enseignant1, salle_a1,   grp_l3a, dt((1,13), 8, 0),  dt((1,13), 10, 0), 'presentiel', 'realise'),
+    (ec1, enseignant1, salle_a1,   grp_l3a, dt((1,20), 8, 0),  dt((1,20), 10, 0), 'presentiel', 'realise'),
+    (ec2, enseignant1, salle_td1,  grp_l3a, dt((1,14), 14, 0), dt((1,14), 16, 0), 'presentiel', 'realise'),
+    (ec3, enseignant2, salle_info, grp_l3a, dt((1,15), 10, 0), dt((1,15), 12, 0), 'hybride',    'realise'),
+    (ec4, enseignant2, salle_info, grp_l3a, dt((1,16), 14, 0), dt((1,16), 16, 0), 'presentiel', 'realise'),
+    (ec1, enseignant1, salle_a1,   grp_l3a, dt((2,3),  8, 0),  dt((2,3),  10, 0), 'presentiel', 'confirme'),
+    (ec3, enseignant2, salle_info, grp_l3a, dt((2,5),  10, 0), dt((2,5),  12, 0), 'hybride',    'planifie'),
+]
+scheduled_sessions = []
+for ec_obj, teacher, room, group, start, end, mode, status in sessions_data:
+    sess, _ = ScheduledSession.objects.get_or_create(
+        ec=ec_obj, teacher=teacher, start_datetime=start,
+        defaults={'end_datetime': end, 'room': room, 'group': group, 'academic_year': year, 'mode': mode, 'status': status}
+    )
+    scheduled_sessions.append(sess)
+
+# Feuilles de présence pour les séances réalisées
+for sess in [s for s, d in zip(scheduled_sessions, sessions_data) if d[7] == 'realise']:
+    sheet, _ = AttendanceSheet.objects.get_or_create(
+        session=sess,
+        defaults={'is_open': False, 'opened_at': sess.start_datetime, 'closed_at': sess.end_datetime, 'created_by': sess.teacher}
+    )
+    presence_map = {etu1: 'present', etu2: 'present', etu3: 'present', etu4: random.choice(['present','absent'])}
+    for stu, stat in presence_map.items():
+        AttendanceRecord.objects.get_or_create(
+            sheet=sheet, student=stu,
+            defaults={'status': stat, 'method': random.choice(['qr_code','code_seance','manuel']), 'marked_at': sess.start_datetime + timedelta(minutes=random.randint(0,10))}
+        )
+
+# Résumés d'assiduité
+for stu, rate, absent, present, alert in [
+    (etu1, 95, 1, 19, 'none'),
+    (etu2, 85, 3, 17, 'none'),
+    (etu3, 100, 0, 20, 'none'),
+    (etu4, 55, 9, 11, 'critical'),
+]:
+    AbsenceSummary.objects.update_or_create(
+        student=stu, course_space=cs_archi,
+        defaults={'total_sessions': 20, 'present_count': present, 'absent_count': absent, 'justified_count': 0, 'attendance_rate': D(str(rate)), 'alert_level': alert, 'unjustified_count': absent}
+    )
+
+print(f"OK Salles : {Room.objects.count()} | Sances : {ScheduledSession.objects.count()} | Feuilles prsence : {AttendanceSheet.objects.count()}")
+
+# ── 12. DOCUMENTS GÉNÉRÉS ────────────────────────────────────────────────────
+from apps.documents.models import DocumentCategory, StudentDocument, GeneratedDocument
+
+cat_id, _ = DocumentCategory.objects.get_or_create(name='Pièce d\'identité', defaults={'code': 'CNI', 'requires_validation': True})
+cat_dipl, _ = DocumentCategory.objects.get_or_create(name='Diplôme', defaults={'code': 'DIPL', 'requires_validation': True})
+cat_rel, _ = DocumentCategory.objects.get_or_create(name='Relevé de notes', defaults={'code': 'RELEVE', 'requires_validation': False})
+
+for stu, dtype, title, status in [
+    (etu1, 'certificat_scolarite',    'Certificat de scolarité — KOUASSI Jean-Paul',  'delivre'),
+    (etu1, 'releve_notes',            'Relevé de notes S5 — KOUASSI Jean-Paul',        'delivre'),
+    (etu2, 'certificat_scolarite',    'Certificat de scolarité — COULIBALY Fatoumata', 'signe'),
+    (etu3, 'certificat_scolarite',    'Certificat de scolarité — SANGARE Moussa',      'delivre'),
+    (etu3, 'attestation_reussite',    'Attestation de réussite S5 — SANGARE Moussa',   'genere'),
+]:
+    GeneratedDocument.objects.get_or_create(
+        student=stu, doc_type=dtype,
+        defaults={
+            'title': title,
+            'status': status,
+            'generated_by': scolarite_user,
+        }
+    )
+
+print(f"OK Documents gnrs : {GeneratedDocument.objects.count()}")
+
+# ── 13. ANALYTICS — ENGAGEMENT ───────────────────────────────────────────────
+from apps.analytics_app.models import LearningActivity, EngagementScore, DashboardStat
+
+for stu, conn, time_min, res_viewed, assignments, quizzes, forum, vclass, completion, risk in [
+    (etu1, 45, 1200, 18,  2, 3, 5, 2, D('78'), 'faible'),
+    (etu2, 22, 580,  9,   1, 1, 1, 1, D('45'), 'moyen'),
+    (etu3, 68, 1850, 24,  2, 4, 9, 3, D('95'), 'faible'),
+    (etu4,  8, 150,  3,   0, 0, 0, 0, D('18'), 'critique'),
+]:
+    score, _ = EngagementScore.objects.update_or_create(
+        student=stu, course_space=cs_archi, academic_year=year,
+        defaults={
+            'connection_count': conn,
+            'total_time_minutes': time_min,
+            'resources_viewed': res_viewed,
+            'assignments_submitted': assignments,
+            'quizzes_attempted': quizzes,
+            'forum_posts': forum,
+            'virtual_class_attended': vclass,
+            'completion_rate': completion,
+            'engagement_score': D(str(round(conn*0.3 + float(completion)*0.3 + assignments*5, 1))),
+            'dropout_risk': risk,
+            'days_inactive': random.randint(0, 15) if risk != 'critique' else 45,
+            'success_prediction_score': D(str(round(float(completion)*0.6 + conn*0.4, 1))),
+        }
+    )
+
+# Statistiques dashboard
+for stat_type, label, value in [
+    ('effectifs',    'Total étudiants inscrits',    1247),
+    ('inscriptions', 'Taux d\'inscription',           87),
+    ('paiements',    'Taux de collecte (%)',           78),
+    ('resultats',    'Moyenne générale /20',         12.4),
+    ('assiduité',    'Taux d\'assiduité moyen (%)',   84),
+    ('lms',          'Espaces de cours actifs',        42),
+]:
+    DashboardStat.objects.update_or_create(
+        academic_year=year, stat_type=stat_type, label=label,
+        defaults={'value': D(str(value))}
+    )
+
+print(f"OK Scores engagement : {EngagementScore.objects.count()} | Stats dashboard : {DashboardStat.objects.count()}")
+
+# ── 14. COMMUNICATION — NOTIFICATIONS & ANNONCES ────────────────────────────
+from apps.communication.models import Notification, Announcement
+
+notifs = [
+    (etudiant1_user, 'resultat',    'urgent', '🎓 Résultats S5 disponibles', 'Vos résultats du Semestre 5 sont publiés. Moyenne : 14.1/20 — Mention : Bien', '/my-grades'),
+    (etudiant1_user, 'paiement',    'normal', '✅ Paiement confirmé', 'Votre paiement de 350 000 FCFA a été validé. Reçu : RECU-A1B2C3D4', '/my-finance'),
+    (etudiant2_user, 'absence',     'high',   '! Alerte assiduité', 'Votre taux de présence est insuffisant. Veuillez régulariser votre situation.', '/my-attendance-student'),
+    (etudiant3_user, 'resultat',    'urgent', '🏆 Félicitations !', 'Mention Très Bien — 17.2/20 au S5. Vous êtes classé 1er de votre promotion.', '/my-grades'),
+    (etudiant4_user, 'absence',     'urgent', '🚨 Risque d\'exclusion', 'Votre taux d\'assiduité est critique (55%). Contactez la scolarité immédiatement.', '/my-attendance-student'),
+    (etudiant4_user, 'resultat',    'high',   '📊 Résultats S5 — Action requise', 'Vous avez été ajourné(e) en S5. Session de rattrapage prévue en juillet.', '/my-grades'),
+    (enseignant1, 'info',      'normal', '📋 Délibérations S5', 'Le PV de délibération du S5 est disponible. Merci de le signer avant le 25/01.', '/evaluation'),
+    (admin_user,     'alerte',      'high',   '! 1 étudiant à risque critique', 'Ibrahim TOURE (ETU-2024-005) présente un risque de décrochage critique.', '/analytics'),
+]
+
+for recipient, ntype, priority, title, message, action_url in notifs:
+    Notification.objects.get_or_create(
+        recipient=recipient, title=title,
+        defaults={
+            'message': message, 'type': ntype, 'priority': priority,
+            'channel': 'interne', 'action_url': action_url,
+            'is_read': random.choice([True, False, False]),
+            'is_sent': True, 'sent_at': timezone.now() - timedelta(days=random.randint(0,7)),
+        }
+    )
+
+# Annonces institutionnelles
+annonces = [
+    ('📅 Calendrier des examens S5 2024-2025', 'Les examens du Semestre 5 auront lieu du 06 au 17 janvier 2025. Les salles seront affichées 48h avant. Bonne préparation à toutes et à tous.', 'etudiants'),
+    ('🎓 Cérémonie de remise des diplômes', 'La cérémonie de remise des diplômes promotion 2023-2024 se tiendra le 15 mars 2025 à 10h00 à l\'Amphi A. Toutes les parties prenantes sont invitées.', 'tous'),
+    ('📚 Nouveaux ouvrages disponibles en bibliothèque', 'La bibliothèque vient d\'acquérir 50 nouveaux ouvrages en informatique, IA et génie logiciel. Consultez le catalogue en ligne.', 'tous'),
+    ('! Interruption système — Maintenance', 'Une maintenance est prévue le dimanche 26 janvier de 2h à 6h. La plateforme sera indisponible pendant cette période.', 'tous'),
+    ('🏆 Résultats S5 publiés', 'Les résultats du Semestre 5 (session normale) sont désormais disponibles dans votre espace personnel. Délai de réclamation : 5 jours ouvrables.', 'etudiants'),
+]
+
+for i, (title, content, audience) in enumerate(annonces):
+    Announcement.objects.get_or_create(
+        title=title,
+        defaults={
+            'content': content, 'audience': audience,
+            'author': admin_user if audience == 'tous' else scolarite_user,
+            'is_published': True,
+            'published_at': timezone.now() - timedelta(days=random.randint(1, 15)),
+            'is_pinned': i < 2,
+        }
+    )
+
+print(f"OK Notifications : {Notification.objects.count()} | Annonces : {Announcement.objects.count()}")
+
+# ── 15. BIBLIOTHÈQUE ─────────────────────────────────────────────────────────
+from apps.library.models import LibraryDocument, Borrowing
+
+livres = [
+    ('Clean Code', 'Robert C. Martin', 'livre', 'Génie Logiciel', 2008, 'ISBN 978-0-13-235088-4', 3),
+    ('Design Patterns : GoF', 'Gang of Four', 'livre', 'Architecture Logicielle', 1994, 'ISBN 978-0-20-163361-5', 2),
+    ('Deep Learning', 'Ian Goodfellow', 'livre', 'Intelligence Artificielle', 2016, 'ISBN 978-0-26-203561-3', 2),
+    ('Introduction to Algorithms', 'Cormen et al.', 'livre', 'Algorithmique', 2009, 'ISBN 978-0-26-203293-3', 4),
+    ('The Pragmatic Programmer', 'Hunt & Thomas', 'livre', 'Développement Logiciel', 2019, 'ISBN 978-0-13-595705-9', 3),
+    ('Système Intégré de Gestion Universitaire — TIRAHOU', 'Auteur UVHCI', 'memoire', 'Génie Logiciel', 2025, '', 1),
+    ('Machine Learning avec Python', 'Aurélien Géron', 'livre', 'Intelligence Artificielle', 2022, 'ISBN 978-2-80-730524-7', 2),
+    ('PostgreSQL Administration', 'Greg Smith', 'livre', 'Bases de Données', 2020, 'ISBN 978-1-78-951533-0', 2),
+    ('React Design Patterns', 'Carlos Santana Roldán', 'livre', 'Développement Web', 2021, '', 3),
+    ('Sécurité des Systèmes d\'Information', 'Solange Ghernaouti', 'livre', 'Sécurité Informatique', 2020, '', 2),
+]
+
+lib_docs = []
+for title, author, ltype, domain, year_pub, isbn, qty in livres:
+    doc, _ = LibraryDocument.objects.get_or_create(
+        title=title, author=author,
+        defaults={
+            'type': ltype, 'domain': domain, 'year': year_pub, 'isbn': isbn,
+            'access_level': 'authenticated', 'status': 'disponible',
+            'quantity': qty, 'available_quantity': qty,
+            'language': 'Français', 'download_count': random.randint(5, 120),
+            'view_count': random.randint(20, 500),
+            'uploaded_by': biblio_user,
+            'is_featured': random.choice([True, False]),
+            'rating': D(str(round(random.uniform(3.5, 5.0), 1))),
+            'rating_count': random.randint(3, 25),
+        }
+    )
+    lib_docs.append(doc)
+
+# Emprunts actifs
+from datetime import timedelta
+for stu, doc_idx, days_left in [(etu1, 0, 7), (etu2, 2, -3), (etu3, 1, 14)]:
+    doc = lib_docs[doc_idx]
+    due = date.today() + timedelta(days=days_left)
+    b, created = Borrowing.objects.get_or_create(
+        document=doc, borrower=stu.user,
+        defaults={'due_date': due, 'status': 'en_cours' if days_left > 0 else 'en_retard'}
+    )
+    if created and days_left <= 0:
+        b.late_days = abs(days_left)
+        b.penalty_amount = D(str(abs(days_left) * 500))
+        b.save()
+        doc.available_quantity = max(0, doc.available_quantity - 1)
+        doc.save()
+
+print(f"OK Bibliothque : {LibraryDocument.objects.count()} documents | {Borrowing.objects.count()} emprunts")
+
+# ── 16. STAGES & MÉMOIRES ────────────────────────────────────────────────────
+from apps.internships.models import Internship, Thesis, Defense
+
+Internship.objects.get_or_create(
+    student=etu1, academic_year=year,
+    defaults={
+        'supervisor': enseignant1,
+        'company_name': 'Orange Côte d\'Ivoire',
+        'company_address': 'Abidjan, Zone 4',
+        'company_supervisor': 'M. Koffi DIOMANDE',
+        'company_supervisor_email': 'k.diomande@orange.ci',
+        'subject': 'Développement d\'une plateforme de gestion des ressources humaines avec Django REST',
+        'description': 'Développement fullstack d\'une application RH intégrée.',
+        'start_date': date(2025, 3, 3),
+        'end_date': date(2025, 5, 30),
+        'status': 'convention_signee',
+    }
+)
+
+thesis, _ = Thesis.objects.get_or_create(
+    student=etu3, academic_year=year,
+    defaults={
+        'type': 'memoire_licence',
+        'title': 'Conception et développement d\'un système de détection d\'intrusion basé sur le machine learning',
+        'abstract': 'Cette étude propose un système IDS utilisant des algorithmes de ML pour détecter les anomalies réseau en temps réel.',
+        'keywords': 'IDS, Machine Learning, Sécurité, Réseaux, Python',
+        'supervisor': enseignant1,
+        'co_supervisor': enseignant2,
+        'status': 'en_redaction',
+        'plagiarism_score': D('4.2'),
+    }
+)
+
+Defense.objects.get_or_create(
+    thesis=thesis,
+    defaults={
+        'scheduled_date': timezone.make_aware(datetime(2025, 6, 20, 10, 0)),
+        'room': 'Amphi A',
+        'virtual_link': 'https://meet.jit.si/soutenance-sangare-2025',
+        'status': 'planifiee',
+        'jury_president': enseignant1,
+    }
+)
+
+print(f"OK Stages : {Internship.objects.count()} | Mmoires : {Thesis.objects.count()} | Soutenances : {Defense.objects.count()}")
+
+# ── 17. CLASSES VIRTUELLES ───────────────────────────────────────────────────
+from apps.virtual_class.models import VirtualClassSession
+
+for title, provider, days_offset, status in [
+    ('Architecture Logicielle — Cours Synchrone S5', 'bbb',  -7, 'terminee'),
+    ('TD Architecture Patterns — Groupe L3A',         'jitsi', -3, 'terminee'),
+    ('Cours Web Avancé — React & TypeScript',         'zoom',   2, 'planifiee'),
+    ('Soutenance Mémoire — SANGARE Moussa',           'bbb',   20, 'planifiee'),
+]:
+    start = timezone.now() + timedelta(days=days_offset)
+    end = start + timedelta(hours=2)
+    VirtualClassSession.objects.get_or_create(
+        title=title, course_space=cs_archi,
+        defaults={
+            'provider': provider, 'mode': 'hybride',
+            'scheduled_start': start, 'scheduled_end': end,
+            'status': status,
+            'room_capacity': 40,
+            'physical_room': 'Amphi A' if status == 'planifiee' else '',
+            'join_url': f'https://meet.jit.si/tirahou-{provider}-{random.randint(1000,9999)}',
+            'replay_available': status == 'terminee',
+            'is_recorded': status == 'terminee',
+            'created_by': enseignant1,
+        }
+    )
+
+print(f"OK Classes virtuelles : {VirtualClassSession.objects.count()}")
+
+# ── RÉSUMÉ FINAL ─────────────────────────────────────────────────────────────
+print()
+print("=" * 60)
+print(" DONNES DE DMONSTRATION CHARGES AVEC SUCCS")
+print("=" * 60)
+print()
+print("COMPTES DE CONNEXION :")
+print()
+print(f"  Super Admin      : admin@tirahou.edu          / Admin@2024")
+print(f"  Scolarit        : scolarite@tirahou.edu      / Test@2024")
+print(f"  Financier        : financier@tirahou.edu      / Test@2024")
+print(f"  Resp. Pda.      : responsable@tirahou.edu    / Test@2024")
+print(f"  Enseignant       : enseignant@tirahou.edu     / Test@2024")
+print(f"  Bibliothcaire   : bibliothecaire@tirahou.edu / Test@2024")
+print(f"  tudiant 1 (bon) : etudiant@tirahou.edu       / Test@2024 (moy: 14.1)")
+print(f"  tudiant 2       : etudiant2@tirahou.edu      / Test@2024 (moy: 11.2)")
+print(f"  tudiant 3 (top) : etudiant3@tirahou.edu      / Test@2024 (moy: 17.2)")
+print(f"  tudiant 4 (risk): etudiant4@tirahou.edu      / Test@2024 (ajourn)")
+print()
+print("PAGES RECOMMANDES POUR CAPTURES D'CRAN :")
+print()
+print("  / (LandingPage)            Page d'accueil TIRAHOU")
+print("  /login                     Page de connexion (design split)")
+print("  /dashboard                 Tableau de bord (selon rle)")
+print("  /students                  Liste tudiants avec filtres")
+print("  /analytics                 Analytics + graphiques")
+print("  /lms                       Campus virtuel LMS")
+print("  /attendance                Gestion prsences QR code")
+print("  /evaluation                Notes et dlibrations")
+print("  /finance                   Gestion financire")
+print("  /student/courses           Espace tudiant (connexion etudiant@)")
+print("  /my-grades                 Mes notes (etudiant@)")
+print("  /verify/VER-...            Vrification document (public)")
+print()
+print("  API Swagger : http://localhost:8000/api/docs/")
+print("=" * 60)
