@@ -35,6 +35,19 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'academic_year', 'student']
     search_fields = ['invoice_number', 'student__student_id', 'student__user__last_name']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Invoice.objects.none()
+        user = self.request.user
+        qs = Invoice.objects.select_related('student__user', 'academic_year').prefetch_related('items', 'payments', 'installments')
+        # Étudiant : seulement ses propres factures
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        # Enseignant : aucun accès aux factures
+        if hasattr(user, 'teacher_profile'):
+            return Invoice.objects.none()
+        return qs.order_by('id')
+
     def perform_create(self, serializer):
         invoice = serializer.save()
         # Si des items existent (créés via admin ou autre), aligner le total

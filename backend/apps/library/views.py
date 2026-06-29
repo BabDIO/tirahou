@@ -1,11 +1,14 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Sum, Count, Q, Avg
+from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 from .models import LibraryDocument, Borrowing, Reservation, DocumentRating, ReadingList
-from .serializers import LibraryDocumentSerializer
+from .serializers import (
+    LibraryDocumentSerializer, BorrowingSerializer,
+    ReservationSerializer, DocumentRatingSerializer, ReadingListSerializer,
+)
 
 
 class LibraryDocumentViewSet(viewsets.ModelViewSet):
@@ -241,3 +244,169 @@ class LibraryDocumentViewSet(viewsets.ModelViewSet):
         """Documents récents"""
         docs = self.get_queryset().order_by('-created_at')[:20]
         return Response(LibraryDocumentSerializer(docs, many=True, context={'request': request}).data)
+
+
+class BorrowingViewSet(viewsets.ModelViewSet):
+    """Gestion des emprunts — bibliothécaire + emprunts propres"""
+    serializer_class = BorrowingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['status', 'document']
+    ordering_fields = ['borrowed_at', 'due_date']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Borrowing.objects.none()
+        user = self.request.user
+        # Bibliothécaire et admin voient tout
+        if user.roles.filter(name__in=['super_admin', 'admin_institutionnel', 'bibliothecaire']).exists():
+            return Borrowing.objects.select_related('document', 'borrower').all()
+        # Les autres ne voient que les leurs
+        return Borrowing.objects.select_related('document', 'borrower').filter(borrower=user)
+
+    @action(detail=True, methods=['post'])
+    def return_book(self, request, pk=None):
+        """Enregistrer le retour d'un exemplaire"""
+        borrowing = self.get_object()
+        if borrowing.status == 'retourne':
+            return Response({'detail': 'Déjà retourné.'}, status=400)
+        penalty = borrowing.calculate_penalty()
+        borrowing.status = 'retourne'
+        borrowing.returned_at = timezone.now()
+        borrowing.save(update_fields=['status', 'returned_at', 'late_days', 'penalty_amount', 'updated_at'])
+        borrowing.document.return_copy()
+        return Response({
+            'detail': 'Retour enregistré.',
+            'late_days': borrowing.late_days,
+            'penalty_amount': float(penalty),
+        })
+
+    @action(detail=True, methods=['post'])
+    def mark_penalty_paid(self, request, pk=None):
+        borrowing = self.get_object()
+        borrowing.penalty_paid = True
+        borrowing.save(update_fields=['penalty_paid'])
+        return Response({'detail': 'Pénalité marquée comme payée.'})
+
+    @action(detail=False, methods=['get'])
+    def overdue(self, request):
+        """Emprunts en retard"""
+        overdue = self.get_queryset().filter(status__in=['en_cours', 'en_retard']).filter(
+            due_date__lt=timezone.now().date()
+        )
+        for b in overdue:
+            b.calculate_penalty()
+        return Response(BorrowingSerializer(overdue, many=True).data)
+
+
+class ReservationViewSet(viewsets.ModelViewSet):
+    """Gestion des réservations"""
+    serializer_class = ReservationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['status', 'document']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Reservation.objects.none()
+        user = self.request.user
+        if user.roles.filter(name__in=['super_admin', 'admin_institutionnel', 'bibliothecaire']).exists():
+            return Reservation.objects.select_related('document', 'user').all()
+        return Reservation.objects.select_related('document', 'user').filter(user=user)
+
+    def perform_create(self, serializer):
+        document = serializer.validated_data['document']
+        position = Reservation.objects.filter(
+            document=document, status='en_attente'
+        ).count() + 1
+        serializer.save(user=self.request.user, position=position)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        reservation = self.get_object()
+        if reservation.user != request.user and not request.user.roles.filter(
+            name__in=['super_admin', 'bibliothecaire']
+        ).exists():
+            return Response({'detail': 'Permission refusée.'}, status=403)
+        reservation.status = 'annule'
+        reservation.save()
+        return Response({'detail': 'Réservation annulée.'})
+
+    @action(detail=True, methods=['post'])
+    def notify_available(self, request, pk=None):
+        """Notifier l'utilisateur que le document est disponible"""
+        reservation = self.get_object()
+        reservation.status = 'disponible'
+        reservation.available_at = timezone.now()
+        reservation.notified = True
+        reservation.save()
+        from apps.communication.models import Notification
+        Notification.objects.create(
+            recipient=reservation.user,
+            title="📖 Document disponible",
+            message=f"'{reservation.document.title}' est maintenant disponible. Venez le récupérer.",
+            type='info',
+            priority='high',
+            action_url='/library',
+            icon='book-open',
+            color='green',
+            is_sent=True,
+            sent_at=timezone.now()
+        )
+        return Response({'detail': 'Utilisateur notifié.'})
+
+
+class DocumentRatingViewSet(viewsets.ModelViewSet):
+    """Évaluations de documents"""
+    serializer_class = DocumentRatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['document']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return DocumentRating.objects.none()
+        return DocumentRating.objects.select_related('document', 'user').filter(
+            user=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ReadingListViewSet(viewsets.ModelViewSet):
+    """Listes de lecture personnalisées"""
+    serializer_class = ReadingListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['is_public']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ReadingList.objects.none()
+        user = self.request.user
+        from django.db.models import Q
+        return ReadingList.objects.filter(
+            Q(user=user) | Q(is_public=True)
+        ).prefetch_related('documents')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def add_document(self, request, pk=None):
+        reading_list = self.get_object()
+        doc_id = request.data.get('document_id')
+        try:
+            doc = LibraryDocument.objects.get(id=doc_id, is_active=True)
+            reading_list.documents.add(doc)
+            return Response({'detail': 'Document ajouté à la liste.'})
+        except LibraryDocument.DoesNotExist:
+            return Response({'detail': 'Document introuvable.'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def remove_document(self, request, pk=None):
+        reading_list = self.get_object()
+        doc_id = request.data.get('document_id')
+        try:
+            doc = LibraryDocument.objects.get(id=doc_id)
+            reading_list.documents.remove(doc)
+            return Response({'detail': 'Document retiré.'})
+        except LibraryDocument.DoesNotExist:
+            return Response({'detail': 'Document introuvable.'}, status=404)

@@ -347,6 +347,7 @@ export const analyticsApi = {
   // Reporting avancé
   getReport: (params?: object) => api.get('/analytics/report/', { params }),
   getLmsStats: (params?: object) => api.get('/analytics/lms-stats/', { params }),
+  getAttendanceStats: (params?: object) => api.get('/analytics/attendance-stats/', { params }),
   exportStudents: (params?: object) =>
     api.get('/analytics/export/students/', { params, responseType: 'blob' }),
   exportGrades: (params?: object) =>

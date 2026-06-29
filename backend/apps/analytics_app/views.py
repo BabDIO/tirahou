@@ -44,9 +44,14 @@ def global_dashboard(request):
     from apps.finance.models import Invoice
     from apps.evaluation.models import SemesterResult
     from apps.lms.models import CourseSpace
-    from django.db.models import Count
-    from django.utils import timezone
-    import datetime
+    from apps.attendance.models import AbsenceSummary
+    from django.db.models import Count, Avg
+
+    # Taux d'assiduité global réel
+    attendance_data = AbsenceSummary.objects.filter(
+        total_sessions__gt=0
+    ).aggregate(avg_rate=Avg('attendance_rate'))
+    attendance_rate = round(float(attendance_data['avg_rate'] or 0), 1)
 
     data = {
         'students': {
@@ -65,6 +70,9 @@ def global_dashboard(request):
         },
         'results': {
             'average': SemesterResult.objects.filter(published=True).aggregate(avg=Avg('average'))['avg'] or 0,
+        },
+        'attendance': {
+            'global_rate': attendance_rate,
         },
         'enrollment_trend': _get_enrollment_trend(),
     }
@@ -97,6 +105,42 @@ def _get_enrollment_trend():
             'inscrits': item['count'],
         })
     return result
+
+
+@extend_schema(responses={200: OpenApiResponse(description='Statistiques LMS détaillées')})
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def attendance_stats(request):
+    """Statistiques d'assiduité globales réelles."""
+    from apps.attendance.models import AbsenceSummary, AttendanceRecord
+    from django.db.models import Avg, Count
+
+    course_space_id = request.query_params.get('course_space')
+    student_id = request.query_params.get('student')
+
+    qs = AbsenceSummary.objects.filter(total_sessions__gt=0)
+    if course_space_id:
+        qs = qs.filter(course_space_id=course_space_id)
+    if student_id:
+        qs = qs.filter(student_id=student_id)
+
+    agg = qs.aggregate(
+        avg_rate=Avg('attendance_rate'),
+        avg_punctuality=Avg('punctuality_rate'),
+        total_absences=Sum('absent_count'),
+        total_justified=Sum('justified_count'),
+    )
+
+    alert_counts = qs.values('alert_level').annotate(count=Count('id'))
+
+    return Response({
+        'global_rate': round(float(agg['avg_rate'] or 0), 1),
+        'punctuality_rate': round(float(agg['avg_punctuality'] or 0), 1),
+        'total_absences': agg['total_absences'] or 0,
+        'total_justified': agg['total_justified'] or 0,
+        'by_alert_level': list(alert_counts),
+        'at_risk_count': qs.filter(alert_level__in=['critical', 'exclusion_risk']).count(),
+    })
 
 
 @extend_schema(responses={200: OpenApiResponse(description='Statistiques LMS détaillées')})

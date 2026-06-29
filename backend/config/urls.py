@@ -64,6 +64,9 @@ urlpatterns = [
 
     # Bibliothèque numérique
     path(API_V1, include('apps.library.urls')),
+
+    # API Utilitaires (health, info, stats)
+    path(API_V1, include('apps.api.urls')),
 ]
 
 if settings.DEBUG:

@@ -12,7 +12,6 @@ from .serializers import (
     QuizSerializer, QuestionSerializer, QuizAttemptSerializer, StudentProgressSerializer,
 )
 
-
 class CourseSpaceViewSet(viewsets.ModelViewSet):
     queryset = CourseSpace.objects.filter(is_active=True).select_related('ue', 'academic_year')
     permission_classes = [permissions.IsAuthenticated]
@@ -113,6 +112,19 @@ class CourseModuleViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['course_space', 'is_published']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CourseModule.objects.none()
+        user = self.request.user
+        qs = CourseModule.objects.select_related('course_space')
+        # Enseignant : seulement ses cours
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(course_space__teachers=user)
+        # Étudiant : seulement modules publiés de ses cours
+        if hasattr(user, 'student_profile'):
+            return qs.filter(course_space__enrolled_students=user.student_profile, is_published=True)
+        return qs
+
 
 class CourseResourceViewSet(viewsets.ModelViewSet):
     queryset = CourseResource.objects.all().select_related('module')
@@ -120,12 +132,42 @@ class CourseResourceViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['module', 'type', 'is_published']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CourseResource.objects.none()
+        user = self.request.user
+        qs = CourseResource.objects.select_related('module__course_space')
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(module__course_space__teachers=user)
+        if hasattr(user, 'student_profile'):
+            return qs.filter(
+                module__course_space__enrolled_students=user.student_profile,
+                is_published=True
+            )
+        return qs
+
 
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Assignment.objects.all().select_related('course_space')
     serializer_class = AssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['course_space', 'type', 'status']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Assignment.objects.none()
+        user = self.request.user
+        qs = Assignment.objects.select_related('course_space')
+        # Enseignant : seulement ses cours
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(course_space__teachers=user)
+        # Étudiant : devoirs publiés de ses cours
+        if hasattr(user, 'student_profile'):
+            return qs.filter(
+                course_space__enrolled_students=user.student_profile,
+                status='publie'
+            )
+        return qs
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
@@ -159,6 +201,20 @@ class QuizViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['course_space', 'is_published']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Quiz.objects.none()
+        user = self.request.user
+        qs = Quiz.objects.select_related('course_space')
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(course_space__teachers=user)
+        if hasattr(user, 'student_profile'):
+            return qs.filter(
+                course_space__enrolled_students=user.student_profile,
+                is_published=True
+            )
+        return qs
+
     @action(detail=True, methods=['post'])
     def start_attempt(self, request, pk=None):
         quiz = self.get_object()
@@ -175,6 +231,52 @@ class QuizViewSet(viewsets.ModelViewSet):
         return Response(QuizAttemptSerializer(attempt).data, status=status.HTTP_201_CREATED)
 
 
+class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
+    """Soumissions de devoirs — lecture + correction."""
+    serializer_class = AssignmentSubmissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['assignment', 'student', 'status']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return AssignmentSubmission.objects.none()
+        user = self.request.user
+        qs = AssignmentSubmission.objects.select_related('assignment', 'student__user')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        return qs
+
+    @action(detail=True, methods=['patch'])
+    def grade(self, request, pk=None):
+        """Corriger un rendu (enseignant)."""
+        submission = self.get_object()
+        grade_val = request.data.get('grade')
+        feedback = request.data.get('feedback', '')
+        if grade_val is None:
+            return Response({'detail': 'grade requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        submission.grade = grade_val
+        submission.feedback = feedback
+        submission.graded_by = request.user
+        submission.graded_at = timezone.now()
+        submission.status = 'corrige'
+        submission.save()
+        # Notifier l'étudiant
+        try:
+            from apps.communication.models import Notification
+            Notification.objects.create(
+                recipient=submission.student.user,
+                title=f"Devoir corrigé — {submission.assignment.title}",
+                message=f"Votre devoir a été corrigé. Note : {grade_val}/20",
+                type='resultat', priority='high',
+                action_url='/my-assignments',
+                icon='check-circle', color='emerald',
+                is_sent=True, sent_at=timezone.now()
+            )
+        except Exception:
+            pass
+        return Response(AssignmentSubmissionSerializer(submission).data)
+
+
 class StudentProgressViewSet(viewsets.ReadOnlyModelViewSet):
     """Progression des étudiants par espace de cours."""
     serializer_class = StudentProgressSerializer
@@ -183,7 +285,6 @@ class StudentProgressViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         qs = StudentProgress.objects.select_related('student__user', 'course_space__ue')
-        # Si étudiant, ne voir que sa propre progression
         user = self.request.user
         if hasattr(user, 'student_profile'):
             qs = qs.filter(student=user.student_profile)

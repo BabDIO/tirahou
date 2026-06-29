@@ -37,6 +37,28 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
     filterset_fields = ['ec', 'teacher', 'room', 'group', 'academic_year', 'mode', 'status']
     ordering_fields = ['start_datetime']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ScheduledSession.objects.none()
+        user = self.request.user
+        qs = ScheduledSession.objects.select_related('ec__ue', 'teacher__user', 'room', 'group')
+
+        # Enseignant : seulement ses séances
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(teacher=user)
+
+        # Étudiant : séances de son groupe
+        if hasattr(user, 'student_profile'):
+            student = user.student_profile
+            from apps.enrollment.models import PedaEnrollment
+            group_ids = PedaEnrollment.objects.filter(
+                admin_enrollment__student=student,
+                admin_enrollment__status='validee'
+            ).values_list('group_id', flat=True)
+            return qs.filter(group_id__in=group_ids, status__in=['planifie', 'confirme', 'realise'])
+
+        return qs
+
     def perform_create(self, serializer):
         # Vérification de conflit de salle
         data = serializer.validated_data

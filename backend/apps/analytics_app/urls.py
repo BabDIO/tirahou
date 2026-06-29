@@ -19,6 +19,7 @@ urlpatterns = [
     path('export/grades/', export_grades_excel, name='export_grades'),
     path('export/payments/', export_payments_csv, name='export_payments'),
     path('lms-stats/', views.lms_stats, name='lms_stats'),
+    path('attendance-stats/', views.attendance_stats, name='attendance_stats'),
     # AMÉLIORATIONS: Prédiction et analyse
     path('predict-success/', views.predict_student_success, name='predict_student_success'),
     path('students-at-risk/', views.students_at_risk, name='students_at_risk'),

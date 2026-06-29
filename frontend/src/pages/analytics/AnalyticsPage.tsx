@@ -56,6 +56,12 @@ export default function AnalyticsPage() {
     enabled: tab === 'lms',
   })
 
+  const { data: attendanceData } = useQuery({
+    queryKey: ['attendance-stats'],
+    queryFn: () => analyticsApi.getAttendanceStats().then(r => r.data),
+    enabled: tab === 'overview' || tab === 'academic',
+  })
+
   const handleExport = async (type: 'students' | 'grades' | 'payments') => {
     const tid = toast.loading('Export en cours...')
     try {
@@ -88,7 +94,7 @@ export default function AnalyticsPage() {
     : 0
   const successRate = report?.results?.success_rate ?? 0
   const avgCompletion = lmsStats?.avg_completion ?? 0
-  const attendanceRate = 75 // TODO: endpoint assiduité globale
+  const attendanceRate = Math.round(attendanceData?.global_rate ?? 75)
 
   const radarData = [
     { subject: 'Inscriptions', A: enrollmentRate },

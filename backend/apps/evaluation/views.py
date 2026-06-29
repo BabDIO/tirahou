@@ -39,6 +39,23 @@ class GradeViewSet(viewsets.ModelViewSet):
     filterset_fields = ['exam_session', 'ec', 'student', 'status']
     search_fields = ['student__student_id', 'student__user__last_name']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Grade.objects.none()
+        user = self.request.user
+        qs = Grade.objects.select_related('student__user', 'ec__ue', 'exam_session', 'entered_by')
+
+        # Étudiant : seulement ses notes publiées
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile, status='publiee')
+
+        # Enseignant : seulement les notes des EC qu'il enseigne
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(ec__teachers=user)
+
+        # Admin, scolarité, responsable : tout
+        return qs
+
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
         grade = self.get_object()
@@ -80,6 +97,22 @@ class SemesterResultViewSet(viewsets.ModelViewSet):
     serializer_class = SemesterResultSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['semester', 'exam_session', 'published', 'decision']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return SemesterResult.objects.none()
+        user = self.request.user
+        qs = SemesterResult.objects.select_related('student__user', 'semester__program', 'exam_session')
+        # Étudiant : seulement ses résultats publiés
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile, published=True)
+        # Enseignant : résultats publiés de ses étudiants
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(
+                student__admin_enrollments__peda_enrollments__ue_enrollments__ue__ecs__teachers=user,
+                published=True
+            ).distinct()
+        return qs
 
     @action(detail=False, methods=['post'])
     def publish_all(self, request):

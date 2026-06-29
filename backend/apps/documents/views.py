@@ -19,6 +19,19 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['student', 'category', 'status']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return StudentDocument.objects.none()
+        user = self.request.user
+        qs = StudentDocument.objects.select_related('student__user', 'category')
+        # Étudiant : seulement ses documents
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        # Enseignant : aucun accès aux documents personnels
+        if hasattr(user, 'teacher_profile'):
+            return StudentDocument.objects.none()
+        return qs
+
     def perform_create(self, serializer):
         file = self.request.FILES.get('file')
         serializer.save(
@@ -52,6 +65,19 @@ class GeneratedDocumentViewSet(viewsets.ModelViewSet):
     serializer_class = GeneratedDocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['student', 'doc_type', 'status']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return GeneratedDocument.objects.none()
+        user = self.request.user
+        qs = GeneratedDocument.objects.select_related('student__user')
+        # Étudiant : seulement ses documents générés
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        # Enseignant : aucun accès
+        if hasattr(user, 'teacher_profile'):
+            return GeneratedDocument.objects.none()
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(generated_by=self.request.user)

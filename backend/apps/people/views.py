@@ -22,15 +22,24 @@ class StudentViewSet(viewsets.ModelViewSet):
         if getattr(self, 'swagger_fake_view', False):
             return Student.objects.none()
         user = self.request.user
-        qs = super().get_queryset()
-        # Étudiant ne voit que son propre profil
-        if hasattr(user, 'student_profile') and not user.is_staff:
-            if not user.roles.filter(name__in=[
-                'super_admin', 'admin_institutionnel', 'admin_scolarite',
-                'responsable_pedagogique', 'chef_departement'
-            ]).exists():
-                return qs.filter(user=user)
-        return qs
+        qs = Student.objects.filter(is_active=True).select_related('user', 'current_program')
+
+        # Étudiant : seulement son propre profil
+        if hasattr(user, 'student_profile'):
+            return qs.filter(user=user)
+
+        # Enseignant : seulement ses étudiants inscrits dans ses cours
+        if hasattr(user, 'teacher_profile'):
+            from apps.enrollment.models import UEEnrollment
+            student_ids = UEEnrollment.objects.filter(
+                ue__ecs__teachers=user
+            ).values_list(
+                'peda_enrollment__admin_enrollment__student_id', flat=True
+            ).distinct()
+            return qs.filter(id__in=student_ids)
+
+        # Admin, scolarité, responsable : tous les étudiants
+        return qs.order_by('id')
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -102,6 +111,16 @@ class TeacherViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['grade', 'status', 'department']
     search_fields = ['teacher_id', 'user__first_name', 'user__last_name']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Teacher.objects.none()
+        user = self.request.user
+        qs = Teacher.objects.filter(is_active=True).select_related('user', 'department')
+        # Enseignant : seulement son propre profil
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(user=user)
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'create':

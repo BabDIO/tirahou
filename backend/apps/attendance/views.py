@@ -13,6 +13,19 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['is_open']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return AttendanceSheet.objects.none()
+        user = self.request.user
+        qs = AttendanceSheet.objects.select_related('session__ec__ue', 'session__teacher')
+        # Enseignant : seulement ses séances
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(session__teacher=user)
+        # Étudiant : pas accès direct aux feuilles
+        if hasattr(user, 'student_profile'):
+            return AttendanceSheet.objects.none()
+        return qs
+
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
@@ -97,6 +110,19 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
     serializer_class = AttendanceRecordSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['sheet', 'student', 'status', 'justification_status']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return AttendanceRecord.objects.none()
+        user = self.request.user
+        qs = AttendanceRecord.objects.select_related('student__user', 'sheet__session')
+        # Enseignant : seulement ses séances
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(sheet__session__teacher=user)
+        # Étudiant : seulement ses propres présences
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        return qs
 
     @action(detail=True, methods=['post'])
     def justify(self, request, pk=None):
