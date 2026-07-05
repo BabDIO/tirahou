@@ -1,168 +1,349 @@
-# TIRAHOU — Plateforme Intégrée de Gestion Universitaire
+# 🎓 Plateforme de Gestion Universitaire - Mémoire TIRAHOU
 
-[![Backend](https://img.shields.io/badge/Backend-Django%205.2-092E20?logo=django)](https://djangoproject.com)
-[![Frontend](https://img.shields.io/badge/Frontend-React%2019-61DAFB?logo=react)](https://react.dev)
-[![API](https://img.shields.io/badge/API-REST%20%2B%20JWT-orange)](https://www.django-rest-framework.org)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10+-green.svg)
+![Django](https://img.shields.io/badge/django-4.2+-success.svg)
+![React](https://img.shields.io/badge/react-18+-61DAFB.svg)
+![TypeScript](https://img.shields.io/badge/typescript-5+-3178C6.svg)
+![License](https://img.shields.io/badge/license-MIT-orange.svg)
 
-ERP universitaire fullstack couvrant l'intégralité du cycle de vie étudiant :
-candidature → admission → inscription → LMS → évaluation → délibération → diplomation.
-
----
-
-## 🗂 Structure du projet
-
-```
-tirahou/
-├── backend/          # Django 5.2 + DRF — API REST
-└── frontend/         # React 19 + TypeScript + Vite — SPA/PWA
-```
+> Système complet de gestion universitaire avec classes virtuelles, évaluation, LMS et bien plus.
 
 ---
 
-## ⚡ Lancement rapide (développement)
+## 📋 Table des Matières
+
+- [À Propos](#-à-propos)
+- [Fonctionnalités](#-fonctionnalités)
+- [Technologies](#-technologies)
+- [Installation](#-installation)
+- [Documentation](#-documentation)
+- [Captures d'Écran](#-captures-décran)
+- [Contribuer](#-contribuer)
+- [Licence](#-licence)
+
+---
+
+## 🎯 À Propos
+
+Plateforme complète de gestion universitaire développée dans le cadre d'un mémoire de fin d'études. Cette solution intègre tous les aspects de la vie académique : inscriptions, évaluations, classes virtuelles, gestion documentaire, finance, et bien plus.
+
+### 🌟 Points Forts
+
+- ✅ **Architecture moderne** - Backend Django REST + Frontend React TypeScript
+- ✅ **Classes virtuelles intégrées** - Système de visioconférence complet
+- ✅ **Gestion multi-rôles** - Étudiants, Enseignants, Scolarité, Admin
+- ✅ **Interface intuitive** - Design moderne et responsive
+- ✅ **API RESTful** - Documentation Swagger/OpenAPI
+- ✅ **Sécurisé** - Authentification JWT, permissions granulaires
+- ✅ **Évolutif** - Architecture modulaire et extensible
+
+---
+
+## 🚀 Fonctionnalités
+
+### 👥 Gestion des Acteurs
+- Étudiants, Enseignants, Personnel administratif
+- Profils détaillés avec historique académique
+- Gestion des permissions par rôle
+
+### 📚 Gestion Académique
+- Programmes, Semestres, UE, EC
+- Inscription administrative et pédagogique
+- Groupes et emplois du temps
+- Système LMD complet
+
+### 📝 Évaluation
+- **Saisie de notes** par enseignants
+- Calcul automatique des moyennes (CC 40% + Examen 60%)
+- **Validation** par responsables pédagogiques
+- Publication des résultats
+- Contestations et réclamations
+- Relevés de notes automatisés
+
+### 🎥 Classes Virtuelles
+- **Visioconférence intégrée** (BigBlueButton, Jitsi, Zoom, Meet, Teams)
+- Planification et gestion des sessions
+- **Chat en temps réel**
+- Partage d'écran
+- Enregistrement des sessions
+- Suivi de présence (en ligne/présentiel)
+- **Test caméra/micro** avant de rejoindre
+- Mode hybride (présentiel + distanciel)
+
+### 💰 Finance
+- Facturation et paiements
+- Échéanciers personnalisés
+- Bourses et exonérations
+- Suivi des encaissements
+- Rapports financiers
+
+### 📄 Documents
+- Génération automatique (certificats, relevés, attestations)
+- QR codes de vérification
+- Gestion électronique des documents (GED)
+- Upload et validation de pièces
+- Historique et traçabilité
+
+### 🎓 LMS (Learning Management System)
+- Espaces de cours en ligne
+- Ressources pédagogiques
+- Devoirs et soumissions
+- Quiz et évaluations
+- Suivi de progression
+
+### 📊 Analytics & Reporting
+- Tableaux de bord personnalisés
+- Statistiques académiques
+- Taux de réussite
+- Suivi d'engagement
+- Prédictions de performance
+- Exports Excel/PDF
+
+### 🔔 Communication
+- Notifications en temps réel
+- Annonces générales
+- Messages privés
+- Forums de discussion
+
+### 📖 Bibliothèque
+- Catalogue de documents
+- Recherche avancée
+- Téléchargements
+- Statistiques d'utilisation
+
+---
+
+## 🛠️ Technologies
 
 ### Backend
+- **Python** 3.10+
+- **Django** 4.2+
+- **Django REST Framework** 3.14+
+- **PostgreSQL** 14+
+- **Celery** (tâches asynchrones)
+- **Redis** (cache & message broker)
+- **JWT** (authentification)
+
+### Frontend
+- **React** 18+
+- **TypeScript** 5+
+- **Vite** (build tool)
+- **TanStack Query** (data fetching)
+- **TailwindCSS** (styling)
+- **Zustand** (state management)
+- **React Router** 6+ (routing)
+- **Lucide React** (icons)
+
+### DevOps
+- **Git** (version control)
+- **Docker** (containerization)
+- **GitHub Actions** (CI/CD)
+- **Vercel** (frontend hosting)
+
+---
+
+## 📦 Installation
+
+### Méthode Rapide
 
 ```bash
+# Cloner le projet
+git clone https://github.com/BabDIO/tirahou.git
+cd tirahou
+
+# Backend
 cd backend
 python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-
+venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-cp .env.example .env          # éditer les variables
+cp .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
-```
 
-API disponible sur : http://localhost:8000/api/v1/
-Swagger UI : http://localhost:8000/api/docs/
-
-### Frontend
-
-```bash
+# Frontend (nouveau terminal)
 cd frontend
 npm install
-cp .env.example .env.local    # éditer VITE_API_URL
+cp .env.example .env
 npm run dev
 ```
 
-Application disponible sur : http://localhost:3000/
+Pour une installation détaillée, consultez [QUICK_START.md](QUICK_START.md)
 
 ---
 
-## 🌐 Déploiement en production
+## 📚 Documentation
 
-### Backend → Render.com
+- **[QUICK_START.md](QUICK_START.md)** - Guide de démarrage rapide
+- **[IMPROVEMENTS.md](frontend/IMPROVEMENTS.md)** - Améliorations v1.2.0
+- **[BACKEND_CONFORMITY.md](frontend/BACKEND_CONFORMITY.md)** - Conformité API
+- **[CHANGELOG.md](CHANGELOG.md)** - Historique des versions
 
-1. Créer un compte sur [render.com](https://render.com)
-2. **New → Web Service** → connecter ce dépôt GitHub
-3. Paramètres :
-   - **Root Directory** : `backend`
-   - **Build Command** : `./build.sh`
-   - **Start Command** : `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2`
-4. Variables d'environnement à configurer :
-
-| Variable | Valeur |
-|----------|--------|
-| `DJANGO_SETTINGS_MODULE` | `config.settings_production` |
-| `SECRET_KEY` | (générer avec `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`) |
-| `DATABASE_URL` | (fourni automatiquement par Render PostgreSQL) |
-| `ALLOWED_HOSTS` | `tirahou-backend.onrender.com` |
-| `CORS_ALLOWED_ORIGINS` | `https://tirahou.vercel.app` |
-| `DEBUG` | `False` |
-
-5. **New → PostgreSQL** → noter l'URL de connexion → l'ajouter comme `DATABASE_URL`
-
-### Frontend → Vercel
-
-1. Créer un compte sur [vercel.com](https://vercel.com)
-2. **New Project** → importer ce dépôt GitHub
-3. Paramètres :
-   - **Root Directory** : `frontend`
-   - **Framework** : Vite
-   - **Build Command** : `npm run build`
-   - **Output Directory** : `dist`
-4. Variable d'environnement :
-   - `VITE_API_URL` = `https://tirahou-backend.onrender.com/api/v1`
+### API Documentation
+- Swagger UI: http://localhost:8000/api/docs
+- ReDoc: http://localhost:8000/api/redoc
 
 ---
 
-## 🏗 Architecture technique
+## 📸 Captures d'Écran
 
-```
-┌─────────────────────────────┐     HTTPS/JWT      ┌──────────────────────────┐
-│  Frontend React 19 (Vercel) │ ◄─────────────────► │  Backend Django (Render) │
-│  TypeScript + Vite + PWA    │                     │  DRF + PostgreSQL + Redis│
-└─────────────────────────────┘                     └──────────────────────────┘
-```
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
 
-### Modules backend (19 apps Django)
+### Classes Virtuelles
+![Virtual Class](docs/screenshots/virtual-class.png)
 
-| App | Domaine |
-|-----|---------|
-| `accounts` | Auth JWT, RBAC 13 rôles, Audit |
-| `academic` | Structure universitaire, Années, LMD |
-| `programs` | Programmes, Semestres, UE, EC |
-| `people` | Étudiants, Enseignants, Personnel |
-| `admissions` | Candidatures, Documents, Décisions |
-| `enrollment` | Inscriptions admin + péda + UE |
-| `finance` | Factures, Paiements, Bourses |
-| `documents` | GED, QR code, PDF |
-| `evaluation` | Notes, Résultats, Jury |
-| `lms` | Cours, Quiz, Devoirs, Progression |
-| `virtual_class` | Classes virtuelles hybrides |
-| `attendance` | Présences QR code |
-| `scheduling_app` | Emploi du temps, Salles |
-| `internships` | Stages, Mémoires, Soutenances |
-| `communication` | Notifications, Messagerie, Forums |
-| `analytics_app` | Engagement, Prédiction décrochage |
-| `library` | Bibliothèque numérique + physique |
+### Saisie de Notes
+![Grades](docs/screenshots/grades.png)
 
-### Rôles utilisateurs (13)
-
-`super_admin` · `admin_institutionnel` · `admin_scolarite` · `admin_financier` · `responsable_pedagogique` · `chef_departement` · `enseignant` · `tuteur` · `etudiant` · `doctorant` · `bibliothecaire` · `invite` · `support_technique`
+### Gestion Documentaire
+![Documents](docs/screenshots/documents.png)
 
 ---
 
-## 📋 Variables d'environnement
+## 🎨 Architecture
 
-### Backend (`.env`)
-
-```env
-SECRET_KEY=your-secret-key-min-50-chars
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DB_ENGINE=django.db.backends.postgresql
-DB_NAME=tirahou_db
-DB_USER=postgres
-DB_PASSWORD=password
-DB_HOST=localhost
-DB_PORT=5432
-REDIS_URL=redis://localhost:6379/0
-CORS_ALLOWED_ORIGINS=http://localhost:3000
-JWT_ACCESS_TOKEN_LIFETIME_HOURS=8
-JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
 ```
-
-### Frontend (`.env.local`)
-
-```env
-VITE_API_URL=http://localhost:8000/api/v1
+memoire/
+├── backend/                # Django Backend
+│   ├── apps/              # Applications Django
+│   │   ├── accounts/      # Authentification
+│   │   ├── people/        # Étudiants, Enseignants
+│   │   ├── academic/      # Structure académique
+│   │   ├── programs/      # Programmes et maquettes
+│   │   ├── admissions/    # Candidatures
+│   │   ├── enrollment/    # Inscriptions
+│   │   ├── evaluation/    # Notes et évaluations
+│   │   ├── finance/       # Finance et paiements
+│   │   ├── documents/     # GED
+│   │   ├── lms/           # LMS
+│   │   ├── virtual_class/ # Classes virtuelles
+│   │   ├── scheduling/    # Emplois du temps
+│   │   ├── attendance/    # Présences
+│   │   ├── library/       # Bibliothèque
+│   │   ├── analytics/     # Analytics
+│   │   └── communication/ # Notifications
+│   ├── config/            # Configuration Django
+│   └── requirements.txt   # Dépendances Python
+│
+└── frontend/              # React Frontend
+    ├── src/
+    │   ├── api/           # API clients
+    │   ├── components/    # Composants React
+    │   ├── pages/         # Pages de l'application
+    │   ├── lib/           # Utilitaires
+    │   ├── hooks/         # Custom hooks
+    │   ├── store/         # State management
+    │   └── types/         # TypeScript types
+    └── package.json       # Dépendances NPM
 ```
 
 ---
 
-## 🔑 Comptes de démonstration
+## 🧪 Tests
 
-Après `python manage.py createsuperuser`, connectez-vous sur `/admin` Django pour créer des utilisateurs avec les rôles souhaités.
+### Backend
+```bash
+cd backend
+python manage.py test
+coverage run manage.py test
+coverage report
+```
+
+### Frontend
+```bash
+cd frontend
+npm run test
+npm run test:coverage
+```
 
 ---
 
-## 📄 License
+## 🚢 Déploiement
 
-MIT — Projet académique TIRAHOU 2024-2025
+### Backend (Production)
+```bash
+cd backend
+pip install -r requirements.txt
+python manage.py collectstatic
+gunicorn config.wsgi:application
+```
+
+### Frontend (Production)
+```bash
+cd frontend
+npm run build
+# Déployer le dossier dist/
+```
+
+---
+
+## 🤝 Contribuer
+
+Les contributions sont les bienvenues !
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit (`git commit -m 'Add AmazingFeature'`)
+4. Push (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+---
+
+## 📈 Roadmap
+
+### v1.3.0 (À venir)
+- [ ] Intégration WebRTC complète
+- [ ] Socket.io pour temps réel
+- [ ] Tableau blanc collaboratif
+- [ ] Système de thèmes (clair/sombre)
+- [ ] Progressive Web App (PWA)
+
+### v2.0.0 (Future)
+- [ ] Application mobile (React Native)
+- [ ] Internationalisation (i18n)
+- [ ] IA pour prédictions de réussite
+- [ ] Blockchain pour certificats
+- [ ] Chatbot d'assistance
+
+---
+
+## 👨‍💻 Auteur
+
+**TIRAHOU**
+- GitHub: [@BabDIO](https://github.com/BabDIO)
+- Email: tirahou@example.com
+
+---
+
+## 📄 Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## 🙏 Remerciements
+
+- Tous les contributeurs
+- Les mainteneurs des bibliothèques utilisées
+- La communauté open source
+
+---
+
+## 📞 Support
+
+Pour toute question ou problème :
+- 📧 Email: support@votre-universite.edu
+- 🐛 Issues: [GitHub Issues](https://github.com/BabDIO/tirahou/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/BabDIO/tirahou/discussions)
+
+---
+
+<div align="center">
+
+**⭐ Si ce projet vous a aidé, n'hésitez pas à lui donner une étoile ! ⭐**
+
+Made with ❤️ by TIRAHOU
+
+</div>
