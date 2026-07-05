@@ -50,7 +50,7 @@ export default function MyGradesPage() {
 
   const { data: gradesData, isLoading: loadGrades } = useQuery({
     queryKey: ['my-grades'],
-    queryFn: () => api.get('/student/grades/').then(r => r.data),
+    queryFn: () => api.get('/evaluation/student/grades/').then(r => r.data),
   })
 
   const { data: ueResults } = useQuery({
@@ -60,7 +60,7 @@ export default function MyGradesPage() {
 
   const contestMut = useMutation({
     mutationFn: ({ grade_id, reason }: { grade_id: string; reason: string }) =>
-      api.post('/student/contest/', { grade_id, reason }),
+      api.post('/evaluation/student/contest/', { grade_id, reason }),
     onSuccess: () => { toast.success('Réclamation soumise — en attente d\'examen'); setContestModal(null); setReason('') },
     onError: () => toast.error('Erreur lors de la soumission'),
   })

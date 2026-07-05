@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileText, Download, QrCode, Plus, Upload, Eye, Shield } from 'lucide-react'
 import { Card, Spinner, Badge, Empty, Modal, Alert } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
+import { getDocumentStatus } from '../../lib/statusHelpers'
+import { DOCUMENT_TYPES } from '../../lib/constants'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 
@@ -17,20 +19,6 @@ interface StudentDoc {
   file: string; rejection_reason: string
 }
 
-const DOC_TYPES = [
-  { value: 'certificat_scolarite', label: 'Certificat de scolarité' },
-  { value: 'certificat_frequentation', label: 'Certificat de fréquentation' },
-  { value: 'releve_notes', label: 'Relevé de notes' },
-  { value: 'attestation_reussite', label: 'Attestation de réussite' },
-  { value: 'carte_etudiant', label: 'Carte étudiant' },
-  { value: 'attestation_fin_cycle', label: 'Attestation de fin de cycle' },
-]
-
-const statusColor = (s: string) => ({
-  genere: 'badge-blue', signe: 'badge-yellow', delivre: 'badge-green', annule: 'badge-red',
-  valide: 'badge-green', rejete: 'badge-red', en_verification: 'badge-yellow', depose: 'badge-blue',
-}[s] ?? 'badge-gray')
-
 export default function MyDocumentsPage() {
   const qc = useQueryClient()
   const [tab, setTab] = useState<'generated' | 'uploaded'>('generated')
@@ -40,16 +28,16 @@ export default function MyDocumentsPage() {
 
   const { data: generatedData, isLoading: loadGen } = useQuery({
     queryKey: ['my-generated-docs'],
-    queryFn: () => api.get('/documents/generated/').then(r => r.data),
+    queryFn: () => api.get('/documents/generated-documents/').then(r => r.data),
   })
 
   const { data: uploadedData, isLoading: loadUp } = useQuery({
     queryKey: ['my-student-docs'],
-    queryFn: () => api.get('/documents/student/').then(r => r.data),
+    queryFn: () => api.get('/documents/student-documents/').then(r => r.data),
   })
 
   const requestMut = useMutation({
-    mutationFn: (type: string) => api.post('/documents/generated/', { doc_type: type }),
+    mutationFn: (type: string) => api.post('/documents/generated-documents/', { doc_type: type }),
     onSuccess: () => { toast.success('Demande soumise — la scolarité va générer votre document'); setShowRequest(false); qc.invalidateQueries({ queryKey: ['my-generated-docs'] }) },
     onError: () => toast.error('Erreur lors de la demande'),
   })
@@ -107,7 +95,7 @@ export default function MyDocumentsPage() {
                         <p className="text-xs text-gray-400 mt-0.5">Généré le {formatDate(doc.created_at)}</p>
                         {doc.valid_until && <p className="text-xs text-amber-600 mt-0.5">Valide jusqu'au {formatDate(doc.valid_until)}</p>}
                       </div>
-                      <Badge label={doc.status} className={statusColor(doc.status)} />
+                      <Badge label={getDocumentStatus(doc.status).label} className={getDocumentStatus(doc.status).badge} />
                     </div>
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
                       <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg flex items-center gap-1">
@@ -159,7 +147,7 @@ export default function MyDocumentsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Badge label={doc.status} className={statusColor(doc.status)} />
+                    <Badge label={getDocumentStatus(doc.status).label} className={getDocumentStatus(doc.status).badge} />
                     <a href={doc.file} target="_blank" rel="noopener noreferrer"
                       className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                       <Eye className="w-4 h-4 text-gray-500" />
@@ -178,7 +166,11 @@ export default function MyDocumentsPage() {
           <div>
             <label className="label">Type de document *</label>
             <select className="input" value={docType} onChange={e => setDocType(e.target.value)}>
-              {DOC_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {DOCUMENT_TYPES.map(t => (
+                <option key={t.value} value={t.value}>
+                  {t.icon} {t.label}
+                </option>
+              ))}
             </select>
           </div>
           <Alert type="info">Votre demande sera traitée par le service de scolarité. Vous serez notifié dès que le document est disponible.</Alert>

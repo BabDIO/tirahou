@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Award, Save, Check, BarChart2, Download, Upload } from 'lucide-react'
+import { Award, Save, BarChart2, Download, Upload } from 'lucide-react'
 import { Card, Spinner, Badge, Empty, Alert } from '../../components/ui'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
@@ -32,7 +32,7 @@ export default function TeacherGradesPage() {
 
   const { data: gradesData } = useQuery({
     queryKey: ['teacher-grades', selectedEc, selectedSession],
-    queryFn: () => api.get('/teacher/grades/', { params: { ec: selectedEc, exam_session: selectedSession } }).then(r => r.data),
+    queryFn: () => api.get('/evaluation/teacher/grades/', { params: { ec: selectedEc, exam_session: selectedSession } }).then(r => r.data),
     enabled: !!selectedEc && !!selectedSession,
     onSuccess: (data: { id: string; student: string; student_name: string; cc_grade: number | null; exam_grade: number | null; is_absent: boolean }[]) => {
       const map: Record<string, GradeEntry> = {}
@@ -45,12 +45,12 @@ export default function TeacherGradesPage() {
 
   const { data: stats } = useQuery({
     queryKey: ['class-stats', selectedEc, selectedSession],
-    queryFn: () => api.get('/teacher/statistics/', { params: { ec: selectedEc, exam_session: selectedSession } }).then(r => r.data),
+    queryFn: () => api.get('/evaluation/teacher/statistics/', { params: { ec: selectedEc, exam_session: selectedSession } }).then(r => r.data),
     enabled: !!selectedEc && !!selectedSession,
   })
 
   const saveGradeMut = useMutation({
-    mutationFn: (entry: GradeEntry) => api.post('/teacher/enter-grade/', {
+    mutationFn: (entry: GradeEntry) => api.post('/evaluation/teacher/enter-grade/', {
       student_id: entry.student_id, ec_id: selectedEc, exam_session_id: selectedSession,
       cc_grade: entry.cc_grade !== '' ? parseFloat(entry.cc_grade) : null,
       exam_grade: entry.exam_grade !== '' ? parseFloat(entry.exam_grade) : null,
@@ -58,11 +58,6 @@ export default function TeacherGradesPage() {
     }),
     onSuccess: () => { toast.success('Note enregistrée'); qc.invalidateQueries({ queryKey: ['teacher-grades', selectedEc, selectedSession] }) },
     onError: () => toast.error('Erreur lors de la sauvegarde'),
-  })
-
-  const validateBulkMut = useMutation({
-    mutationFn: () => api.post('/admin/validate-bulk/', { grade_ids: Object.values(entries).filter(e => e.id).map(e => e.id) }),
-    onSuccess: () => { toast.success('Notes validées'); qc.invalidateQueries({ queryKey: ['teacher-grades'] }) },
   })
 
   const studentList = students?.results ?? []
@@ -130,10 +125,7 @@ export default function TeacherGradesPage() {
             <div className="p-4 flex items-center justify-between">
               <p className="font-semibold text-sm text-gray-700">{studentList.length} étudiant(s)</p>
               <div className="flex gap-2">
-                <button onClick={() => validateBulkMut.mutate()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition">
-                  <Check className="w-4 h-4" /> Valider toutes
-                </button>
+                {/* La validation en masse est réservée aux responsables pédagogiques */}
               </div>
             </div>
             <div className="overflow-x-auto">

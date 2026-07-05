@@ -230,36 +230,44 @@ def predict_student_success(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def students_at_risk(request):
-    """AMÉLIORATION: Liste détaillée des étudiants à risque"""
+    """Liste détaillée des étudiants à risque de décrochage."""
     at_risk = EngagementScore.objects.filter(
         dropout_risk__in=['eleve', 'critique']
-    ).select_related('student', 'course_space').order_by('-dropout_risk', 'engagement_score')
-    
+    ).select_related('student__user', 'course_space').order_by('-dropout_risk', 'engagement_score')
+
     results = []
     for score in at_risk:
-        # Calculer la prédiction si pas déjà fait
-        if not score.success_prediction_score:
-            score.calculate_success_prediction()
-        
+        # Calcul prédictif robuste — ne pas sauvegarder pour éviter les erreurs
+        try:
+            if not score.success_prediction_score:
+                from apps.evaluation.models import Grade
+                from apps.attendance.models import AttendanceRecord
+                from django.db.models import Avg
+                avg_g = Grade.objects.filter(student=score.student).aggregate(avg=Avg('final_grade'))['avg'] or 0
+                att_total = AttendanceRecord.objects.filter(student=score.student).count()
+                att_pres  = AttendanceRecord.objects.filter(student=score.student, status='present').count()
+                att_rate  = (att_pres / max(att_total, 1)) * 100
+                pred = float(avg_g) * 0.35 + att_rate * 0.25 + float(score.engagement_score) * 0.15 + float(score.completion_rate) * 0.25
+                score.success_prediction_score = round(min(100, max(0, pred)), 2)
+        except Exception:
+            pass
+
         results.append({
-            'student_id': score.student.id,
+            'student_id': str(score.student.id),
             'student_name': score.student.user.get_full_name(),
             'student_number': score.student.student_id,
             'course': score.course_space.title,
             'risk_level': score.dropout_risk,
-            'prediction_score': float(score.success_prediction_score),
-            'success_probability': score.success_probability,
+            'prediction_score': float(score.success_prediction_score or 0),
+            'success_probability': score.success_probability or '',
             'engagement_score': float(score.engagement_score),
             'completion_rate': float(score.completion_rate),
             'days_inactive': score.days_inactive,
-            'recommendations': score.recommendations,
+            'recommendations': score.recommendations or [],
             'contact_email': score.student.user.email,
         })
-    
-    return Response({
-        'count': len(results),
-        'students': results
-    })
+
+    return Response({'count': len(results), 'students': results})
 
 
 @extend_schema(responses={200: OpenApiResponse(description='Prédiction de réussite étudiant')})

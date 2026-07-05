@@ -502,3 +502,6 @@ export const SkeletonTable = ({ rows = 5, cols = 5 }: { rows?: number; cols?: nu
     ))}
   </div>
 )
+
+// Export des Skeletons avancés
+export * from './Skeleton'

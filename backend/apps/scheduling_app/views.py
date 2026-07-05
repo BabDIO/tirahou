@@ -41,7 +41,7 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
         if getattr(self, 'swagger_fake_view', False):
             return ScheduledSession.objects.none()
         user = self.request.user
-        qs = ScheduledSession.objects.select_related('ec__ue', 'teacher__user', 'room', 'group')
+        qs = ScheduledSession.objects.select_related('ec__ue', 'room', 'group')
 
         # Enseignant : seulement ses séances
         if hasattr(user, 'teacher_profile'):

@@ -200,17 +200,17 @@ export const evaluationApi = {
   getStudentGrades: (params?: object) => api.get('/evaluation/student/grades/', { params }),
   getStudentTranscript: (params?: object) => api.get('/evaluation/student/transcript/', { params }),
   submitGradeContest: (data: object) => api.post('/evaluation/student/contest/', data),
-  
+
   // Enseignant
   getTeacherGrades: (params?: object) => api.get('/evaluation/teacher/grades/', { params }),
   getClassStatistics: (params?: object) => api.get('/evaluation/teacher/statistics/', { params }),
   enterGrade: (data: object) => api.post('/evaluation/teacher/enter-grade/', data),
-  
+
   // Responsable Pédagogique
   validateGradesBulk: (gradeIds: number[]) => api.post('/evaluation/admin/validate-bulk/', { grade_ids: gradeIds }),
   calculateUEResults: (examSessionId: string) => api.post('/evaluation/admin/calculate-ue/', { exam_session_id: examSessionId }),
   calculateSemesterResults: (examSessionId: string) => api.post('/evaluation/admin/calculate-semester/', { exam_session_id: examSessionId }),
-  
+
   // Admin Scolarité
   publishSemesterResults: (examSessionId: string) => api.post('/evaluation/admin/publish-results/', { exam_session_id: examSessionId }),
 }

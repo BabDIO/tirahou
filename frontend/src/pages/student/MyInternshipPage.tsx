@@ -1,19 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Briefcase, BookMarked, Upload, Calendar, Building2, User, FileText, ChevronDown, ChevronRight } from 'lucide-react'
-import { Card, Spinner, Badge, Empty, Modal, Alert } from '../../components/ui'
+import { Briefcase, BookMarked, Upload, Calendar, Building2, User, FileText } from 'lucide-react'
+import { Card, Spinner, Badge, Empty } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
+import { getInternshipStatus, getThesisStatus, getGradeColor } from '../../lib/statusHelpers'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
-
-const statusColor = (s: string) => ({
-  en_recherche: 'badge-gray', convention_signee: 'badge-blue',
-  en_cours: 'badge-yellow', termine: 'badge-purple',
-  valide: 'badge-green', abandonne: 'badge-red',
-  sujet_propose: 'badge-gray', sujet_valide: 'badge-blue',
-  en_redaction: 'badge-yellow', depose: 'badge-purple',
-  soutenu: 'badge-emerald', rejete: 'badge-red',
-}[s] ?? 'badge-gray')
 
 export default function MyInternshipPage() {
   const qc = useQueryClient()
@@ -79,7 +71,7 @@ export default function MyInternshipPage() {
                       <p className="text-sm text-gray-600 mt-0.5">{intership.subject}</p>
                     </div>
                   </div>
-                  <Badge label={intership.status} className={statusColor(intership.status)} />
+                  <Badge label={getInternshipStatus(intership.status).label} className={getInternshipStatus(intership.status).badge} />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-500">
                   <span className="flex items-center gap-1.5">
@@ -167,7 +159,7 @@ export default function MyInternshipPage() {
                       </div>
                     )}
                   </div>
-                  <Badge label={thesis.status} className={statusColor(thesis.status)} />
+                  <Badge label={getThesisStatus(thesis.status).label} className={getThesisStatus(thesis.status).badge} />
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
                   {thesis.supervisor_name && <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> Dir. : {thesis.supervisor_name}</span>}

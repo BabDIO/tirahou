@@ -63,6 +63,17 @@ class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.filter(is_active=True).prefetch_related('roles')
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        user = self.request.user
+        # Seuls les admins peuvent lister tous les utilisateurs
+        if user.roles.filter(name__in=[
+            'super_admin', 'admin_institutionnel', 'admin_scolarite',
+            'responsable_pedagogique', 'chef_departement'
+        ]).exists() or user.is_staff:
+            return User.objects.filter(is_active=True).prefetch_related('roles')
+        # Autres rôles : seulement leur propre profil
+        return User.objects.filter(id=user.id)
+
     def get_serializer_class(self):
         return UserCreateSerializer if self.request.method == 'POST' else UserSerializer
 

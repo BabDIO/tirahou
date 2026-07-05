@@ -38,8 +38,10 @@ urlpatterns = [
     # Documents & GED
     path(API_V1 + 'documents/', include('apps.documents.urls')),
 
-    # Évaluation & Notes
+    # Évaluation & Notes — ViewSets CRUD
     path(API_V1, include('apps.evaluation.urls')),
+    # Évaluation — Endpoints dédiés par acteur (student/, teacher/, admin/)
+    path(API_V1 + 'evaluation/', include('apps.evaluation.extra_urls')),
 
     # LMS / Campus virtuel
     path(API_V1, include('apps.lms.urls')),

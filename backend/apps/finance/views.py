@@ -339,6 +339,19 @@ class PaymentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'method']
     search_fields = ['receipt_number', 'transaction_ref']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Payment.objects.none()
+        user = self.request.user
+        qs = Payment.objects.select_related('invoice__student__user')
+        # Étudiant : ses paiements uniquement
+        if hasattr(user, 'student_profile'):
+            return qs.filter(invoice__student=user.student_profile)
+        # Enseignant : aucun accès
+        if hasattr(user, 'teacher_profile'):
+            return Payment.objects.none()
+        return qs.order_by('id')
+
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
         """Valider un paiement (workflow manuel)."""

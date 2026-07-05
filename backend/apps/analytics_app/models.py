@@ -89,9 +89,10 @@ class EngagementScore(BaseModel):
         from django.db.models import Avg, Count
         
         # Moyenne des notes (35%)
-        avg_grade = Grade.objects.filter(
-            enrollment__admin_enrollment__student=self.student
-        ).aggregate(avg=Avg('score'))['avg'] or 0
+        avg_grade_data = Grade.objects.filter(
+            student=self.student
+        ).aggregate(avg=Avg('final_grade'))
+        avg_grade = float(avg_grade_data['avg'] or 0)
         
         # Taux d'assiduité (25%)
         attendance_rate = AttendanceRecord.objects.filter(

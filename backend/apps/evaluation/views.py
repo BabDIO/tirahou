@@ -11,6 +11,26 @@ from .serializers import (
 )
 
 
+class UEResultViewSet(viewsets.ModelViewSet):
+    queryset = UEResult.objects.all().select_related('student', 'ue', 'exam_session')
+    serializer_class = UEResultSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['student', 'ue', 'exam_session', 'decision']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return UEResult.objects.none()
+        user = self.request.user
+        qs = UEResult.objects.select_related('student__user', 'ue__semester__program', 'exam_session')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(
+                ue__ecs__teachers=user
+            ).distinct()
+        return qs
+
+
 class ExamSessionViewSet(viewsets.ModelViewSet):
     queryset = ExamSession.objects.all()
     serializer_class = ExamSessionSerializer
@@ -317,12 +337,10 @@ def grade_template(request):
 @permission_classes([permissions.IsAuthenticated])
 def student_grades(request):
     """Mes notes (ÉTUDIANT)"""
-    from apps.people.models import Student
     from .services import GradeService
-    try:
-        student = Student.objects.get(user=request.user)
-    except Student.DoesNotExist:
+    if not hasattr(request.user, 'student_profile'):
         return Response({'error': 'Profil étudiant non trouvé'}, status=404)
+    student = request.user.student_profile
     exam_session_id = request.query_params.get('exam_session')
     exam_session = None
     if exam_session_id:
@@ -339,12 +357,10 @@ def student_grades(request):
 @permission_classes([permissions.IsAuthenticated])
 def student_transcript(request):
     """Relevé de notes complet (ÉTUDIANT)"""
-    from apps.people.models import Student
     from .services import ResultService
-    try:
-        student = Student.objects.get(user=request.user)
-    except Student.DoesNotExist:
+    if not hasattr(request.user, 'student_profile'):
         return Response({'error': 'Profil étudiant non trouvé'}, status=404)
+    student = request.user.student_profile
     academic_year_id = request.query_params.get('academic_year')
     transcript = ResultService.get_student_transcript(student, academic_year_id)
     return Response(transcript)
@@ -376,12 +392,10 @@ def submit_grade_contest(request):
 @permission_classes([permissions.IsAuthenticated])
 def teacher_grades(request):
     """Notes saisies par l'enseignant"""
-    from apps.people.models import Teacher
     from .services import GradeService
-    try:
-        teacher = Teacher.objects.get(user=request.user)
-    except Teacher.DoesNotExist:
+    if not hasattr(request.user, 'teacher_profile'):
         return Response({'error': 'Profil enseignant non trouvé'}, status=404)
+    teacher = request.user.teacher_profile
     ec_id = request.query_params.get('ec')
     exam_session_id = request.query_params.get('exam_session')
     grades = GradeService.get_teacher_grades(teacher, ec_id, exam_session_id)

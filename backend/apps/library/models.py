@@ -197,6 +197,7 @@ class DocumentRating(BaseModel):
     class Meta:
         db_table = 'library_ratings'
         unique_together = ('document', 'user')
+        ordering = ['-created_at']
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.document.title}: {self.rating}/5"

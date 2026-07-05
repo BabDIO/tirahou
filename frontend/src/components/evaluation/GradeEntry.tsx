@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, Button, Input, Badge, Spinner, Alert, StatsCard } from '../ui'
+import { Card, Button, Badge, Spinner, Alert, StatsCard } from '../ui'
 import { Save, Calculator, CheckCircle } from 'lucide-react'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
@@ -40,7 +40,7 @@ const GradeEntry = () => {
 
   const { data: teacherECs, isLoading: loadingECs } = useQuery({
     queryKey: ['teacher', 'ecs'],
-    queryFn: () => api.get('/evaluation/teacher/ecs/').then(r => r.data),
+    queryFn: () => api.get('/ecs/').then(r => r.data),
   })
 
   const { data: examSessions, isLoading: loadingSessions } = useQuery({
@@ -51,13 +51,13 @@ const GradeEntry = () => {
   const { data: existingGrades } = useQuery({
     queryKey: ['teacher', 'grades', selectedEC, selectedSession],
     queryFn: () =>
-      api.get(`/evaluation/teacher/grades/?ec=${selectedEC}&session=${selectedSession}`).then(r => r.data),
+      api.get(`/evaluation/teacher/grades/?ec=${selectedEC}&exam_session=${selectedSession}`).then(r => r.data),
     enabled: !!(selectedEC && selectedSession),
   })
 
   const { data: students, isLoading: loadingStudents } = useQuery({
     queryKey: ['teacher', 'students', selectedEC],
-    queryFn: () => api.get(`/evaluation/teacher/students/?ec=${selectedEC}`).then(r => r.data),
+    queryFn: () => api.get(`/students/?enrolled_in_ec=${selectedEC}`).then(r => r.data),
     enabled: !!selectedEC,
   })
 
