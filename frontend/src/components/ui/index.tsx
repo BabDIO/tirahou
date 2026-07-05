@@ -505,3 +505,10 @@ export const SkeletonTable = ({ rows = 5, cols = 5 }: { rows?: number; cols?: nu
 
 // Export des Skeletons avancés
 export * from './Skeleton'
+
+// Nouveaux composants UI
+export { default as Tooltip } from './Tooltip'
+export { default as ThemeToggle } from './ThemeToggle'
+export { default as Breadcrumb } from './Breadcrumb'
+export { default as AnimatedPage } from './AnimatedPage'
+export * from './AnimatedPage' // Export des variantes d'animation

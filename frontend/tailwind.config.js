@@ -57,6 +57,7 @@ export default {
         'slide-in':  'slideIn 0.2s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'bounce-sm': 'bounceSm 1s infinite',
+        'shimmer': 'shimmer 2s infinite',
       },
       keyframes: {
         fadeIn:   { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -65,6 +66,10 @@ export default {
         bounceSm: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%':      { transform: 'translateY(-4px)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
       },
       backgroundImage: {

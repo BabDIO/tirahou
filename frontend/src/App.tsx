@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import ConfirmDialog from './components/ui/ConfirmDialog'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ThemeProvider } from './contexts/ThemeContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
 import LandingPage from './pages/LandingPage'
@@ -86,16 +87,17 @@ const BIBLIO = ['super_admin', 'admin_institutionnel', 'bibliothecaire'] as cons
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', fontSize: '14px' } }} />
-      <ConfirmDialog />
-      <BrowserRouter>
-        <Routes>
-          {/* ── Public ── */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          <Route path="/verify" element={<VerifyDocumentPage />} />
-          <Route path="/verify/:code" element={<VerifyDocumentPage />} />
+      <ThemeProvider>
+        <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', fontSize: '14px' } }} />
+        <ConfirmDialog />
+        <BrowserRouter>
+          <Routes>
+            {/* ── Public ── */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="/verify" element={<VerifyDocumentPage />} />
+            <Route path="/verify/:code" element={<VerifyDocumentPage />} />
 
           {/* ── Protected ── */}
           <Route element={<ProtectedRoute />}>
@@ -201,6 +203,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }
