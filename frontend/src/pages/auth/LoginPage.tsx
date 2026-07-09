@@ -19,16 +19,13 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const DEMO_ACCOUNTS = [
-  { role: 'Super Admin',            email: 'admin@tirahou.edu',         password: 'Admin@2024',  color: 'bg-red-500' },
-  { role: 'Admin Scolarité',        email: 'scolarite@tirahou.edu',     password: 'Test@2024',   color: 'bg-blue-500' },
-  { role: 'Admin Financier',        email: 'financier@tirahou.edu',     password: 'Test@2024',   color: 'bg-green-500' },
-  { role: 'Resp. Pédagogique',      email: 'responsable@tirahou.edu',   password: 'Test@2024',   color: 'bg-indigo-500' },
-  { role: 'Chef de département',    email: 'chef.dept@tirahou.edu',     password: 'Test@2024',   color: 'bg-violet-500' },
-  { role: 'Enseignant',             email: 'enseignant@tirahou.edu',    password: 'Test@2024',   color: 'bg-cyan-500' },
-  { role: 'Tuteur',                 email: 'tuteur@tirahou.edu',        password: 'Test@2024',   color: 'bg-sky-500' },
-  { role: 'Bibliothécaire',         email: 'bibliothecaire@tirahou.edu',password: 'Test@2024',   color: 'bg-amber-600' },
-  { role: 'Étudiant',               email: 'etudiant@tirahou.edu',      password: 'Test@2024',   color: 'bg-emerald-500' },
-  { role: 'Doctorant',              email: 'doctorant@tirahou.edu',     password: 'Test@2024',   color: 'bg-fuchsia-600' },
+  { role: 'Super Admin',            email: 'admin@tirahou.edu',         password: 'Admin123!',  color: 'bg-red-500' },
+  { role: 'Admin Scolarité',        email: 'scolarite@tirahou.edu',     password: 'Scolarite123!',   color: 'bg-blue-500' },
+  { role: 'Admin Financier',        email: 'financier@tirahou.edu',     password: 'Financier123!',   color: 'bg-green-500' },
+  { role: 'Resp. Pédagogique',      email: 'responsable@tirahou.edu',   password: 'Responsable123!',   color: 'bg-indigo-500' },
+  { role: 'Bibliothécaire',         email: 'bibliothecaire@tirahou.edu',password: 'Biblio123!',   color: 'bg-amber-600' },
+  { role: 'Enseignant',             email: 'enseignant@tirahou.edu',    password: 'Enseignant123!',   color: 'bg-cyan-500' },
+  { role: 'Étudiant',               email: 'etudiant@tirahou.edu',      password: 'Etudiant123!',   color: 'bg-emerald-500' },
 ]
 
 const FEATURES = [
