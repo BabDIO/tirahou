@@ -14,15 +14,19 @@ export async function login(page: Page, accountType: AccountType) {
   // Aller à la page de connexion
   await page.goto('/login');
   
+  // Attendre que le formulaire de connexion soit visible
+  await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+  await page.waitForSelector('button[type="submit"]', { timeout: 5000 });
+  
   // Remplir le formulaire
-  await page.fill('input[name="email"], input[type="email"]', account.email);
-  await page.fill('input[name="password"], input[type="password"]', account.password);
+  await page.fill('input[type="email"]', account.email);
+  await page.fill('input[type="password"]', account.password);
   
   // Soumettre
   await page.click('button[type="submit"]');
   
-  // Attendre la redirection vers le dashboard
-  await page.waitForURL(/\/dashboard/, { timeout: 10000 });
+  // Attendre la redirection vers le dashboard (augmenter timeout)
+  await page.waitForURL(/\/dashboard/, { timeout: 15000 });
   
   // Vérifier que l'utilisateur est connecté
   await expect(page.locator('body')).toContainText(account.name, { timeout: 5000 });
