@@ -248,38 +248,6 @@ export default function TeacherGradesPage() {
                           </button>
                         </td>
                       </tr>
-                        <td className="px-4 py-3">
-                          <p className="font-semibold text-gray-900">{s.user.first_name} {s.user.last_name}</p>
-                          <p className="text-xs text-gray-400">{s.student_id}</p>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <input type="number" min={0} max={20} step={0.25} disabled={entry.is_absent}
-                            value={entry.cc_grade}
-                            onChange={e => updateEntry(s.id, 'cc_grade', e.target.value)}
-                            className="w-20 text-center border border-gray-200 rounded-lg py-1 text-sm focus:ring-1 focus:ring-primary-400 focus:border-primary-400 disabled:bg-gray-50 disabled:text-gray-400" />
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <input type="number" min={0} max={20} step={0.25} disabled={entry.is_absent}
-                            value={entry.exam_grade}
-                            onChange={e => updateEntry(s.id, 'exam_grade', e.target.value)}
-                            className="w-20 text-center border border-gray-200 rounded-lg py-1 text-sm focus:ring-1 focus:ring-primary-400 focus:border-primary-400 disabled:bg-gray-50 disabled:text-gray-400" />
-                        </td>
-                        <td className={`px-3 py-3 text-center text-base ${gradeColor}`}>
-                          {finalGrade !== null ? finalGrade.toFixed(2) : '—'}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <input type="checkbox" checked={entry.is_absent}
-                            onChange={e => updateEntry(s.id, 'is_absent', e.target.checked)}
-                            className="w-4 h-4 rounded accent-red-500" />
-                        </td>
-                        <td className="px-3 py-3">
-                          <button onClick={() => saveGradeMut.mutate({ ...entry, student_id: s.id })}
-                            disabled={saveGradeMut.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-primary-100 text-primary-700 rounded-lg text-xs font-semibold hover:bg-primary-200 transition disabled:opacity-50">
-                            <Save className="w-3.5 h-3.5" /> Enreg.
-                          </button>
-                        </td>
-                      </tr>
                     )
                   })}
                 </tbody>

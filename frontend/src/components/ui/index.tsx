@@ -508,7 +508,7 @@ export * from './Skeleton'
 
 // Nouveaux composants UI
 export { default as Tooltip } from './Tooltip'
-export { default as ThemeToggle } from './ThemeToggle'
+export { ThemeToggle } from './ThemeToggle'
 export { default as Breadcrumb } from './Breadcrumb'
 export { default as AnimatedPage } from './AnimatedPage'
 export * from './AnimatedPage' // Export des variantes d'animation

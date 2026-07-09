@@ -118,7 +118,7 @@ class ParentGuardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParentGuardian
         fields = [
-            'id', 'uuid', 'student', 'student_name', 'student_id',
+            'id', 'student', 'student_name', 'student_id',
             'relationship', 'relationship_display',
             'first_name', 'last_name', 'full_name',
             'email', 'phone', 'phone_secondary',
@@ -129,7 +129,7 @@ class ParentGuardianSerializer(serializers.ModelSerializer):
             'has_legal_authority', 'id_card_number',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['uuid', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
     
     def get_full_name(self, obj):
         return obj.get_full_name()
