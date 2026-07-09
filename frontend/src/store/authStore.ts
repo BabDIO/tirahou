@@ -1,47 +1,37 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User } from '../types'
 
-interface AuthState {
-  user: User | null
-  accessToken: string | null
-  refreshToken: string | null
-  isAuthenticated: boolean
-  setAuth: (user: User, access: string, refresh: string) => void
-  updateUser: (user: User) => void
-  logout: () => void
+interface User {
+  id: string
+  email: string
+  name: string
+  role: string
+  avatar?: string
 }
 
-export const useAuthStore = create<AuthState>()(
+interface AuthStore {
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  login: (user: User, token: string) => void
+  logout: () => void
+  updateUser: (user: Partial<User>) => void
+}
+
+export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      accessToken: null,
-      refreshToken: null,
+      token: null,
       isAuthenticated: false,
-
-      setAuth: (user, access, refresh) => {
-        localStorage.setItem('access_token', access)
-        localStorage.setItem('refresh_token', refresh)
-        set({ user, accessToken: access, refreshToken: refresh, isAuthenticated: true })
-      },
-
-      updateUser: (user) => set({ user }),
-
-      logout: () => {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
-      },
+      login: (user, token) => set({ user, token, isAuthenticated: true }),
+      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+      updateUser: (userData) => set((state) => ({
+        user: state.user ? { ...state.user, ...userData } : null
+      }))
     }),
     {
-      name: 'tirahou-auth',
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      name: 'auth-storage'
     }
   )
 )

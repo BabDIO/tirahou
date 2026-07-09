@@ -2,11 +2,12 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg, Count
-from .models import Student, Teacher, AdminStaff
+from .models import Student, Teacher, AdminStaff, ParentGuardian
 from .serializers import (
     StudentSerializer, StudentCreateSerializer,
     TeacherSerializer, TeacherCreateSerializer,
     AdminStaffSerializer,
+    ParentGuardianSerializer, ParentGuardianCreateSerializer, ParentGuardianBulkNotifySerializer,
 )
 
 
@@ -176,3 +177,117 @@ class AdminStaffViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['service']
     search_fields = ['staff_id', 'user__first_name', 'user__last_name']
+
+
+class ParentGuardianViewSet(viewsets.ModelViewSet):
+    """ViewSet pour la gestion des parents/tuteurs"""
+    queryset = ParentGuardian.objects.filter(is_active=True).select_related('student', 'student__user').order_by('-is_primary_contact', 'last_name')
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['student', 'relationship', 'is_primary_contact', 'is_emergency_contact', 'can_receive_notifications']
+    search_fields = ['first_name', 'last_name', 'email', 'phone', 'student__student_id', 'student__user__first_name', 'student__user__last_name']
+    ordering_fields = ['last_name', 'first_name', 'created_at']
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return ParentGuardianCreateSerializer
+        elif self.action == 'bulk_notify':
+            return ParentGuardianBulkNotifySerializer
+        return ParentGuardianSerializer
+    
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ParentGuardian.objects.none()
+        
+        user = self.request.user
+        qs = super().get_queryset()
+        
+        # Étudiant : voir ses propres parents
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        
+        # Admin scolarité, direction : voir tous
+        if user.has_role(['admin_scolarite', 'admin_institutionnel', 'super_admin']):
+            return qs
+        
+        return qs.none()
+    
+    @action(detail=False, methods=['get'], url_path='by-student/(?P<student_id>[^/.]+)')
+    def by_student(self, request, student_id=None):
+        """Récupérer les parents d'un étudiant"""
+        parents = self.get_queryset().filter(student__student_id=student_id)
+        serializer = self.get_serializer(parents, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_notify(self, request):
+        """Envoyer des notifications en masse aux parents"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        data = serializer.validated_data
+        notification_type = data['notification_type']
+        message = data['message']
+        student_ids = data.get('student_ids', [])
+        send_email = data.get('send_email', True)
+        send_sms = data.get('send_sms', False)
+        
+        # Filtrer les parents
+        queryset = self.get_queryset()
+        if student_ids:
+            queryset = queryset.filter(student__uuid__in=student_ids)
+        
+        # Filtrer par préférences de notification
+        eligible_parents = [
+            parent for parent in queryset
+            if parent.can_receive_notification_type(notification_type)
+        ]
+        
+        # TODO: Implémenter l'envoi réel via Celery
+        # from apps.communication.tasks import send_notification_to_parents
+        # send_notification_to_parents.delay(
+        #     parent_ids=[p.id for p in eligible_parents],
+        #     message=message,
+        #     send_email=send_email,
+        #     send_sms=send_sms
+        # )
+        
+        return Response({
+            'success': True,
+            'message': f'{len(eligible_parents)} notifications envoyées',
+            'recipients_count': len(eligible_parents)
+        })
+    
+    @action(detail=True, methods=['post'])
+    def set_primary(self, request, pk=None):
+        """Définir ce parent comme contact prioritaire"""
+        parent = self.get_object()
+        
+        # Retirer primary des autres parents du même étudiant
+        ParentGuardian.objects.filter(
+            student=parent.student
+        ).exclude(id=parent.id).update(is_primary_contact=False)
+        
+        parent.is_primary_contact = True
+        parent.save()
+        
+        serializer = self.get_serializer(parent)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'])
+    def update_preferences(self, request, pk=None):
+        """Mettre à jour les préférences de notification"""
+        parent = self.get_object()
+        
+        preferences = request.data.get('notification_preferences', {})
+        can_receive = request.data.get('can_receive_notifications')
+        
+        if can_receive is not None:
+            parent.can_receive_notifications = can_receive
+        
+        if preferences:
+            parent.notification_preferences = preferences
+        
+        parent.save()
+        
+        serializer = self.get_serializer(parent)
+        return Response(serializer.data)

@@ -1,87 +1,77 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type Theme = 'light' | 'dark' | 'system'
+type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
-  theme: Theme
-  actualTheme: 'light' | 'dark'
-  setTheme: (theme: Theme) => void
-  toggleTheme: () => void
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  effectiveTheme: 'light' | 'dark';
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theme') as Theme
-    return stored || 'system'
-  })
+interface ThemeProviderProps {
+  children: ReactNode;
+}
 
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light')
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(() => {
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    return savedTheme || 'system';
+  });
+
+  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    const root = window.document.documentElement
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
-    // Déterminer le thème actuel
-    let currentTheme: 'light' | 'dark' = 'light'
+    const updateEffectiveTheme = () => {
+      if (theme === 'system') {
+        setEffectiveTheme(mediaQuery.matches ? 'dark' : 'light');
+      } else {
+        setEffectiveTheme(theme);
+      }
+    };
+
+    updateEffectiveTheme();
+
+    // Écouter les changements du thème système
+    mediaQuery.addEventListener('change', updateEffectiveTheme);
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateEffectiveTheme);
+    };
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
     
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      currentTheme = systemTheme
+    const root = document.documentElement;
+    
+    if (effectiveTheme === 'dark') {
+      root.classList.add('dark');
     } else {
-      currentTheme = theme
+      root.classList.remove('dark');
     }
-    
-    setActualTheme(currentTheme)
-    
-    // Appliquer le thème
-    root.classList.remove('light', 'dark')
-    root.classList.add(currentTheme)
-    
-    // Sauvegarder la préférence
-    localStorage.setItem('theme', theme)
-  }, [theme])
+  }, [theme, effectiveTheme]);
 
-  // Écouter les changements de préférence système
-  useEffect(() => {
-    if (theme !== 'system') return
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = () => {
-      const systemTheme = mediaQuery.matches ? 'dark' : 'light'
-      setActualTheme(systemTheme)
-      const root = window.document.documentElement
-      root.classList.remove('light', 'dark')
-      root.classList.add(systemTheme)
-    }
-    
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [theme])
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme)
-  }
-
-  const toggleTheme = () => {
-    setThemeState(current => {
-      if (current === 'light') return 'dark'
-      if (current === 'dark') return 'system'
-      return 'light'
-    })
-  }
+  const value = {
+    theme,
+    setTheme,
+    effectiveTheme
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, actualTheme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
-  )
+  );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext)
+  const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
-  return context
+  return context;
 }

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Student, Teacher, AdminStaff
+from .models import Student, Teacher, AdminStaff, ParentGuardian
 from apps.accounts.serializers import UserSerializer
 import uuid
 
@@ -105,3 +105,83 @@ class TeacherCreateSerializer(serializers.ModelSerializer):
             validated_data['teacher_id'] = f"ENS-{uuid.uuid4().hex[:8].upper()}"
 
         return Teacher.objects.create(user=user, **validated_data)
+
+
+class ParentGuardianSerializer(serializers.ModelSerializer):
+    """Serializer pour les parents/tuteurs"""
+    student_name = serializers.CharField(source='student.user.get_full_name', read_only=True)
+    student_id = serializers.CharField(source='student.student_id', read_only=True)
+    relationship_display = serializers.CharField(source='get_relationship_display', read_only=True)
+    full_name = serializers.SerializerMethodField()
+    notification_types = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ParentGuardian
+        fields = [
+            'id', 'uuid', 'student', 'student_name', 'student_id',
+            'relationship', 'relationship_display',
+            'first_name', 'last_name', 'full_name',
+            'email', 'phone', 'phone_secondary',
+            'address', 'city', 'country',
+            'profession', 'employer',
+            'can_receive_notifications', 'notification_preferences', 'notification_types',
+            'is_primary_contact', 'is_emergency_contact',
+            'has_legal_authority', 'id_card_number',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['uuid', 'created_at', 'updated_at']
+    
+    def get_full_name(self, obj):
+        return obj.get_full_name()
+    
+    def get_notification_types(self, obj):
+        return obj.get_notification_types()
+
+
+class ParentGuardianCreateSerializer(serializers.ModelSerializer):
+    """Serializer pour création de parents/tuteurs"""
+    class Meta:
+        model = ParentGuardian
+        fields = [
+            'student', 'relationship',
+            'first_name', 'last_name',
+            'email', 'phone', 'phone_secondary',
+            'address', 'city', 'country',
+            'profession', 'employer',
+            'can_receive_notifications', 'notification_preferences',
+            'is_primary_contact', 'is_emergency_contact',
+            'has_legal_authority', 'id_card_number'
+        ]
+    
+    def validate(self, data):
+        # Si is_primary_contact=True, mettre les autres à False pour ce student
+        if data.get('is_primary_contact'):
+            student = data.get('student')
+            if self.instance:  # Update
+                ParentGuardian.objects.filter(
+                    student=student
+                ).exclude(id=self.instance.id).update(is_primary_contact=False)
+            else:  # Create
+                ParentGuardian.objects.filter(student=student).update(is_primary_contact=False)
+        
+        return data
+
+
+class ParentGuardianBulkNotifySerializer(serializers.Serializer):
+    """Serializer pour notifications en masse aux parents"""
+    student_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        help_text="Liste des IDs étudiants (si vide, tous les parents)"
+    )
+    notification_type = serializers.ChoiceField(choices=[
+        ('absences', 'Absences'),
+        ('notes', 'Notes'),
+        ('paiements', 'Paiements'),
+        ('discipline', 'Discipline'),
+        ('annonces', 'Annonces'),
+        ('resultats', 'Résultats')
+    ])
+    message = serializers.CharField(max_length=1000)
+    send_email = serializers.BooleanField(default=True)
+    send_sms = serializers.BooleanField(default=False)

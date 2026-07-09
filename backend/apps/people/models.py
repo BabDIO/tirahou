@@ -105,3 +105,80 @@ class AdminStaff(BaseModel):
 
     def __str__(self):
         return f"{self.staff_id} — {self.user.get_full_name()}"
+
+
+class ParentGuardian(BaseModel):
+    """Parent ou tuteur légal d'un étudiant"""
+    RELATIONSHIP_CHOICES = [
+        ('pere', 'Père'),
+        ('mere', 'Mère'),
+        ('tuteur_legal', 'Tuteur légal'),
+        ('oncle', 'Oncle'),
+        ('tante', 'Tante'),
+        ('grand_parent', 'Grand-parent'),
+        ('autre', 'Autre'),
+    ]
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='parents_guardians')
+    relationship = models.CharField(max_length=20, choices=RELATIONSHIP_CHOICES)
+    
+    # Informations personnelles
+    first_name = models.CharField(max_length=100, verbose_name="Prénom")
+    last_name = models.CharField(max_length=100, verbose_name="Nom")
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, verbose_name="Téléphone")
+    phone_secondary = models.CharField(max_length=20, blank=True, verbose_name="Téléphone secondaire")
+    address = models.TextField(blank=True, verbose_name="Adresse")
+    city = models.CharField(max_length=100, blank=True, verbose_name="Ville")
+    country = models.CharField(max_length=100, default="Côte d'Ivoire", verbose_name="Pays")
+    
+    # Informations professionnelles
+    profession = models.CharField(max_length=100, blank=True, verbose_name="Profession")
+    employer = models.CharField(max_length=200, blank=True, verbose_name="Employeur")
+    
+    # Préférences de notification
+    can_receive_notifications = models.BooleanField(default=True, verbose_name="Peut recevoir des notifications")
+    notification_preferences = models.JSONField(default=dict, blank=True, help_text="Types de notifications autorisées")
+    
+    # Contact prioritaire
+    is_primary_contact = models.BooleanField(default=False, verbose_name="Contact prioritaire")
+    is_emergency_contact = models.BooleanField(default=True, verbose_name="Contact d'urgence")
+    
+    # Informations légales
+    has_legal_authority = models.BooleanField(default=True, verbose_name="Autorité légale")
+    id_card_number = models.CharField(max_length=50, blank=True, verbose_name="Numéro pièce d'identité")
+    
+    class Meta:
+        db_table = 'parent_guardians'
+        verbose_name = "Parent/Tuteur"
+        verbose_name_plural = "Parents/Tuteurs"
+        ordering = ['-is_primary_contact', 'last_name', 'first_name']
+        
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.get_relationship_display()}) - {self.student.user.get_full_name()}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def get_notification_types(self):
+        """Retourne les types de notifications activés"""
+        if not self.can_receive_notifications:
+            return []
+        
+        default_prefs = {
+            'absences': True,
+            'notes': True,
+            'paiements': True,
+            'discipline': True,
+            'annonces': False,
+            'resultats': True
+        }
+        
+        prefs = {**default_prefs, **self.notification_preferences}
+        return [key for key, value in prefs.items() if value]
+    
+    def can_receive_notification_type(self, notification_type):
+        """Vérifie si le parent peut recevoir ce type de notification"""
+        if not self.can_receive_notifications:
+            return False
+        return notification_type in self.get_notification_types()

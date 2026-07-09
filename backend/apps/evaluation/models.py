@@ -1,3 +1,29 @@
+"""
+Module de gestion des évaluations et résultats académiques
+===========================================================
+
+Ce module implémente le système complet d'évaluation LMD :
+- Gestion des sessions d'examen (normale + rattrapage)
+- Saisie et validation des notes (CC 40% + Examen 60%)
+- Calcul automatique des résultats UE et semestriels
+- Système de compensation et capitalisation des crédits
+- Gestion des réclamations de notes
+- Publication contrôlée des résultats avec notifications
+- Historique des modifications
+- Calcul des mentions, GPA et classements
+
+Règles LMD implémentées :
+- UE validée : moyenne ≥ 10/20 → capitalisation définitive
+- Semestre admis : moyenne ≥ 10/20 + toutes UE validées ou compensées
+- Compensation : UE <10 compensée par UE >10 dans même semestre
+- Session de rattrapage : pour UE non validées
+- Crédits ECTS : acquis uniquement pour UE validées
+
+@author: TIRAHOU
+@version: 1.2.0
+@date: Juillet 2026
+"""
+
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
@@ -10,6 +36,21 @@ from apps.enrollment.models import UEEnrollment
 
 
 class ExamSession(BaseModel):
+    """
+    Session d'examen (normale ou rattrapage).
+    
+    Chaque semestre a 2 sessions :
+    - Session 1 (normale) : première évaluation
+    - Session 2 (rattrapage) : pour étudiants ajournés
+    
+    Attributes:
+        semester (ForeignKey): Semestre concerné
+        academic_year (ForeignKey): Année académique
+        session_type (str): Type de session (session1/session2)
+        start_date (date): Date de début
+        end_date (date): Date de fin
+        is_open (bool): Session ouverte pour saisie des notes
+    """
     SESSION_CHOICES = [
         ('session1', 'Session 1 (Normale)'),
         ('session2', 'Session 2 (Rattrapage)'),
@@ -32,6 +73,37 @@ class ExamSession(BaseModel):
 
 
 class Grade(BaseModel):
+    """
+    Note individuelle d'un étudiant pour un EC (Élément Constitutif).
+    
+    Gère la saisie, validation et publication des notes avec workflow complet :
+    1. SAISIE : Enseignant saisit CC + Examen
+    2. VALIDÉE : Responsable pédagogique valide
+    3. PUBLIÉE : Note visible par l'étudiant
+    4. CONTESTÉE : Étudiant a fait une réclamation
+    
+    Calcul automatique de la note finale :
+    - Note finale = (CC × 40%) + (Examen × 60%) + Bonus - Pénalités
+    - Absent : note finale = 0
+    - Historique complet des modifications
+    
+    Attributes:
+        student (ForeignKey): Étudiant évalué
+        ec (ForeignKey): Élément Constitutif (matière)
+        exam_session (ForeignKey): Session d'examen
+        cc_grade (Decimal): Note de Contrôle Continu (0-20)
+        exam_grade (Decimal): Note d'Examen (0-20)
+        final_grade (Decimal): Note finale calculée (0-20)
+        is_absent (bool): Étudiant absent à l'examen
+        status (str): Statut du workflow (saisie/validee/publiee/contestee)
+        cc_weight (Decimal): Pondération CC (par défaut 0.4 = 40%)
+        exam_weight (Decimal): Pondération Examen (par défaut 0.6 = 60%)
+        bonus_points (Decimal): Points bonus (ex: participation)
+        penalty_points (Decimal): Pénalités (ex: retard)
+        appreciation (str): Commentaire de l'enseignant
+        modification_history (JSON): Historique des changements
+    """
+    
     STATUS_CHOICES = [
         ('saisie', 'Saisie'),
         ('validee', 'Validée'),
@@ -82,7 +154,27 @@ class Grade(BaseModel):
         return f"{self.student} — {self.ec.code} : {self.final_grade}/20"
     
     def calculate_final_grade(self):
-        """Calcule automatiquement la note finale avec pondérations, bonus et pénalités"""
+        """
+        Calcule automatiquement la note finale selon la formule LMD.
+        
+        Formule :
+            Note finale = (CC × poids_CC) + (Examen × poids_examen) + Bonus - Pénalités
+            
+        Par défaut :
+            Note finale = (CC × 0.4) + (Examen × 0.6)
+            
+        Cas particuliers :
+            - Absent : note finale = 0
+            - Note finale limitée entre 0 et 20
+            
+        Returns:
+            Decimal: Note finale calculée
+            
+        Examples:
+            >>> grade = Grade(cc_grade=15, exam_grade=12, cc_weight=0.4, exam_weight=0.6)
+            >>> grade.calculate_final_grade()
+            13.2  # (15 × 0.4) + (12 × 0.6) = 6 + 7.2 = 13.2
+        """
         if self.is_absent:
             self.final_grade = 0
             return self.final_grade
@@ -122,7 +214,27 @@ class Grade(BaseModel):
         super().save(*args, **kwargs)
     
     def publish_to_student(self):
-        """Publier la note à l'étudiant avec notification"""
+        """
+        Publie la note à l'étudiant et envoie une notification.
+        
+        Actions effectuées :
+        1. Marque la note comme publiée
+        2. Change le statut à 'publiee'
+        3. Enregistre la date de publication
+        4. Envoie une notification email + push à l'étudiant
+        
+        La notification contient :
+        - Nom du cours (EC)
+        - Note obtenue
+        - Lien direct vers le relevé de notes
+        
+        Raises:
+            Aucune exception levée, les erreurs de notification sont silencieuses
+            
+        Examples:
+            >>> grade = Grade.objects.get(id=123)
+            >>> grade.publish_to_student()  # Étudiant reçoit une notification
+        """
         from django.utils import timezone
         from apps.communication.models import Notification
         
@@ -148,6 +260,37 @@ class Grade(BaseModel):
 
 
 class UEResult(BaseModel):
+    """
+    Résultat d'une Unité d'Enseignement (UE) pour un étudiant.
+    
+    Représente le résultat agrégé de tous les EC d'une UE.
+    La moyenne de l'UE est calculée à partir des notes des EC pondérées
+    par leurs coefficients respectifs.
+    
+    Décisions possibles (LMD) :
+    - VALIDÉ : moyenne ≥ 10/20 → crédits acquis définitivement (capitalisation)
+    - AJOURNÉ : moyenne < 10/20 → aucun crédit
+    - COMPENSÉ : moyenne < 10/20 mais compensée par autre UE du semestre
+    - DETTE : UE non validée à reprendre
+    - ABSENT : étudiant absent aux évaluations
+    
+    Calcul de la moyenne UE :
+    moyenne_ue = Σ(note_EC × coef_EC) / Σ(coef_EC)
+    
+    Attributes:
+        student (ForeignKey): Étudiant
+        ue (ForeignKey): Unité d'Enseignement
+        exam_session (ForeignKey): Session d'examen
+        average (Decimal): Moyenne calculée de l'UE (0-20)
+        credits_obtained (int): Crédits ECTS obtenus (0 ou credits de l'UE)
+        decision (str): Décision finale (valide/ajourné/compense/dette/absent)
+        is_capitalized (bool): UE définitivement capitalisée
+        compensation_source (FK): UE qui compense celle-ci (si compensé)
+        rank_in_ue (int): Classement de l'étudiant dans l'UE
+        total_students (int): Nombre total d'étudiants dans l'UE
+        percentile (Decimal): Percentile de l'étudiant (0-100)
+    """
+    
     DECISION_CHOICES = [
         ('valide', 'Validé'),
         ('ajourné', 'Ajourné'),
@@ -163,7 +306,7 @@ class UEResult(BaseModel):
     credits_obtained = models.PositiveSmallIntegerField(default=0)
     decision = models.CharField(max_length=20, choices=DECISION_CHOICES, null=True, blank=True)
     
-    # AMÉLIORATIONS: Calcul automatique et détails
+    # Calcul automatique et détails
     is_capitalized = models.BooleanField(default=False, help_text="UE capitalisée")
     compensation_source = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, help_text="UE qui compense")
     rank_in_ue = models.PositiveIntegerField(null=True, blank=True, help_text="Classement dans l'UE")
@@ -179,7 +322,35 @@ class UEResult(BaseModel):
         return f"{self.student} — {self.ue.code} : {self.average}/20 ({self.decision})"
     
     def calculate_ue_average(self):
-        """Calcule la moyenne de l'UE à partir des notes des EC"""
+        """
+        Calcule la moyenne pondérée de l'UE à partir des notes des EC.
+        
+        Algorithme :
+        1. Récupère toutes les notes validées des EC de cette UE
+        2. Multiplie chaque note par le coefficient de son EC
+        3. Fait la somme pondérée et divise par la somme des coefficients
+        4. Détermine la décision (validé si ≥ 10, ajourné sinon)
+        5. Attribue les crédits si validé
+        
+        Formule :
+            moyenne_ue = Σ(note_EC_i × coef_EC_i) / Σ(coef_EC_i)
+            
+        Décision :
+            - moyenne_ue ≥ 10 → VALIDÉ + crédits acquis
+            - moyenne_ue < 10 → AJOURNÉ + 0 crédit
+            
+        Returns:
+            Decimal: Moyenne calculée ou None si aucune note
+            
+        Examples:
+            >>> ue_result = UEResult.objects.get(id=1)
+            >>> ue_result.calculate_ue_average()
+            12.5  # Moyenne calculée
+            >>> ue_result.decision
+            'valide'
+            >>> ue_result.credits_obtained
+            6  # Crédits de l'UE
+        """
         from django.db.models import Avg, Sum, F
         
         # Récupérer toutes les notes des EC de cette UE

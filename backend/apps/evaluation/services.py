@@ -1,22 +1,70 @@
 """
 Services pour la gestion des notes et résultats
+=================================================
+
+Services métier pour le module d'évaluation :
+- GradeService : Gestion des notes individuelles
+- ResultService : Calcul des résultats UE et semestriels
+- StatisticsService : Statistiques avancées et analytics
+- ExportService : Export des notes et relevés
+
+Patterns utilisés :
+- Service Layer Pattern : Logique métier isolée
+- Transaction Management : Opérations atomiques
+- Event Broadcasting : Notifications automatiques
+- Data Validation : Validation métier stricte
+
+@author: TIRAHOU
+@version: 1.2.0
+@date: Juillet 2026
 """
-from django.db.models import Avg, Count, Q, Sum
+from django.db import transaction
+from django.db.models import Avg, Count, Q, Sum, F, Max, Min, StdDev
 from django.utils import timezone
+from django.core.cache import cache
 from decimal import Decimal
+from typing import Optional, Dict, List, Tuple
 from .models import Grade, UEResult, SemesterResult, GradeContest, ExamSession
-from apps.people.models import Student
-from apps.communication.notification_service import NotificationService
+from apps.people.models import Student, Teacher
+from apps.programs.models import EC, UE
 import logging
+import csv
+import io
 
 logger = logging.getLogger(__name__)
 
 
 class GradeService:
-    """Service pour la gestion des notes"""
+    """
+    Service de gestion des notes individuelles.
+    
+    Responsabilités :
+    - Saisie et modification des notes
+    - Validation workflow (saisie → validée → publiée)
+    - Calcul automatique des notes finales
+    - Statistiques de classe
+    - Gestion des réclamations
+    - Export des notes
+    
+    Règles métier :
+    - Note finale = (CC × 40%) + (Examen × 60%)
+    - Notes entre 0 et 20
+    - Historique complet des modifications
+    - Validation par responsable pédagogique requise
+    """
 
     @staticmethod
-    def get_student_grades(student, exam_session=None):
+    def get_student_grades(student: Student, exam_session: Optional[ExamSession] = None) -> 'QuerySet[Grade]':
+        """
+        Récupère les notes publiées d'un étudiant.
+        
+        Args:
+            student: L'étudiant concerné
+            exam_session: Session d'examen (optionnel, toutes si None)
+            
+        Returns:
+            QuerySet des notes publiées, triées par nom d'EC
+        """
         qs = Grade.objects.filter(
             student=student,
             status='publiee',
@@ -37,8 +85,49 @@ class GradeService:
         return qs.order_by('student__student_id')
 
     @staticmethod
-    def enter_grade(student, ec, exam_session, cc_grade=None, exam_grade=None,
-                    entered_by=None, is_absent=False, appreciation=''):
+    def enter_grade(student: Student, ec: EC, exam_session: ExamSession, 
+                    cc_grade: Optional[float] = None, exam_grade: Optional[float] = None,
+                    entered_by = None, is_absent: bool = False, 
+                    appreciation: str = '', bonus_points: float = 0,
+                    penalty_points: float = 0) -> Grade:
+        """
+        Saisit ou met à jour une note.
+        
+        Args:
+            student: Étudiant concerné
+            ec: Élément Constitutif
+            exam_session: Session d'examen
+            cc_grade: Note de Contrôle Continu (0-20)
+            exam_grade: Note d'Examen (0-20)
+            entered_by: Enseignant qui saisit la note
+            is_absent: Étudiant absent à l'examen
+            appreciation: Commentaire de l'enseignant
+            bonus_points: Points bonus
+            penalty_points: Points de pénalité
+            
+        Returns:
+            Grade: Note créée ou mise à jour
+            
+        Raises:
+            ValueError: Si les notes sont hors limites (0-20)
+            
+        Examples:
+            >>> GradeService.enter_grade(
+            ...     student=student,
+            ...     ec=ec,
+            ...     exam_session=session,
+            ...     cc_grade=15.5,
+            ...     exam_grade=12.0,
+            ...     entered_by=teacher.user
+            ... )
+            <Grade: Student X - EC Y = 13.2/20>
+        """
+        # Validation
+        if cc_grade is not None and not (0 <= cc_grade <= 20):
+            raise ValueError("La note CC doit être entre 0 et 20")
+        if exam_grade is not None and not (0 <= exam_grade <= 20):
+            raise ValueError("La note d'examen doit être entre 0 et 20")
+        
         grade, created = Grade.objects.get_or_create(
             student=student,
             ec=ec,
@@ -48,20 +137,32 @@ class GradeService:
                 'exam_grade': Decimal(str(exam_grade)) if exam_grade is not None else None,
                 'is_absent': is_absent,
                 'appreciation': appreciation,
+                'bonus_points': Decimal(str(bonus_points)),
+                'penalty_points': Decimal(str(penalty_points)),
                 'entered_by': entered_by,
                 'status': 'saisie',
             }
         )
+        
         if not created:
+            # Mise à jour d'une note existante
             if cc_grade is not None:
                 grade.cc_grade = Decimal(str(cc_grade))
             if exam_grade is not None:
                 grade.exam_grade = Decimal(str(exam_grade))
             grade.is_absent = is_absent
             grade.appreciation = appreciation
+            grade.bonus_points = Decimal(str(bonus_points))
+            grade.penalty_points = Decimal(str(penalty_points))
             grade.entered_by = entered_by
-        grade.save()  # déclenche calculate_final_grade via save()
-        logger.info(f"Note saisie: {student} - {ec.name} = {grade.final_grade}")
+            
+        grade.save()  # Déclenche calculate_final_grade() automatiquement
+        
+        logger.info(
+            f"Note {'créée' if created else 'mise à jour'}: "
+            f"{student.student_id} - {ec.code} = {grade.final_grade}/20"
+        )
+        
         return grade
 
     @staticmethod
