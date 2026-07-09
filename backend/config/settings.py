@@ -102,6 +102,12 @@ else:
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Backend d'authentification personnalisé (connexion par email)
+AUTHENTICATION_BACKENDS = [
+    'apps.accounts.backends.EmailBackend',  # Authentification par email
+    'django.contrib.auth.backends.ModelBackend',  # Fallback sur username
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
