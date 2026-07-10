@@ -11,66 +11,33 @@ import { formatCurrency, cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../lib/axios'
 
-// Types pour les données
 interface ProgramStatus {
   name: string
-  status: 'actif' | 'en_cours'
+  status: string
   students: number
 }
 
 interface SystemActivity {
   action: string
   user: string
-  amount?: string
-  course?: string
+  detail?: string
   time: string
   type: 'success' | 'finance' | 'academic' | 'document'
 }
 
-// Données simulées pour démonstration
+// Repli affiché brièvement pendant le tout premier chargement — remplacé
+// par /system-stats/ (données réelles) dès la réponse du serveur.
 const MOCK_DATA = {
-  students: {
-    total: 1428,
-    by_status: [
-      { status: 'Actif', count: 1250 },
-      { status: 'En pause', count: 95 },
-      { status: 'Diplômé', count: 83 },
-    ],
-    trend: 8.2
-  },
-  teachers: {
-    total: 87,
-    by_type: [
-      { type: 'Permanent', count: 45 },
-      { type: 'Vacataire', count: 32 },
-      { type: 'Invité', count: 10 },
-    ]
-  },
-  finance: {
-    total_invoiced: 12500000,
-    total_paid: 10850000,
-    collection_rate: 86.8
-  },
-  academic: {
-    programs: 12,
-    courses: 245,
-    active_classes: 187
-  },
-  system: {
-    uptime: 99.8,
-    active_sessions: 342,
-    pending_tasks: 18
-  }
+  students: { total: 0, by_status: [] as { status: string; count: number }[], trend: 0 },
+  teachers: { total: 0, by_status: [] as { status: string; count: number }[] },
+  finance: { total_invoiced: 0, total_paid: 0, collection_rate: 0 },
+  academic: { programs: 0, courses: 0, active_classes: 0 },
+  programs: [] as ProgramStatus[],
+  recent_activities: [] as SystemActivity[],
+  documents_generated: 0,
+  success_rate: null as number | null,
+  pending_tasks: 0,
 }
-
-const enrollmentTrend = [
-  { month: 'Jan', inscrits: 120, objectif: 100 },
-  { month: 'Fév', inscrits: 185, objectif: 150 },
-  { month: 'Mar', inscrits: 210, objectif: 180 },
-  { month: 'Avr', inscrits: 195, objectif: 200 },
-  { month: 'Mai', inscrits: 240, objectif: 220 },
-  { month: 'Juin', inscrits: 280, objectif: 250 },
-]
 
 export default function SuperAdminDashboard() {
   const { user } = useAuthStore()
@@ -78,7 +45,7 @@ export default function SuperAdminDashboard() {
 
   const { data: systemStats, isLoading } = useQuery({
     queryKey: ['system-stats'],
-    queryFn: () => api.get('/system/stats/').then(r => r.data),
+    queryFn: () => api.get('/system-stats/').then(r => r.data),
     initialData: MOCK_DATA
   })
 
@@ -114,7 +81,7 @@ export default function SuperAdminDashboard() {
           </div>
           <div className="hidden sm:flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            <span className="text-white/90 font-medium">Système: {systemStats.system?.uptime ?? 99.8}% uptime</span>
+            <span className="text-white/90 font-medium">{systemStats.pending_tasks} tâche(s) en attente</span>
           </div>
         </div>
       </div>
@@ -135,7 +102,7 @@ export default function SuperAdminDashboard() {
           value={systemStats.teachers.total}
           icon={<Users className="w-5 h-5" />}
           color="bg-gradient-to-br from-emerald-500 to-emerald-600"
-          subtitle={`${systemStats.teachers.by_type?.[0]?.count ?? 0} permanents`}
+          subtitle={`${systemStats.teachers.by_status?.[0]?.count ?? 0} ${systemStats.teachers.by_status?.[0]?.status ?? ''}`}
           onClick={() => navigate('/teachers')}
         />
         <StatsCard
@@ -160,27 +127,24 @@ export default function SuperAdminDashboard() {
       {/* ── Middle Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Program Status */}
-        <Card title="Programmes académiques" subtitle="12 programmes actifs">
+        <Card title="Programmes académiques" subtitle={`${systemStats.academic.programs} programmes actifs`}>
           <div className="space-y-3">
-            {[
-              { name: 'Licence Informatique', status: 'actif' as const, students: 320 },
-              { name: 'Master Data Science', status: 'actif' as const, students: 185 },
-              { name: 'Doctorat IA', status: 'en_cours' as const, students: 42 },
-              { name: 'BTS Gestion', status: 'actif' as const, students: 156 },
-            ].map((program: ProgramStatus) => (
+            {!systemStats.programs?.length ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Aucun programme actif pour l'instant.</p>
+            ) : systemStats.programs.map((program: ProgramStatus) => (
               <div key={program.name} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <div>
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{program.name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{program.students} étudiants</p>
                 </div>
-                <Badge 
-                  label={program.status === 'actif' ? 'Actif' : 'En cours'}
-                  className={program.status === 'actif' ? 'badge-green' : 'badge-blue'}
+                <Badge
+                  label={program.status === 'active' ? 'Actif' : program.status}
+                  className={program.status === 'active' ? 'badge-green' : 'badge-blue'}
                   dot
                 />
               </div>
             ))}
-            <button 
+            <button
               onClick={() => navigate('/programs')}
               className="w-full text-center text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium py-2"
             >
@@ -217,8 +181,8 @@ export default function SuperAdminDashboard() {
           </div>
         </Card>
 
-        {/* System Health */}
-        <Card title="Santé du système" subtitle="Monitoring en temps réel">
+        {/* Indicateurs pédagogiques */}
+        <Card title="Indicateurs pédagogiques" subtitle="Vue rapide">
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <div className="flex items-center gap-3">
@@ -226,11 +190,11 @@ export default function SuperAdminDashboard() {
                   <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Serveurs</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">3/3 opérationnels</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Taux de réussite</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Résultats semestriels publiés</p>
                 </div>
               </div>
-              <Badge label="100%" className="badge-green" />
+              <Badge label={systemStats.success_rate != null ? `${systemStats.success_rate}%` : '—'} className="badge-green" />
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <div className="flex items-center gap-3">
@@ -238,11 +202,11 @@ export default function SuperAdminDashboard() {
                   <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Uptime</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">30 derniers jours</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Documents générés</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Certificats, relevés, attestations...</p>
                 </div>
               </div>
-              <Badge label={`${systemStats.system?.uptime ?? 99.8}%`} className="badge-blue" />
+              <Badge label={systemStats.documents_generated} className="badge-blue" />
             </div>
             <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl border border-amber-100 dark:border-amber-800">
               <div className="flex items-center gap-3">
@@ -254,7 +218,7 @@ export default function SuperAdminDashboard() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">Requiert attention</p>
                 </div>
               </div>
-              <Badge label={systemStats.system?.pending_tasks ?? 18} className="badge-amber" />
+              <Badge label={systemStats.pending_tasks} className="badge-amber" />
             </div>
           </div>
         </Card>
@@ -263,14 +227,11 @@ export default function SuperAdminDashboard() {
       {/* ── Bottom Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent Activity */}
-        <Card title="Activité récente" subtitle="Dernières 24 heures">
+        <Card title="Activité récente" subtitle="Journal d'audit">
           <div className="space-y-3">
-            {[
-              { action: 'Nouvelle inscription', user: 'Étudiant DIARRA', time: '10:45', type: 'success' as const },
-              { action: 'Paiement reçu', user: 'Famille KONE', amount: '450,000 FCFA', time: '09:22', type: 'finance' as const },
-              { action: 'Cours créé', user: 'Prof. DIALLO', course: 'Algèbre linéaire', time: '14:18', type: 'academic' as const },
-              { action: 'Document validé', user: 'Scolarité', document: 'Attestation', time: '16:05', type: 'document' as const },
-            ].map((activity: SystemActivity, i) => (
+            {!systemStats.recent_activities?.length ? (
+              <p className="text-sm text-gray-400 py-4 text-center">Aucune activité récente.</p>
+            ) : systemStats.recent_activities.map((activity: SystemActivity, i: number) => (
               <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
@@ -288,14 +249,13 @@ export default function SuperAdminDashboard() {
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{activity.action}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {activity.user}
-                    {activity.amount && ` • ${activity.amount}`}
-                    {activity.course && ` • ${activity.course}`}
+                    {activity.detail && ` • ${activity.detail}`}
                   </p>
                 </div>
                 <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{activity.time}</span>
               </div>
             ))}
-            <button 
+            <button
               onClick={() => navigate('/admin/audit')}
               className="w-full text-center text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium py-2"
             >
@@ -346,8 +306,8 @@ export default function SuperAdminDashboard() {
       {/* ── Footer Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Sessions actives</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.system?.active_sessions ?? 342}</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Programmes actifs</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.academic.programs}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Utilisateurs actifs</p>
@@ -357,11 +317,11 @@ export default function SuperAdminDashboard() {
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Documents générés</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">1,245</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.documents_generated.toLocaleString()}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Taux satisfaction</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">94.2%</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Taux de collecte</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.finance.collection_rate}%</p>
         </div>
       </div>
     </div>
