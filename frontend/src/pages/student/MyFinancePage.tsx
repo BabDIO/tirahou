@@ -1,57 +1,127 @@
-import { useQuery } from '@tanstack/react-query'
-import { DollarSign, Clock, CheckCircle, Download } from 'lucide-react'
-import { Card, StatsCard, Badge, Button, Progress } from '../../components/ui'
-import api from '../../lib/axios'
+import { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { CreditCard, Clock, CheckCircle, Smartphone } from 'lucide-react'
+import { Card, StatsCard, Badge, Progress, Modal, Button, Spinner, Empty } from '../../components/ui'
+import { financeApi } from '../../api'
+import { formatCurrency, formatDate, statusColor } from '../../lib/utils'
+import { useToast } from '../../hooks/useToast'
+import type { Invoice } from '../../types'
+
+const OPERATORS = [
+  { value: 'OM', label: 'Orange Money' },
+  { value: 'MOMO', label: 'MTN Mobile Money' },
+  { value: 'MOOV', label: 'Moov Money' },
+  { value: 'WAVE', label: 'Wave' },
+]
 
 export default function MyFinancePage() {
-  const { data: finance } = useQuery({
-    queryKey: ['student-finance'],
-    queryFn: () => api.get('/student/finance/').then(r => r.data)
+  const toast = useToast()
+  const [payTarget, setPayTarget] = useState<Invoice | null>(null)
+  const [phone, setPhone] = useState('')
+  const [operator, setOperator] = useState('OM')
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['my-invoices'],
+    queryFn: () => financeApi.getInvoices({ page_size: 100 }).then(r => r.data),
   })
 
-  const { data: payments } = useQuery({
-    queryKey: ['student-payments'],
-    queryFn: () => api.get('/student/payments/').then(r => r.data)
+  const payMut = useMutation({
+    mutationFn: () => financeApi.payOnline(payTarget!.id, { phone, operator }),
+    onSuccess: (res) => {
+      const url = res.data.payment_url
+      if (url) {
+        toast.success('Redirection vers le paiement...')
+        window.location.href = url
+      }
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { error?: string } } }
+      toast.error(e?.response?.data?.error ?? 'Paiement en ligne indisponible — réglez en caisse.')
+    },
   })
 
-  const totalAmount = finance?.total_amount || 0
-  const paidAmount = finance?.paid_amount || 0
+  const invoices: Invoice[] = data?.results ?? []
+  const totalAmount = invoices.reduce((s, i) => s + Number(i.total_amount), 0)
+  const paidAmount = invoices.reduce((s, i) => s + Number(i.paid_amount), 0)
   const remaining = totalAmount - paidAmount
   const percentPaid = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Ma situation financière</h1>
+      <div>
+        <h1 className="page-title">Ma situation financière</h1>
+        <p className="text-gray-400 text-sm mt-0.5">Factures, paiements et échéances</p>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatsCard title="Total à payer" value={`${totalAmount}€`} icon={<DollarSign className="w-5 h-5" />} color="bg-blue-600" />
-        <StatsCard title="Déjà payé" value={`${paidAmount}€`} icon={<CheckCircle className="w-5 h-5" />} color="bg-emerald-600" />
-        <StatsCard title="Reste à payer" value={`${remaining}€`} icon={<Clock className="w-5 h-5" />} color="bg-amber-600" />
+        <StatsCard title="Total facturé" value={formatCurrency(totalAmount)} icon={<CreditCard className="w-5 h-5" />} color="bg-blue-600" />
+        <StatsCard title="Déjà payé" value={formatCurrency(paidAmount)} icon={<CheckCircle className="w-5 h-5" />} color="bg-emerald-600" />
+        <StatsCard title="Reste à payer" value={formatCurrency(remaining)} icon={<Clock className="w-5 h-5" />} color="bg-amber-600" />
       </div>
 
       <Card title="Avancement des paiements">
         <Progress value={percentPaid} max={100} label="Progression" size="lg" color="bg-emerald-600" />
       </Card>
 
-      <Card title="Historique des paiements">
-        <div className="space-y-3">
-          {payments?.map((payment: any) => (
-            <div key={payment.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-emerald-600" />
+      <Card title="Mes factures" noPadding>
+        {isLoading ? <Spinner text="Chargement..." /> : !invoices.length ? (
+          <Empty message="Aucune facture" icon={<CreditCard className="w-8 h-8" />} />
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {invoices.map(inv => (
+              <div key={inv.id} className="flex items-center justify-between gap-3 p-4 flex-wrap">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900">{inv.invoice_number}</p>
+                  <p className="text-xs text-gray-400">
+                    {formatCurrency(Number(inv.paid_amount))} / {formatCurrency(Number(inv.total_amount))} · Échéance {formatDate(inv.due_date)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge label={inv.status_display} className={statusColor(inv.status)} dot />
+                  {inv.status !== 'payee' && inv.status !== 'annulee' && (
+                    <Button size="sm" icon={<Smartphone className="w-3.5 h-3.5" />} onClick={() => setPayTarget(inv)}>
+                      Payer en ligne
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="font-medium">{payment.amount}€</p>
-                <p className="text-sm text-gray-500">{payment.description}</p>
-              </div>
-              <div className="text-right">
-                <Badge label={payment.status === 'validated' ? 'Validé' : 'En attente'} className={payment.status === 'validated' ? 'badge-green' : 'badge-yellow'} />
-                <p className="text-xs text-gray-400 mt-1">{payment.date}</p>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Modal open={!!payTarget} onClose={() => setPayTarget(null)} title="Paiement mobile money" subtitle={payTarget?.invoice_number} size="sm">
+        {payTarget && (
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-xl p-3.5 flex items-center justify-between">
+              <span className="text-sm text-gray-600">Montant restant</span>
+              <span className="font-bold text-gray-900">{formatCurrency(Number(payTarget.remaining_amount))}</span>
+            </div>
+            <div>
+              <label className="label">Opérateur</label>
+              <div className="grid grid-cols-2 gap-2">
+                {OPERATORS.map(op => (
+                  <button key={op.value} type="button" onClick={() => setOperator(op.value)}
+                    className={`p-2.5 rounded-xl border text-sm font-medium transition-all ${
+                      operator === op.value ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}>
+                    {op.label}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </Card>
+            <div>
+              <label className="label">Numéro de téléphone *</label>
+              <input className="input" placeholder="07 00 00 00 00" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+            <Button className="w-full" icon={<Smartphone className="w-4 h-4" />} loading={payMut.isPending}
+              disabled={!phone.trim()} onClick={() => payMut.mutate()}>
+              Lancer le paiement
+            </Button>
+            <p className="text-xs text-gray-400 text-center">Vous recevrez une demande de confirmation sur votre téléphone.</p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

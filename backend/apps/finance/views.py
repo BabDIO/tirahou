@@ -90,6 +90,26 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'])
+    def pay_online(self, request, pk=None):
+        """
+        Démarre un paiement mobile money en ligne (8.12 / E7) — l'étudiant
+        est redirigé vers `payment_url` pour saisir son code sur son
+        opérateur. Nécessite CINETPAY_API_KEY/CINETPAY_SITE_ID (voir
+        apps.finance.payment_gateway) ; sinon renvoie une erreur explicite
+        invitant à payer en caisse.
+        """
+        from .payment_gateway import initiate_mobile_money_payment
+        invoice = self.get_object()
+        phone = request.data.get('phone')
+        operator = request.data.get('operator', 'OM')
+        if not phone:
+            return Response({'error': 'Numéro de téléphone requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        result = initiate_mobile_money_payment(invoice, invoice.remaining_amount, phone, operator)
+        if not result['success']:
+            return Response({'error': result['error']}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'payment_url': result['payment_url'], 'transaction_id': result['transaction_id']})
+
     @extend_schema(
         request={
             'application/json': {
@@ -541,3 +561,40 @@ def cash_journal(request):
         'payments': PaymentSerializer(qs.order_by('-paid_at')[:100], many=True).data,
     }
     return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def cinetpay_notify(request):
+    """
+    Callback serveur-à-serveur CinetPay (E7) : appelé par CinetPay lui-même
+    (pas par le navigateur), donc AllowAny — la sécurité repose sur la
+    vérification du statut via `verify_transaction` (jamais sur les données
+    brutes du POST, qui pourraient être falsifiées).
+    """
+    from .payment_gateway import verify_transaction
+    transaction_id = request.data.get('cpm_trans_id') or request.data.get('transaction_id')
+    if not transaction_id:
+        return Response({'error': 'transaction_id manquant'}, status=status.HTTP_400_BAD_REQUEST)
+
+    result = verify_transaction(transaction_id)
+    if not result['success']:
+        return Response({'detail': 'Transaction non confirmée', 'status': result['status']})
+
+    try:
+        invoice_number = transaction_id.split('-')[1]
+        invoice = Invoice.objects.get(invoice_number=invoice_number)
+    except (IndexError, Invoice.DoesNotExist):
+        return Response({'error': 'Facture introuvable pour cette transaction'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not Payment.objects.filter(transaction_ref=transaction_id).exists():
+        amount = invoice.remaining_amount
+        payment = Payment.objects.create(
+            invoice=invoice, amount=amount, method='mobile_money',
+            transaction_ref=transaction_id, status='valide', paid_at=timezone.now(),
+        )
+        invoice.paid_amount += payment.amount
+        invoice.status = 'payee' if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount else 'partiellement_payee'
+        invoice.save()
+
+    return Response({'detail': 'Paiement confirmé.'})

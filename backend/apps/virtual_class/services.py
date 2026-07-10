@@ -79,7 +79,19 @@ class VirtualClassService:
         if session.join_url:
             return session.join_url
 
-        # URLs par défaut selon le fournisseur
+        # BigBlueButton : intégration réelle si configurée (voir apps.virtual_class.bbb)
+        if session.provider == 'bbb':
+            from . import bbb
+            if bbb.is_configured():
+                bbb.create_meeting(session)
+                url = bbb.get_join_url(session, user)
+                if url:
+                    return url
+            # Non configuré : pas de serveur BBB disponible, aucune URL de démonstration
+            return ""
+
+        # URLs par défaut selon le fournisseur (Jitsi ne nécessite aucune clé —
+        # meet.jit.si est un service public gratuit, c'est une vraie intégration)
         provider_urls = {
             'jitsi': f"https://meet.jit.si/{session.meeting_id or session.id}",
             'zoom': f"https://zoom.us/j/{session.meeting_id}" if session.meeting_id else "",

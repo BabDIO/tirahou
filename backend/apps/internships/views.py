@@ -159,7 +159,32 @@ class ThesisViewSet(viewsets.ModelViewSet):
         thesis.status = 'depose'
         thesis.submitted_at = timezone.now()
         thesis.save()
-        return Response({'detail': 'Mémoire déposé avec succès.'})
+
+        detail = 'Mémoire déposé avec succès.'
+        from .plagiarism import is_configured, submit_for_analysis
+        if is_configured():
+            result = submit_for_analysis(thesis)
+            if result['success']:
+                thesis.plagiarism_analysis_id = result['analysis_id']
+                thesis.save(update_fields=['plagiarism_analysis_id', 'updated_at'])
+                detail += " Analyse anti-plagiat lancée (résultat sous quelques minutes)."
+        return Response({'detail': detail})
+
+    @action(detail=True, methods=['get'])
+    def check_plagiarism(self, request, pk=None):
+        """Interroge le résultat de l'analyse anti-plagiat (Compilatio) si disponible."""
+        thesis = self.get_object()
+        from .plagiarism import is_configured, get_analysis_result
+        if not is_configured():
+            return Response({'error': "Service anti-plagiat non configuré."}, status=400)
+        if not thesis.plagiarism_analysis_id:
+            return Response({'error': "Aucune analyse en cours pour ce mémoire."}, status=400)
+        result = get_analysis_result(thesis.plagiarism_analysis_id)
+        if result['success'] and result['similarity_percent'] is not None:
+            thesis.plagiarism_score = result['similarity_percent']
+            thesis.plagiarism_report_url = result['report_url'] or ''
+            thesis.save(update_fields=['plagiarism_score', 'plagiarism_report_url', 'updated_at'])
+        return Response(result)
 
     @action(detail=True, methods=['get'])
     def progress_history(self, request, pk=None):

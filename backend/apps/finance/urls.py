@@ -12,4 +12,5 @@ router.register('installments', views.InstallmentViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('finance/cash-journal/', views.cash_journal, name='cash-journal'),
+    path('finance/cinetpay/notify/', views.cinetpay_notify, name='cinetpay-notify'),
 ]

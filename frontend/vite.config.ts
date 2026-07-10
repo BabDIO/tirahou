@@ -8,6 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'TIRAHOU — Gestion Universitaire',
@@ -28,21 +34,6 @@ export default defineConfig({
           { name: 'Dashboard', url: '/dashboard', description: 'Tableau de bord' },
           { name: 'Étudiants', url: '/students', description: 'Gestion des étudiants' },
           { name: 'LMS', url: '/lms', description: 'Campus virtuel' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: { cacheName: 'google-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
-          },
-          {
-            urlPattern: /\/api\/v1\/(academic-years|programs|faculties|departments)\//,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'api-static-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 } },
-          },
         ],
       },
     }),

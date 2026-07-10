@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -341,6 +342,51 @@ VAPID_PRIVATE_KEY = os.environ.get(
     '-----END PRIVATE KEY-----\n'
 )
 VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'admin@tirahou.edu')
+
+# ── Intégrations nécessitant des identifiants externes (non fournis) ─────────
+# Chaque intégration est un adaptateur fonctionnel : il suffit de renseigner
+# les variables d'environnement correspondantes pour l'activer en production.
+
+# Paiement mobile money — CinetPay (apps/finance/payment_gateway.py)
+CINETPAY_API_KEY = os.environ.get('CINETPAY_API_KEY', '')
+CINETPAY_SITE_ID = os.environ.get('CINETPAY_SITE_ID', '')
+CINETPAY_NOTIFY_URL = os.environ.get('CINETPAY_NOTIFY_URL', '')
+CINETPAY_RETURN_URL = os.environ.get('CINETPAY_RETURN_URL', '')
+
+# Visioconférence — BigBlueButton (apps/virtual_class/bbb.py)
+BBB_SERVER_URL = os.environ.get('BBB_SERVER_URL', '')
+BBB_SECRET = os.environ.get('BBB_SECRET', '')
+
+# SMS — Twilio (apps/communication/sms.py)
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
+
+# Anti-plagiat — Compilatio (apps/internships/plagiarism.py)
+PLAGIARISM_API_KEY = os.environ.get('PLAGIARISM_API_KEY', '')
+PLAGIARISM_API_URL = os.environ.get('PLAGIARISM_API_URL', 'https://api.compilatio.net')
+
+# SSO / Annuaire externe — LDAP (nécessite `pip install django-auth-ldap`)
+LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI', '')
+LDAP_BIND_DN = os.environ.get('LDAP_BIND_DN', '')
+LDAP_BIND_PASSWORD = os.environ.get('LDAP_BIND_PASSWORD', '')
+LDAP_USER_SEARCH_BASE = os.environ.get('LDAP_USER_SEARCH_BASE', '')
+if LDAP_SERVER_URI:
+    try:
+        import ldap
+        from django_auth_ldap.config import LDAPSearch
+
+        AUTH_LDAP_SERVER_URI = LDAP_SERVER_URI
+        AUTH_LDAP_BIND_DN = LDAP_BIND_DN
+        AUTH_LDAP_BIND_PASSWORD = LDAP_BIND_PASSWORD
+        AUTH_LDAP_USER_SEARCH = LDAPSearch(LDAP_USER_SEARCH_BASE, ldap.SCOPE_SUBTREE, '(mail=%(user)s)')
+        AUTH_LDAP_USER_ATTR_MAP = {'first_name': 'givenName', 'last_name': 'sn', 'email': 'mail'}
+        AUTHENTICATION_BACKENDS = ['django_auth_ldap.backend.LDAPBackend'] + list(AUTHENTICATION_BACKENDS)
+    except ImportError:
+        logging.getLogger(__name__).warning(
+            "LDAP_SERVER_URI défini mais django-auth-ldap n'est pas installé "
+            "(pip install django-auth-ldap) — authentification LDAP désactivée."
+        )
 
 # ── Sécurité production ───────────────────────────────────────────────────────
 if not DEBUG:

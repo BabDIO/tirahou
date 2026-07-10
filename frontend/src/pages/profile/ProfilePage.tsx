@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Mail, Phone, Lock, Shield, Clock, IdCard, FileText, Download, ShieldCheck, ShieldOff, Award, Coins } from 'lucide-react'
+import { Mail, Phone, Lock, Shield, Clock, IdCard, FileText, Download, ShieldCheck, ShieldOff, Award, Coins, Bell, BellOff } from 'lucide-react'
 import { Card, Spinner, Badge, Alert, Button } from '../../components/ui'
 import { authApi, documentsApi, analyticsApi } from '../../api'
 import { useAuthStore } from '../../store/authStore'
@@ -10,6 +10,7 @@ import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import { saveAs } from 'file-saver'
 import { formatDate } from '../../lib/utils'
+import { isPushSupported, getCurrentPushSubscription, subscribeToPush, unsubscribeFromPush } from '../../lib/push'
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore()
@@ -113,6 +114,34 @@ export default function ProfilePage() {
     },
     onError: () => toast.error('Mot de passe incorrect'),
   })
+
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isPushSupported()) return
+    getCurrentPushSubscription().then(sub => setPushEnabled(!!sub))
+  }, [])
+
+  const togglePush = async () => {
+    setPushLoading(true)
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush()
+        setPushEnabled(false)
+        toast.success('Notifications push désactivées')
+      } else {
+        const ok = await subscribeToPush()
+        setPushEnabled(ok)
+        if (ok) toast.success('Notifications push activées')
+        else toast.error('Autorisation refusée par le navigateur')
+      }
+    } catch {
+      toast.error('Erreur lors de la configuration des notifications push')
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   const profile: User | null = me ?? user
   if (isLoading) return <Spinner text="Chargement du profil..." />
@@ -352,6 +381,22 @@ export default function ProfilePage() {
           </div>
         )}
       </Card>
+
+      {/* Notifications push web */}
+      {isPushSupported() && (
+        <Card title="Notifications push" subtitle="Recevez une alerte sur cet appareil même hors de l'application">
+          <div className="flex items-center justify-between">
+            <Badge label={pushEnabled ? 'Activées' : 'Désactivées'} className={pushEnabled ? 'badge-green' : 'badge-gray'} dot />
+            <button onClick={togglePush} disabled={pushLoading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-50 ${
+                pushEnabled ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-primary-600 text-white hover:bg-primary-700'
+              }`}>
+              {pushEnabled ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+              {pushLoading ? 'Veuillez patienter...' : pushEnabled ? 'Désactiver' : 'Activer sur cet appareil'}
+            </button>
+          </div>
+        </Card>
+      )}
 
       {/* Activité récente */}
       {auditLogs?.results?.length > 0 && (

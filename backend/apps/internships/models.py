@@ -69,6 +69,8 @@ class Thesis(BaseModel):
     validated_at = models.DateTimeField(null=True, blank=True)
     final_file = models.FileField(upload_to='theses/final/', null=True, blank=True)
     plagiarism_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    plagiarism_analysis_id = models.CharField(max_length=100, blank=True)
+    plagiarism_report_url = models.URLField(blank=True)
     is_published = models.BooleanField(default=False)
 
     class Meta:

@@ -1,12 +1,14 @@
 from rest_framework import viewsets, permissions, status, serializers
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q, Count
-from .models import Notification, Announcement, Message, Forum, ForumPost
+from .models import Notification, Announcement, Message, Forum, ForumPost, PushSubscription
 from .serializers import (
     NotificationSerializer, AnnouncementSerializer,
     MessageSerializer, ForumSerializer, ForumPostSerializer,
+    PushSubscriptionSerializer,
 )
 
 
@@ -241,3 +243,50 @@ class ForumPostViewSet(viewsets.ModelViewSet):
         post.is_pinned = not post.is_pinned
         post.save()
         return Response({'detail': f'Post {"épinglé" if post.is_pinned else "désépinglé"}.'})
+
+
+class PushSubscriptionViewSet(viewsets.ModelViewSet):
+    """
+    Abonnement/désabonnement aux notifications push web (VAPID, 8.24 / Q4).
+    Le frontend crée un abonnement navigateur (PushManager.subscribe) puis
+    l'enregistre ici ; `create` fait un upsert par `endpoint` pour éviter
+    les doublons lors d'un réabonnement.
+    """
+    queryset = PushSubscription.objects.all()
+    serializer_class = PushSubscriptionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return PushSubscription.objects.none()
+        return PushSubscription.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        endpoint = serializer.validated_data['endpoint']
+        subscription, _ = PushSubscription.objects.update_or_create(
+            endpoint=endpoint,
+            defaults={
+                'user': request.user,
+                'p256dh': serializer.validated_data['p256dh'],
+                'auth': serializer.validated_data['auth'],
+                'user_agent': serializer.validated_data.get('user_agent', ''),
+            },
+        )
+        return Response(PushSubscriptionSerializer(subscription).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    def unsubscribe(self, request):
+        endpoint = request.data.get('endpoint')
+        if not endpoint:
+            return Response({'error': 'endpoint requis'}, status=status.HTTP_400_BAD_REQUEST)
+        PushSubscription.objects.filter(endpoint=endpoint, user=request.user).delete()
+        return Response({'detail': 'Désabonnement effectué.'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def vapid_public_key(request):
+    """Clé publique VAPID à utiliser côté navigateur pour PushManager.subscribe()."""
+    return Response({'public_key': settings.VAPID_PUBLIC_KEY})

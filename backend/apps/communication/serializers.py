@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import Notification, Announcement, Message, Forum, ForumPost
+from .models import Notification, Announcement, Message, Forum, ForumPost, PushSubscription
+
+
+class PushSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PushSubscription
+        fields = '__all__'
+        read_only_fields = ['user']
 
 
 class NotificationSerializer(serializers.ModelSerializer):

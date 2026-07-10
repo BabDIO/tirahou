@@ -135,3 +135,23 @@ class ForumPost(BaseModel):
 
     def __str__(self):
         return f"{self.forum} — {self.author} : {self.content[:50]}"
+
+
+class PushSubscription(BaseModel):
+    """
+    Abonnement Web Push (8.24 / Q4) — un utilisateur peut avoir plusieurs
+    abonnements (un par navigateur/appareil). Les clés `p256dh`/`auth`
+    proviennent de `PushSubscription.toJSON()` côté navigateur.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='push_subscriptions')
+    endpoint = models.URLField(max_length=500, unique=True)
+    p256dh = models.CharField(max_length=255)
+    auth = models.CharField(max_length=255)
+    user_agent = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = 'push_subscriptions'
+        verbose_name = 'Abonnement Push'
+
+    def __str__(self):
+        return f"{self.user} — {self.endpoint[:50]}"

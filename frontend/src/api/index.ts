@@ -156,6 +156,9 @@ export const financeApi = {
   markInstallmentPaid: (id: string) => api.post(`/installments/${id}/mark_paid/`),
   // Remises
   applyDiscount: (invoiceId: string, data: object) => api.post(`/invoices/${invoiceId}/apply_discount/`, data),
+  // Paiement mobile money en ligne (E7)
+  payOnline: (invoiceId: string, data: { phone: string; operator: string }) =>
+    api.post<{ payment_url: string; transaction_id: string }>(`/invoices/${invoiceId}/pay_online/`, data),
 }
 
 // ── Documents & GED ───────────────────────────────────────────────────────────
@@ -356,6 +359,10 @@ export const communicationApi = {
   createForum: (data: object) => api.post('/forums/', data),
   getForumPosts: (params?: object) => api.get('/forum-posts/', { params }),
   createForumPost: (data: object) => api.post('/forum-posts/', data),
+  // Notifications push web (VAPID)
+  getVapidPublicKey: () => api.get<{ public_key: string }>('/push/vapid-public-key/'),
+  subscribePush: (data: object) => api.post('/push-subscriptions/', data),
+  unsubscribePush: (endpoint: string) => api.post('/push-subscriptions/unsubscribe/', { endpoint }),
 }
 
 // ── Analytics & Reporting ─────────────────────────────────────────────────────

@@ -55,7 +55,22 @@ class NotificationService:
         # Envoyer par email si demandé
         if channel in ['email', 'both']:
             NotificationService._send_email(notification)
-        
+
+        # Envoyer par SMS si demandé (best-effort, no-op si Twilio non configuré)
+        if channel in ['sms', 'both'] and getattr(recipient, 'phone', ''):
+            try:
+                from .sms import send_sms
+                send_sms(recipient.phone, f"[TIRAHOU] {title} — {message}"[:300])
+            except Exception as e:
+                logger.warning(f"SMS non envoyé: {e}")
+
+        # Notification push web (best-effort, silencieuse si aucun abonnement)
+        try:
+            from .webpush import send_web_push
+            send_web_push(recipient, title, message, url=action_url or '/notifications', icon=None)
+        except Exception as e:
+            logger.warning(f"Push web non envoyé: {e}")
+
         logger.info(f"Notification envoyée à {recipient.email}: {title}")
         return notification
     
