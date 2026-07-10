@@ -9,4 +9,7 @@ router.register('ues', views.UEViewSet)
 router.register('ecs', views.ECViewSet)
 router.register('groups', views.GroupViewSet)
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('responsable/dashboard/', views.responsable_dashboard, name='responsable-dashboard'),
+    path('', include(router.urls)),
+]

@@ -13,4 +13,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('finance/cash-journal/', views.cash_journal, name='cash-journal'),
     path('finance/cinetpay/notify/', views.cinetpay_notify, name='cinetpay-notify'),
+    path('finance/dashboard/', views.finance_dashboard, name='finance-dashboard'),
 ]

@@ -598,3 +598,88 @@ def cinetpay_notify(request):
         invoice.save()
 
     return Response({'detail': 'Paiement confirmé.'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def finance_dashboard(request):
+    """
+    Tableau de bord du service financier — toutes les valeurs sont
+    calculées depuis la base (aucune donnée inventée).
+    """
+    from datetime import timedelta
+    from django.db.models import Sum, Count
+
+    today = timezone.now().date()
+    this_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month_end = this_month_start - timedelta(seconds=1)
+    last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    invoices = Invoice.objects.exclude(status='annulee')
+    total_invoiced = float(invoices.aggregate(t=Sum('total_amount'))['t'] or 0)
+    total_paid = float(invoices.aggregate(t=Sum('paid_amount'))['t'] or 0)
+    outstanding = total_invoiced - total_paid
+    collection_rate = round((total_paid / total_invoiced) * 100, 1) if total_invoiced else 0
+
+    overdue_qs = invoices.filter(due_date__lt=today, status__in=['emise', 'partiellement_payee'])
+    overdue_count = overdue_qs.count()
+
+    payments_this_month = Payment.objects.filter(status='valide', paid_at__gte=this_month_start)
+    payments_last_month = Payment.objects.filter(status='valide', paid_at__gte=last_month_start, paid_at__lte=last_month_end)
+    revenue_this_month = float(payments_this_month.aggregate(t=Sum('amount'))['t'] or 0)
+    revenue_last_month = float(payments_last_month.aggregate(t=Sum('amount'))['t'] or 0)
+    monthly_revenue_trend = round(((revenue_this_month - revenue_last_month) / revenue_last_month) * 100, 1) if revenue_last_month else 0
+
+    categories_qs = (
+        InvoiceItem.objects.filter(invoice__in=invoices)
+        .values('fee_type__category')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
+    )
+    category_labels = dict(FeeType.CATEGORY_CHOICES)
+    category_colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-teal-500', 'bg-rose-500', 'bg-indigo-500', 'bg-lime-500']
+    categories = [
+        {
+            'name': category_labels.get(c['fee_type__category'], c['fee_type__category'] or 'Autre'),
+            'amount': float(c['total']),
+            'color': category_colors[i % len(category_colors)],
+        }
+        for i, c in enumerate(categories_qs) if c['fee_type__category']
+    ]
+
+    recent_payments_qs = Payment.objects.filter(status='valide').select_related('invoice__student__user').order_by('-paid_at')[:6]
+    recent_payments = [
+        {
+            'student': p.invoice.student.user.get_full_name(),
+            'amount': float(p.amount),
+            'date': p.paid_at.strftime('%d/%m/%Y') if p.paid_at else '',
+            'status': p.invoice.status if p.invoice.status in ('payee', 'partiellement_payee') else (
+                'en_retard' if p.invoice.due_date and p.invoice.due_date < today else 'payee'
+            ),
+        }
+        for p in recent_payments_qs
+    ]
+
+    paid_invoices_count = invoices.filter(status='payee').count()
+    active_scholarships = Scholarship.objects.filter(is_active=True).count()
+
+    return Response({
+        'summary': {
+            'total_invoiced': total_invoiced,
+            'total_paid': total_paid,
+            'collection_rate': collection_rate,
+            'outstanding_amount': outstanding,
+            'invoices_count': invoices.count(),
+            'paid_invoices': paid_invoices_count,
+        },
+        'trends': {
+            'monthly_revenue': monthly_revenue_trend,
+            'collection_efficiency': collection_rate,
+            'overdue_invoices': overdue_count,
+            'scholarships_approved': active_scholarships,
+        },
+        'categories': categories,
+        'recent_payments': recent_payments,
+        'overdue_rate': round((overdue_count / invoices.count()) * 100, 1) if invoices.count() else 0,
+        'average_payment_amount': round(total_paid / paid_invoices_count) if paid_invoices_count else 0,
+    })

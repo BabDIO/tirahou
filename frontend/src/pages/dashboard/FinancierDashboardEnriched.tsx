@@ -34,42 +34,26 @@ interface FinancialData {
     paid_invoices: number
   }
   trends: {
-    monthly_revenue: string
-    collection_efficiency: string
+    monthly_revenue: number
+    collection_efficiency: number
     overdue_invoices: number
     scholarships_approved: number
   }
   categories: FinancialCategory[]
   recent_payments: RecentPayment[]
+  overdue_rate: number
+  average_payment_amount: number
 }
 
-// Données simulées pour démonstration
+// Repli affiché brièvement au tout premier chargement — remplacé par
+// /finance/dashboard/ (données réelles) dès la réponse du serveur.
 const FINANCIAL_DATA: FinancialData = {
-  summary: {
-    total_invoiced: 12500000,
-    total_paid: 10850000,
-    collection_rate: 86.8,
-    outstanding_amount: 1650000,
-    invoices_count: 1245,
-    paid_invoices: 1082
-  },
-  trends: {
-    monthly_revenue: '+8.5%',
-    collection_efficiency: '+12.3%',
-    overdue_invoices: -5.2,
-    scholarships_approved: 42
-  },
-  categories: [
-    { name: 'Frais inscription', amount: 4500000, color: 'bg-blue-500' },
-    { name: 'Frais scolarité', amount: 6200000, color: 'bg-green-500' },
-    { name: 'Services divers', amount: 1800000, color: 'bg-purple-500' },
-  ],
-  recent_payments: [
-    { student: 'Moussa DIALLO', amount: 450000, date: 'Aujourd\'hui', status: 'payee' },
-    { student: 'Fatou DIOP', amount: 320000, date: 'Hier', status: 'payee' },
-    { student: 'Amadou KEITA', amount: 280000, date: 'Il y a 2 jours', status: 'partiellement_payee' },
-    { student: 'Khadija TRAORE', amount: 150000, date: 'Il y a 3 jours', status: 'en_retard' },
-  ]
+  summary: { total_invoiced: 0, total_paid: 0, collection_rate: 0, outstanding_amount: 0, invoices_count: 0, paid_invoices: 0 },
+  trends: { monthly_revenue: 0, collection_efficiency: 0, overdue_invoices: 0, scholarships_approved: 0 },
+  categories: [],
+  recent_payments: [],
+  overdue_rate: 0,
+  average_payment_amount: 0,
 }
 
 export default function FinancierDashboardEnriched() {
@@ -78,7 +62,7 @@ export default function FinancierDashboardEnriched() {
 
   const { data: financialData, isLoading } = useQuery({
     queryKey: ['financial-dashboard'],
-    queryFn: () => api.get('/finance/dashboard/').then(r => r.data),
+    queryFn: () => api.get<FinancialData>('/finance/dashboard/').then(r => r.data),
     initialData: FINANCIAL_DATA
   })
 
@@ -141,8 +125,7 @@ export default function FinancierDashboardEnriched() {
           value={`${financialData.summary.collection_rate}%`}
           icon={<TrendingUp className="w-5 h-5" />}
           color="bg-gradient-to-br from-teal-500 to-teal-600"
-          trend={{ value: financialData.trends.collection_efficiency, label: 'amélioration' }}
-          subtitle="Performance"
+          subtitle={`${financialData.summary.paid_invoices}/${financialData.summary.invoices_count} factures soldées`}
           onClick={() => navigate('/finance')}
         />
         <StatsCard
@@ -161,8 +144,12 @@ export default function FinancierDashboardEnriched() {
         <Card title="Répartition des revenus" subtitle="Par catégorie" className="lg:col-span-2">
           <div className="space-y-4">
             <div className="space-y-3">
+              {!financialData.categories.length && (
+                <p className="text-sm text-gray-400 py-4 text-center">Aucune facture détaillée par catégorie pour l'instant.</p>
+              )}
               {financialData.categories.map((cat: FinancialCategory) => {
-                const percentage = Math.round((cat.amount / financialData.summary.total_invoiced) * 100)
+                const percentage = financialData.summary.total_invoiced
+                  ? Math.round((cat.amount / financialData.summary.total_invoiced) * 100) : 0
                 return (
                   <div key={cat.name}>
                     <div className="flex items-center justify-between mb-1">
@@ -252,8 +239,11 @@ export default function FinancierDashboardEnriched() {
       {/* ── Bottom Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent Payments */}
-        <Card title="Paiements récents" subtitle="Dernières 72 heures">
+        <Card title="Paiements récents" subtitle="Derniers encaissements validés">
           <div className="space-y-3">
+            {!financialData.recent_payments.length && (
+              <p className="text-sm text-gray-400 py-4 text-center">Aucun paiement enregistré pour l'instant.</p>
+            )}
             {financialData.recent_payments.map((payment: RecentPayment) => (
               <div key={payment.student} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <div className="flex items-center gap-3">
@@ -347,22 +337,22 @@ export default function FinancierDashboardEnriched() {
       {/* ── Footer Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Montant moyen</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Montant moyen encaissé</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">
-            {formatCurrency(Math.round(financialData.summary.total_paid / financialData.summary.paid_invoices))}
+            {formatCurrency(financialData.average_payment_amount)}
           </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Délai moyen</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">18 jours</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Factures en retard</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{financialData.trends.overdue_invoices}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Taux retard</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">3.2%</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Taux de retard</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{financialData.overdue_rate}%</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Clients satisfaits</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">96.8%</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Bourses / exonérations</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{financialData.trends.scholarships_approved}</p>
         </div>
       </div>
     </div>

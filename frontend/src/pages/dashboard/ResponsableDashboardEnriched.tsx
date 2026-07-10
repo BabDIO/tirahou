@@ -2,43 +2,30 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   Award, Users, BookOpen, TrendingUp, Sparkles,
-  BarChart3, CheckCircle, AlertTriangle, Target,
-  GraduationCap, FileText, Calendar, TrendingDown
+  BarChart3, AlertTriangle, Target,
+  GraduationCap, FileText, Calendar
 } from 'lucide-react'
 import { StatsCard, Card, Badge, Progress, Alert, Spinner } from '../../components/ui'
 import { formatNumber, cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../lib/axios'
 
-// Données simulées pour démonstration
-const RESPONSABLE_DATA = {
-  programs: {
-    total: 12,
-    active: 10,
-    by_type: [
-      { type: 'Licence', count: 6 },
-      { type: 'Master', count: 4 },
-      { type: 'Doctorat', count: 2 },
-    ]
-  },
-  academic: {
-    students_total: 1428,
-    teachers_total: 87,
-    average_grade: 14.2,
-    success_rate: 78.5
-  },
-  validation: {
-    pending_grades: 245,
-    pending_validation: 18,
-    validated_this_month: 142,
-    rejection_rate: 3.2
-  },
-  quality: {
-    satisfaction_rate: 89.3,
-    retention_rate: 92.8,
-    dropout_risk: 5.4,
-    improvement_target: '+15%'
-  }
+interface ResponsableData {
+  programs: { total: number; active: number; by_type: { type: string; count: number }[] }
+  academic: { students_total: number; teachers_total: number; average_grade: number | null; success_rate: number }
+  validation: { pending_grades: number; pending_validation: number; validated_this_month: number; rejection_rate: number }
+  quality: { retention_rate: number; dropout_risk: number | null }
+  pending_actions: { action: string; program: string; deadline: string; priority: 'haute' | 'moyenne' | 'normale' }[]
+}
+
+// Repli affiché brièvement au tout premier chargement — remplacé par
+// /responsable/dashboard/ (données réelles) dès la réponse du serveur.
+const RESPONSABLE_DATA: ResponsableData = {
+  programs: { total: 0, active: 0, by_type: [] },
+  academic: { students_total: 0, teachers_total: 0, average_grade: null, success_rate: 0 },
+  validation: { pending_grades: 0, pending_validation: 0, validated_this_month: 0, rejection_rate: 0 },
+  quality: { retention_rate: 0, dropout_risk: null },
+  pending_actions: [],
 }
 
 export default function ResponsableDashboardEnriched() {
@@ -47,7 +34,7 @@ export default function ResponsableDashboardEnriched() {
 
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['responsable-dashboard'],
-    queryFn: () => api.get('/responsable/dashboard/').then(r => r.data),
+    queryFn: () => api.get<ResponsableData>('/responsable/dashboard/').then(r => r.data),
     initialData: RESPONSABLE_DATA
   })
 
@@ -106,10 +93,10 @@ export default function ResponsableDashboardEnriched() {
         />
         <StatsCard
           title="Moyenne générale"
-          value={`${dashboardData.academic.average_grade}/20`}
+          value={dashboardData.academic.average_grade != null ? `${dashboardData.academic.average_grade}/20` : '—'}
           icon={<Award className="w-5 h-5" />}
           color="bg-gradient-to-br from-amber-500 to-amber-600"
-          subtitle="Session en cours"
+          subtitle="Notes validées/publiées"
           onClick={() => navigate('/evaluation')}
         />
         <StatsCard
@@ -127,8 +114,11 @@ export default function ResponsableDashboardEnriched() {
         {/* Programs Overview */}
         <Card title="Types de programmes" subtitle="Répartition par niveau">
           <div className="space-y-4">
-            {dashboardData.programs.by_type.map((program) => {
-              const percentage = Math.round((program.count / dashboardData.programs.total) * 100)
+            {!dashboardData.programs.by_type.length && (
+              <p className="text-sm text-gray-400 py-4 text-center">Aucun programme actif pour l'instant.</p>
+            )}
+            {dashboardData.programs.by_type.map((program: { type: string; count: number }) => {
+              const percentage = dashboardData.programs.total ? Math.round((program.count / dashboardData.programs.total) * 100) : 0
               return (
                 <div key={program.type}>
                   <div className="flex items-center justify-between mb-1">
@@ -171,11 +161,13 @@ export default function ResponsableDashboardEnriched() {
                 <p className="text-lg font-bold text-emerald-700">{dashboardData.validation.validated_this_month}</p>
               </div>
             </div>
-            <Progress 
-              value={Math.round((dashboardData.validation.validated_this_month / dashboardData.validation.pending_grades) * 100)} 
-              label="Progression validation" 
-              color="bg-emerald-500" 
-              size="md" 
+            <Progress
+              value={dashboardData.validation.pending_grades
+                ? Math.round((dashboardData.validation.validated_this_month / (dashboardData.validation.validated_this_month + dashboardData.validation.pending_grades)) * 100)
+                : 100}
+              label="Progression validation"
+              color="bg-emerald-500"
+              size="md"
             />
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Taux de rejet:</span>
@@ -189,24 +181,12 @@ export default function ResponsableDashboardEnriched() {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Satisfaction</p>
-                  <p className="text-xs text-gray-500">Enquêtes étudiants</p>
-                </div>
-              </div>
-              <Badge label={`${dashboardData.quality.satisfaction_rate}%`} className="badge-emerald" />
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Target className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Rétention</p>
-                  <p className="text-xs text-gray-500">Taux maintien</p>
+                  <p className="text-xs text-gray-500">Étudiants ni abandonnés ni exclus</p>
                 </div>
               </div>
               <Badge label={`${dashboardData.quality.retention_rate}%`} className="badge-blue" />
@@ -218,10 +198,10 @@ export default function ResponsableDashboardEnriched() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Risque décrochage</p>
-                  <p className="text-xs text-gray-500">À surveiller</p>
+                  <p className="text-xs text-gray-500">Scores d'engagement à risque</p>
                 </div>
               </div>
-              <Badge label={`${dashboardData.quality.dropout_risk}%`} className="badge-amber" />
+              <Badge label={dashboardData.quality.dropout_risk != null ? `${dashboardData.quality.dropout_risk}%` : '—'} className="badge-amber" />
             </div>
           </div>
         </Card>
@@ -232,12 +212,10 @@ export default function ResponsableDashboardEnriched() {
         {/* Pending Actions */}
         <Card title="Actions en attente" subtitle="Requièrent votre attention">
           <div className="space-y-3">
-            {[
-              { action: 'Validation notes Master Data', program: 'Master Data Science', deadline: 'Demain', priority: 'haute' },
-              { action: 'Révision programme Licence Info', program: 'Licence Informatique', deadline: '3 jours', priority: 'moyenne' },
-              { action: 'Rapport qualité semestre', program: 'Tous programmes', deadline: '5 jours', priority: 'normale' },
-              { action: 'Entretien enseignant vacataire', program: 'BTS Gestion', deadline: '1 semaine', priority: 'normale' },
-            ].map((task, i) => (
+            {!dashboardData.pending_actions.length && (
+              <p className="text-sm text-gray-400 py-4 text-center">Aucune action en attente 🎉</p>
+            )}
+            {dashboardData.pending_actions.map((task, i: number) => (
               <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5",
@@ -322,10 +300,10 @@ export default function ResponsableDashboardEnriched() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-emerald-900">Taux réussite</p>
-                <p className="text-xs text-emerald-700">Objectif: {dashboardData.quality.improvement_target}</p>
+                <p className="text-xs text-emerald-700">Résultats semestriels publiés</p>
               </div>
             </div>
-            <Progress value={78} label="Actuel: 78%" color="bg-emerald-500" />
+            <Progress value={dashboardData.academic.success_rate} label={`Actuel: ${dashboardData.academic.success_rate}%`} color="bg-emerald-500" />
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
@@ -334,10 +312,10 @@ export default function ResponsableDashboardEnriched() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-blue-900">Rétention</p>
-                <p className="text-xs text-blue-700">Objectif: 95%+</p>
+                <p className="text-xs text-blue-700">Objectif institutionnel : 95%+</p>
               </div>
             </div>
-            <Progress value={92.8} label="Actuel: 92.8%" color="bg-blue-500" />
+            <Progress value={dashboardData.quality.retention_rate} label={`Actuel: ${dashboardData.quality.retention_rate}%`} color="bg-blue-500" />
           </div>
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
@@ -345,11 +323,17 @@ export default function ResponsableDashboardEnriched() {
                 <Target className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-purple-900">Satisfaction</p>
-                <p className="text-xs text-purple-700">Objectif: 95%+</p>
+                <p className="text-sm font-semibold text-purple-900">Validation des notes</p>
+                <p className="text-xs text-purple-700">Résultats publiés ce mois</p>
               </div>
             </div>
-            <Progress value={89.3} label="Actuel: 89.3%" color="bg-purple-500" />
+            <Progress
+              value={dashboardData.validation.pending_validation + dashboardData.validation.validated_this_month
+                ? Math.round((dashboardData.validation.validated_this_month / (dashboardData.validation.pending_validation + dashboardData.validation.validated_this_month)) * 100)
+                : 100}
+              label={`${dashboardData.validation.validated_this_month} publié(s)`}
+              color="bg-purple-500"
+            />
           </div>
         </div>
       </Card>
