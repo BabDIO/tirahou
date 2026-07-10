@@ -9,4 +9,7 @@ router.register('teacher-availabilities', views.TeacherAvailabilityViewSet)
 router.register('admin-staff', views.AdminStaffViewSet)
 router.register('parent-guardians', views.ParentGuardianViewSet)
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('student/dashboard/', views.student_dashboard, name='student-dashboard'),
+    path('', include(router.urls)),
+]

@@ -7,4 +7,7 @@ router.register('admin-enrollments', views.AdminEnrollmentViewSet)
 router.register('peda-enrollments', views.PedaEnrollmentViewSet)
 router.register('ue-enrollments', views.UEEnrollmentViewSet)
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('enrollment/dashboard/', views.enrollment_dashboard, name='enrollment-dashboard'),
+    path('', include(router.urls)),
+]

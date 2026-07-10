@@ -9,4 +9,7 @@ router.register('library-reservations', views.ReservationViewSet, basename='libr
 router.register('library-ratings', views.DocumentRatingViewSet, basename='library-ratings')
 router.register('reading-lists', views.ReadingListViewSet, basename='reading-lists')
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('library/dashboard/', views.library_dashboard, name='library-dashboard'),
+    path('', include(router.urls)),
+]

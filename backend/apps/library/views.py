@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
@@ -430,3 +430,58 @@ class ReadingListViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Document retiré.'})
         except LibraryDocument.DoesNotExist:
             return Response({'detail': 'Document introuvable.'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def library_dashboard(request):
+    """Tableau de bord bibliothécaire — toutes les valeurs sont calculées depuis la base."""
+    docs = LibraryDocument.objects.filter(is_active=True)
+    total_documents = docs.count()
+    this_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_this_month = docs.filter(created_at__gte=this_month_start).count()
+
+    type_labels = dict(LibraryDocument.TYPE_CHOICES)
+    colors = ['bg-amber-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-cyan-500']
+    categories = []
+    for i, row in enumerate(docs.values('type').annotate(count=Count('id')).order_by('-count')[:5]):
+        categories.append({
+            'name': type_labels.get(row['type'], row['type']),
+            'count': row['count'],
+            'color': colors[i % len(colors)],
+        })
+
+    borrowings = Borrowing.objects.all()
+    active_loans = borrowings.filter(status='en_cours').count()
+    overdue = borrowings.filter(status__in=['en_cours', 'en_retard'], due_date__lt=timezone.now().date()).count()
+    returned_this_month = borrowings.filter(status='retourne', returned_at__gte=this_month_start).count()
+    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
+    returned_last_month = borrowings.filter(status='retourne', returned_at__gte=last_month_start, returned_at__lt=this_month_start).count()
+    attendance_trend = round(((returned_this_month - returned_last_month) / returned_last_month) * 100) if returned_last_month else 0
+
+    recent_loans = []
+    for b in borrowings.select_related('document', 'borrower').order_by('-borrowed_at')[:4]:
+        age_days = (timezone.now() - b.borrowed_at).days
+        date_label = "Aujourd'hui" if age_days == 0 else "Hier" if age_days == 1 else f"Il y a {age_days} jours"
+        loan_status = 'rendu' if b.status == 'retourne' else 'en_retard' if b.status == 'en_retard' else 'en_cours'
+        recent_loans.append({
+            'student': b.borrower.get_full_name(),
+            'title': b.document.title,
+            'date': date_label,
+            'status': loan_status,
+        })
+
+    return Response({
+        'catalog': {
+            'total_documents': total_documents,
+            'new_this_month': new_this_month,
+            'categories': categories,
+        },
+        'loans': {
+            'active': active_loans,
+            'overdue': overdue,
+            'returned_this_month': returned_this_month,
+            'attendance_trend': attendance_trend,
+        },
+        'recent_loans': recent_loans,
+    })

@@ -8,10 +8,11 @@ import { StatsCard, Card, Button, Spinner } from '../../components/ui'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../lib/axios'
 
-interface UpcomingClass {
+interface ScheduledSession {
   id: number | string
-  name: string
-  time: string
+  ec_name: string
+  start_datetime: string
+  status: string
 }
 
 interface StudentStats {
@@ -22,19 +23,13 @@ interface StudentStats {
   attendance_rate: number
 }
 
-const STUDENT_STATS: StudentStats = {
-  courses_count: 8,
-  average: 13.6,
-  credits: 42,
-  total_credits: 60,
-  attendance_rate: 91,
+const EMPTY_STATS: StudentStats = {
+  courses_count: 0,
+  average: 0,
+  credits: 0,
+  total_credits: 0,
+  attendance_rate: 0,
 }
-
-const UPCOMING_CLASSES: UpcomingClass[] = [
-  { id: 1, name: 'Algorithmique avancée', time: "Aujourd'hui · 14h00" },
-  { id: 2, name: 'Bases de données', time: 'Demain · 09h00' },
-  { id: 3, name: 'Anglais technique', time: 'Demain · 11h30' },
-]
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
@@ -43,14 +38,17 @@ export default function StudentDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['student-dashboard'],
     queryFn: () => api.get('/student/dashboard/').then(r => r.data),
-    initialData: STUDENT_STATS,
+    initialData: EMPTY_STATS,
   })
 
-  const { data: upcomingClasses } = useQuery({
+  const { data: sessions } = useQuery({
     queryKey: ['upcoming-classes'],
-    queryFn: () => api.get('/student/upcoming-classes/').then(r => r.data),
-    initialData: UPCOMING_CLASSES,
+    queryFn: () => api.get('/sessions/', { params: { ordering: 'start_datetime' } }).then(r => r.data),
   })
+
+  const upcomingClasses = ((sessions?.results ?? sessions ?? []) as ScheduledSession[])
+    .filter((s) => new Date(s.start_datetime) >= new Date() && s.status !== 'annule')
+    .slice(0, 3)
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
@@ -127,14 +125,21 @@ export default function StudentDashboard() {
         <div className="lg:col-span-2 space-y-5">
           <Card title="Prochains cours" subtitle="Emploi du temps">
             <div className="space-y-3">
-              {upcomingClasses?.map((c: UpcomingClass) => (
+              {upcomingClasses.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">Aucun cours à venir planifié.</p>
+              )}
+              {upcomingClasses.map((c) => (
                 <div key={c.id} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="w-11 h-11 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{c.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{c.time}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{c.ec_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(c.start_datetime).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })}
+                      {' · '}
+                      {new Date(c.start_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                   <Button size="sm" onClick={() => navigate('/my-virtual-classes')}>
                     <Video className="w-3.5 h-3.5" /> Rejoindre

@@ -151,3 +151,60 @@ class UEEnrollmentViewSet(viewsets.ModelViewSet):
     serializer_class = UEEnrollmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['peda_enrollment', 'ue']
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def enrollment_dashboard(request):
+    """Tableau de bord scolarité — toutes les valeurs sont calculées depuis la base."""
+    from apps.admissions.models import Application
+    from apps.documents.models import StudentDocument
+
+    applications = Application.objects.all()
+    applications_count = applications.count()
+    admitted_count = applications.filter(status__in=['admis', 'converti']).count()
+    admission_rate = round((admitted_count / applications_count) * 100) if applications_count else 0
+    pending_review = applications.filter(status__in=['soumise', 'en_instruction']).count()
+
+    enrollments = AdminEnrollment.objects.all()
+    enrollments_total = enrollments.count()
+    enrollments_validated = enrollments.filter(status='validee').count()
+    validation_rate = round((enrollments_validated / enrollments_total) * 100) if enrollments_total else 0
+
+    documents = StudentDocument.objects.all()
+    documents_total = documents.count()
+    pending_verification = documents.filter(status__in=['depose', 'en_verification']).count()
+    this_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    verified_this_month = documents.filter(status='valide', verified_at__gte=this_month_start).count()
+
+    pending_docs = []
+    for doc in documents.filter(status__in=['depose', 'en_verification']).select_related('student__user').order_by('created_at')[:4]:
+        age_days = (timezone.now() - doc.created_at).days
+        priority = 'haute' if age_days >= 3 else 'moyenne' if age_days >= 1 else 'normale'
+        submitted = "Aujourd'hui" if age_days == 0 else "Hier" if age_days == 1 else f"Il y a {age_days} jours"
+        pending_docs.append({
+            'student': doc.student.user.get_full_name(),
+            'document': doc.title,
+            'submitted': submitted,
+            'priority': priority,
+        })
+
+    return Response({
+        'admissions': {
+            'applications': applications_count,
+            'admitted': admitted_count,
+            'admission_rate': admission_rate,
+            'pending_review': pending_review,
+        },
+        'enrollment': {
+            'total': enrollments_total,
+            'validated': enrollments_validated,
+            'validation_rate': validation_rate,
+        },
+        'documents': {
+            'pending_verification': pending_verification,
+            'verified_this_month': verified_this_month,
+            'total': documents_total,
+        },
+        'pending_docs': pending_docs,
+    })

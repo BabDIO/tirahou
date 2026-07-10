@@ -31,28 +31,10 @@ interface LibraryData {
   recent_loans: LoanEntry[]
 }
 
-const LIBRARY_DATA: LibraryData = {
-  catalog: {
-    total_documents: 1245,
-    new_this_month: 28,
-    categories: [
-      { name: 'Ouvrages académiques', count: 620, color: 'bg-amber-500' },
-      { name: 'Mémoires & thèses', count: 340, color: 'bg-orange-500' },
-      { name: 'Revues & périodiques', count: 285, color: 'bg-yellow-500' },
-    ],
-  },
-  loans: {
-    active: 342,
-    overdue: 19,
-    returned_this_month: 268,
-    attendance_trend: 12,
-  },
-  recent_loans: [
-    { student: 'Moussa DIALLO', title: 'Algorithmique avancée', date: "Aujourd'hui", status: 'en_cours' },
-    { student: 'Fatou DIOP', title: 'Mémoire — IA appliquée', date: 'Hier', status: 'rendu' },
-    { student: 'Amadou KEITA', title: 'Bases de données réparties', date: 'Il y a 2 jours', status: 'en_retard' },
-    { student: 'Khadija TRAORE', title: 'Économie du développement', date: 'Il y a 3 jours', status: 'rendu' },
-  ],
+const EMPTY_DATA: LibraryData = {
+  catalog: { total_documents: 0, new_this_month: 0, categories: [] },
+  loans: { active: 0, overdue: 0, returned_this_month: 0, attendance_trend: 0 },
+  recent_loans: [],
 }
 
 export default function BibliothecaireDashboard() {
@@ -62,7 +44,7 @@ export default function BibliothecaireDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ['library-dashboard'],
     queryFn: () => api.get('/library/dashboard/').then(r => r.data),
-    initialData: LIBRARY_DATA,
+    initialData: EMPTY_DATA,
   })
 
   const hour = new Date().getHours()
@@ -143,7 +125,7 @@ export default function BibliothecaireDashboard() {
           <div className="space-y-4">
             <div className="space-y-3">
               {data.catalog.categories.map((cat: LibraryData['catalog']['categories'][number]) => {
-                const percentage = Math.round((cat.count / data.catalog.total_documents) * 100)
+                const percentage = data.catalog.total_documents ? Math.round((cat.count / data.catalog.total_documents) * 100) : 0
                 return (
                   <div key={cat.name}>
                     <div className="flex items-center justify-between mb-1">
@@ -179,7 +161,7 @@ export default function BibliothecaireDashboard() {
                     <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="8" />
                     <circle
                       cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" strokeWidth="8"
-                      strokeDasharray={`${(data.loans.active / (data.loans.active + data.loans.returned_this_month)) * 282.7} 282.7`}
+                      strokeDasharray={`${(data.loans.active + data.loans.returned_this_month) ? (data.loans.active / (data.loans.active + data.loans.returned_this_month)) * 282.7 : 0} 282.7`}
                       strokeLinecap="round" transform="rotate(-90 50 50)"
                     />
                   </svg>
@@ -209,6 +191,9 @@ export default function BibliothecaireDashboard() {
         {/* Recent Loans */}
         <Card title="Emprunts récents" subtitle="Dernières 72 heures">
           <div className="space-y-3">
+            {data.recent_loans.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-4">Aucun emprunt récent.</p>
+            )}
             {data.recent_loans.map((loan: LoanEntry, i: number) => (
               <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <div className="flex items-center gap-3 min-w-0">

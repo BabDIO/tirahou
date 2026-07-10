@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Avg, Count
 from .models import Student, Teacher, AdminStaff, ParentGuardian, TeacherAvailability
@@ -313,3 +313,35 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(parent)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def student_dashboard(request):
+    """Tableau de bord étudiant — toutes les valeurs sont calculées depuis la base."""
+    if not hasattr(request.user, 'student_profile'):
+        return Response({'detail': "Profil étudiant introuvable."}, status=404)
+    student = request.user.student_profile
+
+    from apps.evaluation.models import SemesterResult
+    from apps.attendance.models import AttendanceRecord
+
+    courses_count = student.course_spaces.count()
+
+    latest_result = SemesterResult.objects.filter(student=student, published=True).order_by('-published_at').first()
+    average = float(latest_result.average) if latest_result and latest_result.average is not None else 0
+    credits = latest_result.credits_obtained if latest_result else 0
+    total_credits = latest_result.total_credits if latest_result else 0
+
+    records = AttendanceRecord.objects.filter(student=student)
+    total_records = records.count()
+    present_records = records.filter(status__in=['present', 'retard']).count()
+    attendance_rate = round((present_records / total_records) * 100, 1) if total_records else 0
+
+    return Response({
+        'courses_count': courses_count,
+        'average': average,
+        'credits': credits,
+        'total_credits': total_credits,
+        'attendance_rate': attendance_rate,
+    })

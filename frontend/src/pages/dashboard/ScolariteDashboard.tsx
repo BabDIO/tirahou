@@ -36,29 +36,11 @@ interface ScolariteData {
   pending_docs: PendingDoc[]
 }
 
-const SCOLARITE_DATA: ScolariteData = {
-  admissions: {
-    applications: 142,
-    admitted: 111,
-    admission_rate: 78,
-    pending_review: 14,
-  },
-  enrollment: {
-    total: 1428,
-    validated: 1312,
-    validation_rate: 92,
-  },
-  documents: {
-    pending_verification: 23,
-    verified_this_month: 187,
-    total: 245,
-  },
-  pending_docs: [
-    { student: 'Awa CISSE', document: 'Acte de naissance', submitted: "Aujourd'hui", priority: 'haute' },
-    { student: 'Ibrahim SANGARE', document: 'Relevé de notes Bac', submitted: 'Hier', priority: 'moyenne' },
-    { student: 'Mariam KONE', document: "Certificat d'équivalence", submitted: 'Il y a 2 jours', priority: 'normale' },
-    { student: 'Yves N\'GUESSAN', document: 'Attestation de bourse', submitted: 'Il y a 3 jours', priority: 'normale' },
-  ],
+const EMPTY_DATA: ScolariteData = {
+  admissions: { applications: 0, admitted: 0, admission_rate: 0, pending_review: 0 },
+  enrollment: { total: 0, validated: 0, validation_rate: 0 },
+  documents: { pending_verification: 0, verified_this_month: 0, total: 0 },
+  pending_docs: [],
 }
 
 export default function ScolariteDashboard() {
@@ -68,7 +50,7 @@ export default function ScolariteDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ['scolarite-dashboard'],
     queryFn: () => api.get('/enrollment/dashboard/').then(r => r.data),
-    initialData: SCOLARITE_DATA,
+    initialData: EMPTY_DATA,
   })
 
   const hour = new Date().getHours()
@@ -152,7 +134,7 @@ export default function ScolariteDashboard() {
               { label: 'Admises', value: data.admissions.admitted, color: 'bg-emerald-500' },
               { label: 'En instruction', value: data.admissions.pending_review, color: 'bg-amber-500' },
             ].map((row: { label: string; value: number; color: string }) => {
-              const percentage = Math.round((row.value / data.admissions.applications) * 100)
+              const percentage = data.admissions.applications ? Math.round((row.value / data.admissions.applications) * 100) : 0
               return (
                 <div key={row.label}>
                   <div className="flex items-center justify-between mb-1">
@@ -211,6 +193,9 @@ export default function ScolariteDashboard() {
         {/* Pending documents */}
         <Card title="Documents à vérifier" subtitle="File de traitement">
           <div className="space-y-3">
+            {data.pending_docs.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-4">Aucun document en attente de vérification.</p>
+            )}
             {data.pending_docs.map((doc: PendingDoc, i: number) => (
               <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors">
                 <div className={cn(
