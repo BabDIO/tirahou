@@ -10,6 +10,10 @@ router = DefaultRouter()
 router.register('activities', views.LearningActivityViewSet)
 router.register('engagement-scores', views.EngagementScoreViewSet)
 router.register('dashboard-stats', views.DashboardStatViewSet)
+router.register('badges', views.BadgeViewSet)
+router.register('student-badges', views.StudentBadgeViewSet)
+router.register('wallets', views.WalletViewSet)
+router.register('wallet-transactions', views.WalletTransactionViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -73,6 +73,11 @@ class Teacher(BaseModel):
     bio = models.TextField(blank=True)
     office = models.CharField(max_length=50, blank=True)
     weekly_hours_quota = models.PositiveSmallIntegerField(default=8)
+    # Référentiel intervenants externes / vacataires
+    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True,
+                                       help_text="Taux horaire (vacataires/invités)")
+    contract_reference = models.CharField(max_length=100, blank=True,
+                                           help_text="Référence de contrat (vacataires/invités)")
 
     class Meta:
         db_table = 'teachers'
@@ -182,3 +187,25 @@ class ParentGuardian(BaseModel):
         if not self.can_receive_notifications:
             return False
         return notification_type in self.get_notification_types()
+
+
+class TeacherAvailability(BaseModel):
+    """Créneaux de disponibilité déclarés par un enseignant (pour la planification)."""
+    DAY_CHOICES = [
+        (0, 'Lundi'), (1, 'Mardi'), (2, 'Mercredi'), (3, 'Jeudi'),
+        (4, 'Vendredi'), (5, 'Samedi'), (6, 'Dimanche'),
+    ]
+
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='availabilities')
+    day_of_week = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    notes = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        db_table = 'teacher_availabilities'
+        ordering = ['day_of_week', 'start_time']
+        verbose_name = 'Disponibilité Enseignant'
+
+    def __str__(self):
+        return f"{self.teacher} — {self.get_day_of_week_display()} {self.start_time}-{self.end_time}"

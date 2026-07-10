@@ -1,7 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { GraduationCap, BookMarked, CheckCircle, Users, Calendar, BookOpen } from 'lucide-react'
-import { Card, Spinner, Badge, Empty, Alert, Progress } from '../../components/ui'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { GraduationCap, BookMarked, CheckCircle, Users, Calendar, BookOpen, Send } from 'lucide-react'
+import { Card, Spinner, Badge, Empty, Alert, Progress, Button } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
+import { programsApi, enrollmentApi } from '../../api'
+import { useToast } from '../../hooks/useToast'
 import api from '../../lib/axios'
 
 interface AdminEnrollment {
@@ -18,6 +21,7 @@ interface AdminEnrollment {
 
 interface PedaEnrollment {
   id: string
+  semester: string
   semester_label: string
   group_name: string | null
   status: string
@@ -121,53 +125,122 @@ export default function MyEnrollmentPage() {
               <Alert type="info">Aucune inscription pédagogique. Contactez votre responsable de filière.</Alert>
             ) : (
               <div className="space-y-3">
-                {pedaList.map(pe => {
-                  const myUEs = ueList.filter((u: { peda_enrollment: string }) => u.peda_enrollment === pe.id)
-                  return (
-                    <div key={pe.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-bold text-gray-900">{pe.semester_label}</p>
-                          {pe.group_name && (
-                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                              <Users className="w-3 h-3" /> Groupe : {pe.group_name}
-                            </p>
-                          )}
-                        </div>
-                        <Badge label={pe.status_display} className={statusColor(pe.status)} dot />
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                        <span className="flex items-center gap-1.5">
-                          <BookMarked className="w-3.5 h-3.5 text-primary-500" />
-                          {myUEs.length > 0 ? `${myUEs.length} UE inscrites` : (pe.ue_count ?? 0) + ' UE'}
-                        </span>
-                        {pe.confirmed_at && (
-                          <span className="flex items-center gap-1.5">
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                            Confirmé le {formatDate(pe.confirmed_at)}
-                          </span>
-                        )}
-                      </div>
-                      {/* Liste des UE */}
-                      {myUEs.length > 0 && (
-                        <div className="space-y-1">
-                          {myUEs.map((ue: { id: string; ue_code: string; ue_name: string; is_optional: boolean }) => (
-                            <div key={ue.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-white rounded-lg border border-gray-100">
-                              <BookOpen className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
-                              <span className="text-xs font-semibold text-gray-700">{ue.ue_code}</span>
-                              <span className="text-xs text-gray-400 truncate">{ue.ue_name}</span>
-                              {ue.is_optional && <span className="ml-auto text-xs text-amber-600 font-medium">Optionnelle</span>}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                {pedaList.map(pe => (
+                  <PedaEnrollmentBlock key={pe.id} pe={pe}
+                    myUEs={ueList.filter((u: { peda_enrollment: string }) => u.peda_enrollment === pe.id)} />
+                ))}
               </div>
             )}
           </Card>
         </>
+      )}
+    </div>
+  )
+}
+
+interface UeEnrolled { id: string; ue_code: string; ue_name: string; ue: string; is_optional: boolean }
+interface AvailableUE { id: string; code: string; name: string; type: string; type_display: string; credits: number }
+
+function PedaEnrollmentBlock({ pe, myUEs }: { pe: PedaEnrollment; myUEs: UeEnrolled[] }) {
+  const qc = useQueryClient()
+  const toast = useToast()
+  const [selectedOptional, setSelectedOptional] = useState<string[]>([])
+  const pending = pe.status === 'en_attente'
+
+  const { data: availableUEs } = useQuery({
+    queryKey: ['available-ues', pe.semester],
+    queryFn: () => programsApi.getUEs({ semester: pe.semester, page_size: 100 }).then(r => r.data),
+    enabled: pending,
+  })
+
+  const enrolledUeIds = new Set(myUEs.map(u => u.ue))
+  const optionalChoices: AvailableUE[] = (availableUEs?.results ?? [])
+    .filter((ue: AvailableUE & { type: string }) => ue.type === 'optionnelle' && !enrolledUeIds.has(ue.id))
+
+  const enrollMut = useMutation({
+    mutationFn: (ueId: string) => enrollmentApi.createUEEnrollment({ peda_enrollment: pe.id, ue: ueId, is_optional: true }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['my-ue-enrollments'] }); qc.invalidateQueries({ queryKey: ['my-peda-enrollments'] }) },
+    onError: () => toast.error("Erreur lors de l'ajout de l'UE optionnelle"),
+  })
+
+  const confirmMut = useMutation({
+    mutationFn: () => enrollmentApi.confirmPedaEnrollment(pe.id),
+    onSuccess: () => { toast.success('Inscription pédagogique confirmée'); qc.invalidateQueries({ queryKey: ['my-peda-enrollments'] }) },
+    onError: () => toast.error('Erreur lors de la confirmation'),
+  })
+
+  const handleAddSelected = async () => {
+    for (const ueId of selectedOptional) await enrollMut.mutateAsync(ueId)
+    setSelectedOptional([])
+  }
+
+  return (
+    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="font-bold text-gray-900">{pe.semester_label}</p>
+          {pe.group_name && (
+            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+              <Users className="w-3 h-3" /> Groupe : {pe.group_name}
+            </p>
+          )}
+        </div>
+        <Badge label={pe.status_display} className={statusColor(pe.status)} dot />
+      </div>
+      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+        <span className="flex items-center gap-1.5">
+          <BookMarked className="w-3.5 h-3.5 text-primary-500" />
+          {myUEs.length > 0 ? `${myUEs.length} UE inscrites` : (pe.ue_count ?? 0) + ' UE'}
+        </span>
+        {pe.confirmed_at && (
+          <span className="flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+            Confirmé le {formatDate(pe.confirmed_at)}
+          </span>
+        )}
+      </div>
+
+      {myUEs.length > 0 && (
+        <div className="space-y-1 mb-3">
+          {myUEs.map(ue => (
+            <div key={ue.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-white rounded-lg border border-gray-100">
+              <BookOpen className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
+              <span className="text-xs font-semibold text-gray-700">{ue.ue_code}</span>
+              <span className="text-xs text-gray-400 truncate">{ue.ue_name}</span>
+              {ue.is_optional && <span className="ml-auto text-xs text-amber-600 font-medium">Optionnelle</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {pending && (
+        <div className="pt-3 border-t border-gray-200 space-y-3">
+          {optionalChoices.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">UE optionnelles disponibles</p>
+              <div className="space-y-1.5">
+                {optionalChoices.map(ue => (
+                  <label key={ue.id} className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-gray-100 hover:border-primary-200 cursor-pointer text-sm">
+                    <input type="checkbox" checked={selectedOptional.includes(ue.id)}
+                      onChange={e => setSelectedOptional(prev => e.target.checked ? [...prev, ue.id] : prev.filter(id => id !== ue.id))} />
+                    <span className="font-mono text-xs text-gray-600">{ue.code}</span>
+                    <span className="text-gray-700">{ue.name}</span>
+                    <span className="ml-auto text-xs text-gray-400">{ue.credits} cr.</span>
+                  </label>
+                ))}
+              </div>
+              {selectedOptional.length > 0 && (
+                <Button size="sm" className="mt-2" loading={enrollMut.isPending} onClick={handleAddSelected}>
+                  Ajouter {selectedOptional.length} UE optionnelle(s)
+                </Button>
+              )}
+            </div>
+          )}
+          <Button size="sm" variant="secondary" icon={<Send className="w-3.5 h-3.5" />}
+            loading={confirmMut.isPending} onClick={() => confirmMut.mutate()}>
+            Confirmer mon inscription pédagogique
+          </Button>
+        </div>
       )}
     </div>
   )

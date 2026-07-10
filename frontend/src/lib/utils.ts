@@ -14,6 +14,10 @@ export function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(amount)
 }
 
+export function formatNumber(num: number) {
+  return new Intl.NumberFormat('fr-FR').format(num)
+}
+
 export function formatGrade(grade: number | null) {
   if (grade === null || grade === undefined) return '—'
   return `${Number(grade).toFixed(2)}/20`

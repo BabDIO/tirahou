@@ -19,6 +19,26 @@ class LibraryDocumentViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'author', 'keywords', 'abstract', 'domain']
     ordering_fields = ['year', 'download_count', 'created_at']
 
+    def get_permissions(self):
+        # Le catalogue public (access_level='public') est consultable sans compte.
+        if self.action in ('list', 'retrieve', 'featured', 'stats'):
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return LibraryDocument.objects.none()
+        qs = LibraryDocument.objects.filter(is_active=True)
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return qs.filter(access_level='public')
+        is_privileged = user.is_superuser or user.roles.filter(
+            name__in=['bibliothecaire', 'super_admin', 'admin_institutionnel', 'enseignant']
+        ).exists()
+        if is_privileged:
+            return qs
+        return qs.exclude(access_level='restricted')
+
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
 

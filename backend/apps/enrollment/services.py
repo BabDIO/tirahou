@@ -22,7 +22,18 @@ class EnrollmentService:
 
         # Mettre à jour le statut étudiant
         student = enrollment.student
-        if student.status == 'admis':
+        if enrollment.type == 'transfert':
+            # Un transfert change effectivement le programme de l'étudiant,
+            # quel que soit son statut antérieur (bug historique : seule la
+            # première inscription mettait à jour current_program).
+            if enrollment.program_id != student.current_program_id:
+                enrollment.previous_program = student.current_program
+                enrollment.save(update_fields=['previous_program', 'updated_at'])
+            student.current_program = enrollment.program
+            student.current_year = enrollment.academic_year
+            student.status = 'inscrit'
+            student.save(update_fields=['status', 'current_program', 'current_year', 'updated_at'])
+        elif student.status == 'admis':
             student.status = 'inscrit'
             student.current_program = enrollment.program
             student.current_year = enrollment.academic_year
@@ -30,7 +41,8 @@ class EnrollmentService:
         elif student.status == 'inscrit':
             student.status = 'reinscrit'
             student.current_year = enrollment.academic_year
-            student.save(update_fields=['status', 'current_year', 'updated_at'])
+            student.current_program = enrollment.program
+            student.save(update_fields=['status', 'current_program', 'current_year', 'updated_at'])
 
         # Générer automatiquement la facture si le programme a des frais
         program = enrollment.program
@@ -50,6 +62,15 @@ class EnrollmentService:
                 icon='check-circle',
                 color='green'
             )
+        except Exception:
+            pass
+
+        try:
+            from apps.core.tasks import dispatch_webhook
+            dispatch_webhook('enrollment.validated', {
+                'enrollment_number': enrollment.enrollment_number, 'student_id': str(student.id),
+                'program': program.name, 'academic_year': enrollment.academic_year.label, 'type': enrollment.type,
+            })
         except Exception:
             pass
 

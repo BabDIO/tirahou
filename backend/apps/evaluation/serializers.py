@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ExamSession, Grade, UEResult, SemesterResult, Jury, GradeContest
+from .models import ExamSession, Grade, UEResult, SemesterResult, Jury, GradeContest, ExamRoomAssignment
 
 
 class ExamSessionSerializer(serializers.ModelSerializer):
@@ -8,6 +8,20 @@ class ExamSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamSession
         fields = '__all__'
+
+
+class ExamRoomAssignmentSerializer(serializers.ModelSerializer):
+    ec_code = serializers.CharField(source='ec.code', read_only=True)
+    ec_name = serializers.CharField(source='ec.name', read_only=True)
+    room_name = serializers.CharField(source='room.name', read_only=True)
+    invigilator_names = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExamRoomAssignment
+        fields = '__all__'
+
+    def get_invigilator_names(self, obj):
+        return [u.get_full_name() for u in obj.invigilators.all()]
 
 
 class GradeSerializer(serializers.ModelSerializer):
@@ -44,9 +58,22 @@ class SemesterResultSerializer(serializers.ModelSerializer):
 
 
 class JurySerializer(serializers.ModelSerializer):
+    president_name = serializers.SerializerMethodField()
+    member_names = serializers.SerializerMethodField()
+    exam_session_label = serializers.SerializerMethodField()
+
     class Meta:
         model = Jury
         fields = '__all__'
+
+    def get_president_name(self, obj):
+        return obj.president.get_full_name() if obj.president else None
+
+    def get_member_names(self, obj):
+        return [m.get_full_name() for m in obj.members.all()]
+
+    def get_exam_session_label(self, obj):
+        return str(obj.exam_session)
 
 
 class GradeContestSerializer(serializers.ModelSerializer):

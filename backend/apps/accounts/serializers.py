@@ -25,9 +25,9 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
             'phone', 'avatar', 'roles', 'full_name', 'is_active',
-            'is_verified', 'is_locked', 'created_at',
+            'is_verified', 'is_locked', 'mfa_enabled', 'created_at',
         ]
-        read_only_fields = ['id', 'created_at', 'is_verified']
+        read_only_fields = ['id', 'created_at', 'is_verified', 'mfa_enabled']
 
     def get_full_name(self, obj):
         return obj.get_full_name()
@@ -64,6 +64,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'is_verified',
         ]
 
+    def update(self, instance, validated_data):
+        # Déverrouiller un compte réinitialise aussi le compteur d'échecs,
+        # sinon un seul nouvel échec le reverrouillerait immédiatement.
+        if validated_data.get('is_locked') is False and instance.is_locked:
+            instance.failed_login_attempts = 0
+        return super().update(instance, validated_data)
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
@@ -76,7 +83,69 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
 
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+
+
 class CustomTokenObtainSerializer(TokenObtainPairSerializer):
+    # Utiliser 'email' au lieu de 'username' pour la connexion
+    username_field = 'email'
+    mfa_code = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    def validate(self, attrs):
+        # Remplacer username par email pour authenticate()
+        email = attrs.get('email')
+        password = attrs.get('password')
+        mfa_code = (attrs.get('mfa_code') or '').strip()
+
+        existing_user = User.objects.filter(email=email).first()
+
+        if existing_user and existing_user.is_locked:
+            raise serializers.ValidationError({
+                'account_locked': True,
+                'detail': "Compte verrouillé après plusieurs tentatives de connexion échouées. "
+                          "Contactez un administrateur pour le débloquer.",
+            })
+
+        user = authenticate(
+            request=self.context.get('request'),
+            email=email,
+            password=password
+        )
+
+        if not user:
+            if existing_user:
+                existing_user.failed_login_attempts += 1
+                if existing_user.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS:
+                    existing_user.is_locked = True
+                existing_user.save(update_fields=['failed_login_attempts', 'is_locked'])
+            raise serializers.ValidationError(
+                "Aucun compte actif n'a été trouvé avec les identifiants fournis"
+            )
+
+        if user.mfa_enabled:
+            import pyotp
+            if not mfa_code:
+                raise serializers.ValidationError({
+                    'mfa_required': True,
+                    'detail': "Code de double authentification requis.",
+                })
+            if not pyotp.TOTP(user.mfa_secret).verify(mfa_code, valid_window=1):
+                raise serializers.ValidationError({
+                    'mfa_required': True,
+                    'detail': "Code de double authentification invalide.",
+                })
+
+        # Générer les tokens
+        refresh = self.get_token(user)
+        
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data,
+        }
+        
+        return data
+    
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)

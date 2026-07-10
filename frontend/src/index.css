@@ -91,6 +91,8 @@
   .badge-yellow { @apply badge bg-amber-50 text-amber-700 ring-1 ring-amber-200/60; }
   .badge-gray   { @apply badge bg-gray-100 text-gray-600 ring-1 ring-gray-200/60; }
   .badge-purple { @apply badge bg-violet-50 text-violet-700 ring-1 ring-violet-200/60; }
+  .badge-emerald { @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60; }
+  .badge-amber   { @apply badge bg-amber-50 text-amber-700 ring-1 ring-amber-200/60; }
 
   /* ── Typography ── */
   .page-title {
@@ -264,6 +266,8 @@
   .dark .badge-yellow { @apply bg-amber-950/50 text-amber-400 ring-amber-900/50; }
   .dark .badge-gray   { @apply bg-slate-800 text-slate-400 ring-slate-700/50; }
   .dark .badge-purple { @apply bg-violet-950/50 text-violet-400 ring-violet-900/50; }
+  .dark .badge-emerald { @apply bg-emerald-950/50 text-emerald-400 ring-emerald-900/50; }
+  .dark .badge-amber   { @apply bg-amber-950/50 text-amber-400 ring-amber-900/50; }
 
   /* Dark mode info boxes */
   .dark .info-box-blue   { @apply bg-blue-950/30 border-blue-900/50 text-blue-300; }

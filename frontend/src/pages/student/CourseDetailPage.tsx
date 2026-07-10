@@ -1,11 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, FileText, Video, Link2, Download, Clock, Send, HelpCircle, ChevronDown, ChevronRight } from 'lucide-react'
-import { Card, Spinner, Badge, Empty, Progress, Alert } from '../../components/ui'
+import { BookOpen, FileText, Video, Link2, Download, Clock, Send, HelpCircle, ChevronDown, ChevronRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Card, Spinner, Badge, Empty, Progress, Alert, Modal, Button } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
+
+interface QuizChoice { id: string; text: string }
+interface QuizQuestion { id: string; text: string; type: string; points: number; choices: QuizChoice[]; explanation: string }
+interface QuizT { id: string; title: string; duration_minutes: number; max_grade: number; max_attempts: number; instructions: string; is_published: boolean; questions: QuizQuestion[] }
+interface AttemptAnswer { id: string; question: string; is_correct: boolean | null; points_earned: number | null }
+interface Attempt { id: string; status: string; score: number | null; question_order: string[]; time_remaining_seconds: number; answers?: AttemptAnswer[] }
 
 type ResourceIcon = { [key: string]: React.ReactNode }
 
@@ -60,9 +66,15 @@ export default function CourseDetailPage() {
     onError: (e: Error & { response?: { data?: { detail?: string } } }) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la soumission'),
   })
 
+  const [activeQuiz, setActiveQuiz] = useState<QuizT | null>(null)
+  const [activeAttempt, setActiveAttempt] = useState<Attempt | null>(null)
+
   const startQuizMut = useMutation({
-    mutationFn: (quizId: string) => api.post(`/quizzes/${quizId}/start_attempt/`).then(r => r.data),
-    onSuccess: () => toast.success('Tentative démarrée'),
+    mutationFn: (quizId: string) => api.post(`/quizzes/${quizId}/start_attempt/`).then(r => r.data as Attempt),
+    onSuccess: (attempt, quizId) => {
+      setActiveAttempt(attempt)
+      setActiveQuiz(quizzes?.results?.find((q: QuizT) => q.id === quizId) ?? null)
+    },
     onError: (e: Error & { response?: { data?: { detail?: string } } }) => toast.error(e?.response?.data?.detail ?? 'Erreur'),
   })
 
@@ -256,6 +268,149 @@ export default function CourseDetailPage() {
           </div>
         )
       )}
+
+      {/* Passation du quiz */}
+      <Modal open={!!activeAttempt} onClose={() => { setActiveAttempt(null); setActiveQuiz(null) }}
+        title={activeQuiz?.title ?? 'Quiz'} size="lg">
+        {activeAttempt && activeQuiz && (
+          <QuizTaking
+            quiz={activeQuiz}
+            attempt={activeAttempt}
+            onDone={() => { setActiveAttempt(null); setActiveQuiz(null); qc.invalidateQueries({ queryKey: ['quizzes'] }) }}
+          />
+        )}
+      </Modal>
+    </div>
+  )
+}
+
+function QuizTaking({ quiz, attempt, onDone }: { quiz: QuizT; attempt: Attempt; onDone: () => void }) {
+  const [answers, setAnswers] = useState<Record<string, { choice_ids: string[]; text_answer: string }>>({})
+  const [secondsLeft, setSecondsLeft] = useState(attempt.time_remaining_seconds)
+  const [result, setResult] = useState<Attempt | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const orderedQuestions = attempt.question_order.length
+    ? attempt.question_order.map(qid => quiz.questions.find(q => q.id === qid)).filter(Boolean) as QuizQuestion[]
+    : quiz.questions
+
+  const submitMut = useMutation({
+    mutationFn: () => api.post(`/quiz-attempts/${attempt.id}/submit/`, {
+      answers: orderedQuestions.map(q => ({
+        question: q.id,
+        choice_ids: answers[q.id]?.choice_ids ?? [],
+        text_answer: answers[q.id]?.text_answer ?? '',
+      })),
+    }).then(r => r.data as Attempt),
+    onSuccess: (data) => { setResult(data); toast.success('Quiz soumis') },
+    onError: (e: Error & { response?: { data?: { detail?: string } } }) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la soumission'),
+  })
+
+  useEffect(() => {
+    if (result) return
+    intervalRef.current = setInterval(() => {
+      setSecondsLeft(s => {
+        if (s <= 1) { clearInterval(intervalRef.current!); submitMut.mutate(); return 0 }
+        return s - 1
+      })
+    }, 1000)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result])
+
+  const toggleChoice = (questionId: string, choiceId: string, multi: boolean) => {
+    setAnswers(prev => {
+      const current = prev[questionId]?.choice_ids ?? []
+      const next = multi
+        ? (current.includes(choiceId) ? current.filter(c => c !== choiceId) : [...current, choiceId])
+        : [choiceId]
+      return { ...prev, [questionId]: { ...prev[questionId], choice_ids: next, text_answer: prev[questionId]?.text_answer ?? '' } }
+    })
+  }
+
+  const setText = (questionId: string, text: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: { choice_ids: prev[questionId]?.choice_ids ?? [], text_answer: text } }))
+  }
+
+  if (result) {
+    const answeredById = new Map((result.answers ?? []).map(a => [a.question, a]))
+    return (
+      <div className="space-y-4">
+        <div className="text-center bg-gray-50 rounded-2xl p-6">
+          <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Score</p>
+          <p className="text-4xl font-black text-gray-900 mt-1">{result.score ?? 0}<span className="text-lg text-gray-400">/{quiz.max_grade}</span></p>
+        </div>
+        <div className="space-y-2">
+          {orderedQuestions.map((q, i) => {
+            const a = answeredById.get(q.id)
+            const pending = a?.is_correct === null || a?.is_correct === undefined
+            return (
+              <div key={q.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                {pending ? <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                  : a?.is_correct ? <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  : <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-700">Q{i + 1}. {q.text}</p>
+                  {pending && <p className="text-xs text-amber-600 mt-0.5">En attente de correction manuelle (réponse libre)</p>}
+                  {q.explanation && !pending && <p className="text-xs text-gray-400 mt-0.5">{q.explanation}</p>}
+                </div>
+                <span className="text-xs font-semibold text-gray-500 flex-shrink-0">{a?.points_earned ?? '—'}/{q.points}</span>
+              </div>
+            )
+          })}
+        </div>
+        <Button className="w-full" onClick={onDone}>Fermer</Button>
+      </div>
+    )
+  }
+
+  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
+  const ss = String(secondsLeft % 60).padStart(2, '0')
+
+  return (
+    <div className="space-y-5">
+      <div className={`flex items-center justify-center gap-2 py-2 rounded-xl font-mono font-bold text-lg ${secondsLeft < 60 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-700'}`}>
+        <Clock className="w-4 h-4" /> {mm}:{ss}
+      </div>
+
+      <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+        {orderedQuestions.map((q, i) => (
+          <div key={q.id} className="p-4 border border-gray-100 rounded-xl">
+            <p className="text-sm font-semibold text-gray-900 mb-3">Q{i + 1}. {q.text} <span className="text-xs text-gray-400 font-normal">({q.points} pt{q.points > 1 ? 's' : ''})</span></p>
+            {(q.type === 'qcm' || q.type === 'vrai_faux') && (
+              <div className="space-y-2">
+                {q.choices.map(c => (
+                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">
+                    <input type="radio" name={q.id} checked={(answers[q.id]?.choice_ids ?? []).includes(c.id)}
+                      onChange={() => toggleChoice(q.id, c.id, false)} />
+                    {c.text}
+                  </label>
+                ))}
+              </div>
+            )}
+            {q.type === 'qcm_multiple' && (
+              <div className="space-y-2">
+                {q.choices.map(c => (
+                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">
+                    <input type="checkbox" checked={(answers[q.id]?.choice_ids ?? []).includes(c.id)}
+                      onChange={() => toggleChoice(q.id, c.id, true)} />
+                    {c.text}
+                  </label>
+                ))}
+              </div>
+            )}
+            {(q.type === 'reponse_courte' || q.type === 'reponse_longue') && (
+              q.type === 'reponse_courte'
+                ? <input className="input" value={answers[q.id]?.text_answer ?? ''} onChange={e => setText(q.id, e.target.value)} />
+                : <textarea className="input h-24 resize-none" value={answers[q.id]?.text_answer ?? ''} onChange={e => setText(q.id, e.target.value)} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Button className="w-full" icon={<Send className="w-4 h-4" />} loading={submitMut.isPending} onClick={() => submitMut.mutate()}>
+        Soumettre le quiz
+      </Button>
     </div>
   )
 }

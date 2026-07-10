@@ -5,6 +5,7 @@ from . import views
 router = DefaultRouter()
 router.register('students', views.StudentViewSet)
 router.register('teachers', views.TeacherViewSet)
+router.register('teacher-availabilities', views.TeacherAvailabilityViewSet)
 router.register('admin-staff', views.AdminStaffViewSet)
 router.register('parent-guardians', views.ParentGuardianViewSet)
 

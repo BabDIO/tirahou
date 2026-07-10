@@ -4,11 +4,13 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-from .models import ExamSession, Grade, UEResult, SemesterResult, Jury, GradeContest
+from .models import ExamSession, Grade, UEResult, SemesterResult, Jury, GradeContest, ExamRoomAssignment
 from .serializers import (
     ExamSessionSerializer, GradeSerializer, UEResultSerializer,
     SemesterResultSerializer, JurySerializer, GradeContestSerializer,
+    ExamRoomAssignmentSerializer,
 )
+from apps.accounts.permissions import HasModulePermission
 
 
 class UEResultViewSet(viewsets.ModelViewSet):
@@ -34,7 +36,8 @@ class UEResultViewSet(viewsets.ModelViewSet):
 class ExamSessionViewSet(viewsets.ModelViewSet):
     queryset = ExamSession.objects.all()
     serializer_class = ExamSessionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'evaluation'
     filterset_fields = ['semester', 'academic_year', 'session_type', 'is_open']
 
     @action(detail=True, methods=['post'])
@@ -52,10 +55,29 @@ class ExamSessionViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Session fermée.'})
 
 
+class ExamRoomAssignmentViewSet(viewsets.ModelViewSet):
+    """Planification des examens : salle, créneau, surveillants par EC (G7)."""
+    queryset = ExamRoomAssignment.objects.all().select_related('ec', 'room', 'exam_session').prefetch_related('invigilators')
+    serializer_class = ExamRoomAssignmentSerializer
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'evaluation'
+    filterset_fields = ['exam_session', 'ec', 'room']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ExamRoomAssignment.objects.none()
+        user = self.request.user
+        qs = ExamRoomAssignment.objects.select_related('ec', 'room', 'exam_session').prefetch_related('invigilators')
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(invigilators=user)
+        return qs
+
+
 class GradeViewSet(viewsets.ModelViewSet):
     queryset = Grade.objects.all().select_related('student', 'ec', 'exam_session')
     serializer_class = GradeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'evaluation'
     filterset_fields = ['exam_session', 'ec', 'student', 'status']
     search_fields = ['student__student_id', 'student__user__last_name']
 
@@ -115,7 +137,8 @@ class GradeViewSet(viewsets.ModelViewSet):
 class SemesterResultViewSet(viewsets.ModelViewSet):
     queryset = SemesterResult.objects.all().select_related('student', 'semester')
     serializer_class = SemesterResultSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'evaluation'
     filterset_fields = ['semester', 'exam_session', 'published', 'decision']
 
     def get_queryset(self):
@@ -256,13 +279,15 @@ class SemesterResultViewSet(viewsets.ModelViewSet):
 class JuryViewSet(viewsets.ModelViewSet):
     queryset = Jury.objects.all()
     serializer_class = JurySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'evaluation'
 
 
 class GradeContestViewSet(viewsets.ModelViewSet):
     queryset = GradeContest.objects.all()
     serializer_class = GradeContestSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'evaluation'
     filterset_fields = ['status', 'student']
 
     @action(detail=True, methods=['post'])

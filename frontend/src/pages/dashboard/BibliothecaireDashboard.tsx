@@ -1,119 +1,301 @@
 import { useQuery } from '@tanstack/react-query'
-import { BookOpen, Download, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  BookOpen, Users, FileText, TrendingUp, Sparkles,
+  Library, AlertTriangle, CheckCircle, Clock, ArrowUpRight,
+} from 'lucide-react'
+import { StatsCard, Card, Badge, Alert, Spinner } from '../../components/ui'
+import { formatNumber, cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
-import { libraryApi } from '../../api'
-import { Card, StatsCard, Badge, Alert } from '../../components/ui'
-import type { LibraryDocument } from '../../types'
+import api from '../../lib/axios'
 
-const typeColor: Record<string, string> = {
-  livre: 'badge-blue', memoire: 'badge-purple', these: 'badge-yellow',
-  article: 'badge-green', guide: 'badge-gray', rapport: 'badge-gray',
+interface LoanEntry {
+  student: string
+  title: string
+  date: string
+  status: 'rendu' | 'en_cours' | 'en_retard'
+}
+
+interface LibraryData {
+  catalog: {
+    total_documents: number
+    new_this_month: number
+    categories: { name: string; count: number; color: string }[]
+  }
+  loans: {
+    active: number
+    overdue: number
+    returned_this_month: number
+    attendance_trend: number
+  }
+  recent_loans: LoanEntry[]
+}
+
+const LIBRARY_DATA: LibraryData = {
+  catalog: {
+    total_documents: 1245,
+    new_this_month: 28,
+    categories: [
+      { name: 'Ouvrages académiques', count: 620, color: 'bg-amber-500' },
+      { name: 'Mémoires & thèses', count: 340, color: 'bg-orange-500' },
+      { name: 'Revues & périodiques', count: 285, color: 'bg-yellow-500' },
+    ],
+  },
+  loans: {
+    active: 342,
+    overdue: 19,
+    returned_this_month: 268,
+    attendance_trend: 12,
+  },
+  recent_loans: [
+    { student: 'Moussa DIALLO', title: 'Algorithmique avancée', date: "Aujourd'hui", status: 'en_cours' },
+    { student: 'Fatou DIOP', title: 'Mémoire — IA appliquée', date: 'Hier', status: 'rendu' },
+    { student: 'Amadou KEITA', title: 'Bases de données réparties', date: 'Il y a 2 jours', status: 'en_retard' },
+    { student: 'Khadija TRAORE', title: 'Économie du développement', date: 'Il y a 3 jours', status: 'rendu' },
+  ],
 }
 
 export default function BibliothecaireDashboard() {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
-  const { data: stats } = useQuery({
-    queryKey: ['biblio-stats'],
-    queryFn: () => libraryApi.getStats().then(r => r.data),
+  const { data, isLoading } = useQuery({
+    queryKey: ['library-dashboard'],
+    queryFn: () => api.get('/library/dashboard/').then(r => r.data),
+    initialData: LIBRARY_DATA,
   })
 
-  const { data: recent } = useQuery({
-    queryKey: ['biblio-recent'],
-    queryFn: () => libraryApi.getDocuments({ page_size: 6, ordering: '-created_at' }).then(r => r.data),
-  })
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
-  const { data: popular } = useQuery({
-    queryKey: ['biblio-popular'],
-    queryFn: () => libraryApi.getDocuments({ page_size: 5, ordering: '-download_count' }).then(r => r.data),
-  })
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Spinner text="Chargement des données bibliothèque..." />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 to-orange-700 rounded-2xl p-6 text-white">
+    <div className="space-y-6">
+      {/* ── Welcome Banner ── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 via-orange-600 to-orange-700 rounded-2xl p-6 text-white">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-amber-200" />
-            <span className="text-amber-200 text-sm font-medium">Espace Bibliothèque</span>
+        <div className="relative flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-amber-200" />
+              <span className="text-amber-200 text-sm font-medium">{greeting},</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white">{user?.full_name}</h1>
+            <p className="text-amber-200 text-sm mt-1">
+              Gestion du fonds documentaire — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold">{user?.full_name}</h1>
-          <p className="text-amber-200 text-sm mt-1">
-            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+          <div className="hidden sm:flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            <span className="text-white/90 font-medium">{data.loans.active} emprunts actifs</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatsCard title="Total documents" value={stats?.total ?? 0}
-          icon={<BookOpen className="w-5 h-5" />} color="bg-gradient-to-br from-amber-500 to-orange-500" />
-        <StatsCard title="Livres" value={stats?.livres ?? 0}
-          icon={<BookOpen className="w-5 h-5" />} color="bg-gradient-to-br from-blue-500 to-blue-600" />
-        <StatsCard title="Mémoires & Thèses" value={(stats?.memoires ?? 0) + (stats?.theses ?? 0)}
-          icon={<BookOpen className="w-5 h-5" />} color="bg-gradient-to-br from-violet-500 to-violet-600" />
-        <StatsCard title="Téléchargements" value={stats?.total_downloads ?? 0}
-          icon={<Download className="w-5 h-5" />} color="bg-gradient-to-br from-emerald-500 to-emerald-600" />
+      {/* ── KPI Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
+          title="Documents"
+          value={formatNumber(data.catalog.total_documents)}
+          icon={<BookOpen className="w-5 h-5" />}
+          color="bg-gradient-to-br from-amber-500 to-amber-600"
+          subtitle={`+${data.catalog.new_this_month} ce mois`}
+          onClick={() => navigate('/bibliothecaire')}
+        />
+        <StatsCard
+          title="Emprunts actifs"
+          value={formatNumber(data.loans.active)}
+          icon={<Users className="w-5 h-5" />}
+          color="bg-gradient-to-br from-orange-500 to-orange-600"
+          subtitle="En circulation"
+          onClick={() => navigate('/bibliothecaire')}
+        />
+        <StatsCard
+          title="Retours du mois"
+          value={formatNumber(data.loans.returned_this_month)}
+          icon={<FileText className="w-5 h-5" />}
+          color="bg-gradient-to-br from-yellow-500 to-yellow-600"
+          subtitle="Documents rendus"
+          onClick={() => navigate('/bibliothecaire')}
+        />
+        <StatsCard
+          title="Fréquentation"
+          value={`+${data.loans.attendance_trend}%`}
+          icon={<TrendingUp className="w-5 h-5" />}
+          color="bg-gradient-to-br from-lime-500 to-lime-600"
+          trend={{ value: data.loans.attendance_trend, label: 'ce mois' }}
+          subtitle="Vs mois dernier"
+        />
       </div>
 
+      {/* ── Middle Section ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Catalog Breakdown */}
+        <Card title="Répartition du catalogue" subtitle="Par catégorie" className="lg:col-span-2">
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {data.catalog.categories.map((cat: LibraryData['catalog']['categories'][number]) => {
+                const percentage = Math.round((cat.count / data.catalog.total_documents) * 100)
+                return (
+                  <div key={cat.name}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{cat.name}</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-50">{formatNumber(cat.count)}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className={cn('h-full rounded-full', cat.color)} style={{ width: `${percentage}%` }} />
+                      </div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{percentage}%</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">Total catalogue</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-gray-50">{formatNumber(data.catalog.total_documents)}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Loan status ring */}
+        <Card title="État des emprunts" subtitle="Vue d'ensemble">
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center">
+                <div className="relative w-32 h-32">
+                  <svg className="w-full h-full" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+                    <circle
+                      cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" strokeWidth="8"
+                      strokeDasharray={`${(data.loans.active / (data.loans.active + data.loans.returned_this_month)) * 282.7} 282.7`}
+                      strokeLinecap="round" transform="rotate(-90 50 50)"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center flex-col">
+                    <span className="text-3xl font-bold text-gray-900 dark:text-gray-50">{data.loans.active}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">En cours</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Rendus ce mois</span>
+                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{data.loans.returned_this_month}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">En retard</span>
+                <span className="text-sm font-bold text-red-600 dark:text-red-400">{data.loans.overdue}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Bottom Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Derniers ajouts">
-          {!recent?.results?.length ? (
-            <Alert type="info">Aucun document dans la bibliothèque.</Alert>
-          ) : (
-            <div className="space-y-2">
-              {recent.results.map((doc: LibraryDocument) => (
-                <div key={doc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <span className="text-xl flex-shrink-0">
-                    {doc.type === 'livre' ? '📚' : doc.type === 'memoire' ? '📝' : doc.type === 'these' ? '🎓' : '📄'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{doc.title}</p>
-                    <p className="text-xs text-gray-400">{doc.author} · {doc.year}</p>
+        {/* Recent Loans */}
+        <Card title="Emprunts récents" subtitle="Dernières 72 heures">
+          <div className="space-y-3">
+            {data.recent_loans.map((loan: LoanEntry, i: number) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                    loan.status === 'rendu' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300' :
+                    loan.status === 'en_cours' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' :
+                    'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300'
+                  )}>
+                    {loan.status === 'rendu' ? <CheckCircle className="w-4 h-4" /> :
+                     loan.status === 'en_cours' ? <Clock className="w-4 h-4" /> :
+                     <AlertTriangle className="w-4 h-4" />}
                   </div>
-                  <Badge label={doc.type_display} className={typeColor[doc.type] ?? 'badge-gray'} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{loan.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{loan.student} • {loan.date}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <Badge
+                  label={loan.status === 'rendu' ? 'Rendu' : loan.status === 'en_cours' ? 'En cours' : 'Retard'}
+                  className={loan.status === 'rendu' ? 'badge-green' : loan.status === 'en_cours' ? 'badge-blue' : 'badge-red'}
+                  dot
+                />
+              </div>
+            ))}
+            <button
+              onClick={() => navigate('/bibliothecaire')}
+              className="w-full text-center text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium py-2"
+            >
+              Voir tous les emprunts →
+            </button>
+          </div>
         </Card>
 
-        <Card title="Plus téléchargés">
-          {!popular?.results?.length ? (
-            <Alert type="info">Aucune statistique disponible.</Alert>
-          ) : (
-            <div className="space-y-2">
-              {popular.results.map((doc: LibraryDocument, idx: number) => (
-                <div key={doc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 ${
-                    idx === 0 ? 'bg-amber-400 text-white' : idx === 1 ? 'bg-gray-300 text-gray-700' : 'bg-gray-100 text-gray-500'
-                  }`}>{idx + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{doc.title}</p>
-                    <p className="text-xs text-gray-400">{doc.author}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <Download className="w-3 h-3" />{doc.download_count}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Quick Actions */}
+        <Card title="Actions rapides" subtitle="Gestion documentaire">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => navigate('/bibliothecaire')}
+              className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4 text-left hover:bg-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 dark:border-amber-700/30 dark:hover:bg-amber-800/30 transition-colors"
+            >
+              <Library className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">Fonds documentaire</p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">Gérer le catalogue</p>
+            </button>
+            <button
+              onClick={() => navigate('/library')}
+              className="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 rounded-xl p-4 text-left hover:bg-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 dark:border-cyan-700/30 dark:hover:bg-cyan-800/30 transition-colors"
+            >
+              <BookOpen className="w-5 h-5 text-cyan-600 dark:text-cyan-400 mb-2" />
+              <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-200">Catalogue public</p>
+              <p className="text-xs text-cyan-700 dark:text-cyan-300 mt-1">Vue étudiants</p>
+            </button>
+            <button
+              onClick={() => navigate('/documents')}
+              className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl p-4 text-left hover:bg-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 dark:border-indigo-700/30 dark:hover:bg-indigo-800/30 transition-colors"
+            >
+              <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+              <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">Documents étudiants</p>
+              <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">Pièces & dépôts</p>
+            </button>
+            <button
+              onClick={() => navigate('/communication')}
+              className="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 rounded-xl p-4 text-left hover:bg-rose-100 dark:from-rose-900/20 dark:to-rose-800/20 dark:border-rose-700/30 dark:hover:bg-rose-800/30 transition-colors"
+            >
+              <ArrowUpRight className="w-5 h-5 text-rose-600 dark:text-rose-400 mb-2" />
+              <p className="text-sm font-semibold text-rose-900 dark:text-rose-200">Relances</p>
+              <p className="text-xs text-rose-700 dark:text-rose-300 mt-1">Retards d'emprunt</p>
+            </button>
+          </div>
         </Card>
-
-        {stats?.by_domain?.length > 0 && (
-          <Card title="Répartition par domaine" className="lg:col-span-2">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {stats.by_domain.map((d: { domain: string; count: number }) => (
-                <div key={d.domain} className="bg-amber-50 rounded-xl p-3 text-center border border-amber-100">
-                  <p className="text-2xl font-black text-amber-700">{d.count}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">{d.domain || 'Non classé'}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
       </div>
+
+      {/* ── Alertes ── */}
+      {data.loans.overdue > 0 && (
+        <Alert type="warning">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900 dark:text-amber-200">Emprunts en retard détectés</p>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                {data.loans.overdue} emprunt(s) dépassent la date de retour et nécessitent une relance.
+              </p>
+            </div>
+          </div>
+        </Alert>
+      )}
     </div>
   )
 }

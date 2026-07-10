@@ -10,6 +10,7 @@ from .serializers import (
     FeeTypeSerializer, InvoiceSerializer, PaymentSerializer,
     ScholarshipSerializer, InstallmentSerializer,
 )
+from apps.accounts.permissions import HasModulePermission
 
 def _recompute_invoice_totals(invoice: Invoice) -> None:
     """
@@ -24,14 +25,16 @@ def _recompute_invoice_totals(invoice: Invoice) -> None:
 class FeeTypeViewSet(viewsets.ModelViewSet):
     queryset = FeeType.objects.filter(is_active=True)
     serializer_class = FeeTypeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'finance'
     filterset_fields = ['category', 'academic_year']
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all().select_related('student', 'academic_year').prefetch_related('items', 'payments').order_by('id')
     serializer_class = InvoiceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'finance'
     filterset_fields = ['status', 'academic_year', 'student']
     search_fields = ['invoice_number', 'student__student_id', 'student__user__last_name']
 
@@ -76,6 +79,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             else:
                 invoice.status = 'partiellement_payee'
             invoice.save()
+            try:
+                from apps.core.tasks import dispatch_webhook
+                dispatch_webhook('payment.received', {
+                    'invoice_number': invoice.invoice_number, 'student_id': str(invoice.student_id),
+                    'amount': float(payment.amount), 'method': payment.method, 'invoice_status': invoice.status,
+                })
+            except Exception:
+                pass
             return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -335,7 +346,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all().select_related('invoice').order_by('id')
     serializer_class = PaymentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'finance'
     filterset_fields = ['status', 'method']
     search_fields = ['receipt_number', 'transaction_ref']
 
@@ -488,14 +500,16 @@ class PaymentViewSet(viewsets.ModelViewSet):
 class ScholarshipViewSet(viewsets.ModelViewSet):
     queryset = Scholarship.objects.all().order_by('id')
     serializer_class = ScholarshipSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'finance'
     filterset_fields = ['type', 'academic_year', 'student']
 
 
 class InstallmentViewSet(viewsets.ModelViewSet):
     queryset = Installment.objects.all().select_related('invoice').order_by('id')
     serializer_class = InstallmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'finance'
     filterset_fields = ['invoice', 'status']
 
     @action(detail=True, methods=['post'])

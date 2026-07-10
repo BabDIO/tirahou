@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from apps.core.models import BaseModel
 from apps.accounts.models import User
 from apps.programs.models import UE, EC
@@ -41,6 +42,8 @@ class CourseModule(BaseModel):
     order = models.PositiveSmallIntegerField(default=0)
     is_published = models.BooleanField(default=False)
     available_from = models.DateTimeField(null=True, blank=True)
+    prerequisite_module = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                             related_name='unlocks', help_text="Module à terminer avant d'accéder à celui-ci")
 
     class Meta:
         db_table = 'course_modules'
@@ -49,6 +52,27 @@ class CourseModule(BaseModel):
 
     def __str__(self):
         return f"{self.course_space} — {self.title}"
+
+    def is_accessible_to(self, student):
+        """
+        Un module est accessible si : publié, la date de disponibilité est
+        atteinte, et — s'il a un prérequis — que l'étudiant a complété la
+        totalité des ressources de ce module prérequis (8.16 / H6).
+        """
+        from django.utils import timezone
+        if not self.is_published:
+            return False
+        if self.available_from and self.available_from > timezone.now():
+            return False
+        if self.prerequisite_module_id:
+            prereq_resources = self.prerequisite_module.resources.filter(is_published=True)
+            if prereq_resources.exists():
+                completed = ResourceCompletion.objects.filter(
+                    student=student, resource__in=prereq_resources
+                ).values('resource').distinct().count()
+                if completed < prereq_resources.count():
+                    return False
+        return True
 
 
 class CourseResource(BaseModel):
@@ -78,6 +102,8 @@ class CourseResource(BaseModel):
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     file_size = models.PositiveIntegerField(default=0)
     duration_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    version = models.PositiveSmallIntegerField(default=1)
+    previous_version = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='next_versions')
 
     class Meta:
         db_table = 'course_resources'
@@ -85,7 +111,38 @@ class CourseResource(BaseModel):
         verbose_name = 'Ressource Pédagogique'
 
     def __str__(self):
-        return f"{self.module} — {self.title}"
+        return f"{self.module} — {self.title} (v{self.version})"
+
+    def create_new_version(self, uploaded_by, file=None, external_url=None, description=None):
+        """
+        Archive la ressource courante (dépubliée mais conservée pour
+        historique) et crée une nouvelle version active à sa place (8.16 / H7).
+        """
+        self.is_published = False
+        self.save(update_fields=['is_published', 'updated_at'])
+        return CourseResource.objects.create(
+            module=self.module, title=self.title, type=self.type,
+            file=file if file is not None else self.file,
+            external_url=external_url if external_url is not None else self.external_url,
+            description=description if description is not None else self.description,
+            order=self.order, is_downloadable=self.is_downloadable, is_published=True,
+            uploaded_by=uploaded_by, version=self.version + 1, previous_version=self,
+        )
+
+
+class ResourceCompletion(BaseModel):
+    """Marque qu'un étudiant a consulté/terminé une ressource pédagogique donnée."""
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='resource_completions')
+    resource = models.ForeignKey(CourseResource, on_delete=models.CASCADE, related_name='completions')
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'lms_resource_completions'
+        unique_together = ('student', 'resource')
+        verbose_name = 'Complétion de Ressource'
+
+    def __str__(self):
+        return f"{self.student} — {self.resource}"
 
 
 class Assignment(BaseModel):
@@ -225,6 +282,9 @@ class QuizAttempt(BaseModel):
     score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_cours')
     attempt_number = models.PositiveSmallIntegerField(default=1)
+    # Ordre des questions figé au démarrage (anti-fraude : mélange par tentative
+    # si quiz.randomize_questions est activé) — liste d'UUID sous forme de str.
+    question_order = models.JSONField(default=list, blank=True)
 
     class Meta:
         db_table = 'quiz_attempts'
@@ -232,6 +292,68 @@ class QuizAttempt(BaseModel):
 
     def __str__(self):
         return f"{self.student} — {self.quiz.title} (tentative {self.attempt_number})"
+
+    @property
+    def deadline(self):
+        from datetime import timedelta
+        return self.started_at + timedelta(minutes=self.quiz.duration_minutes)
+
+    @property
+    def is_time_expired(self):
+        return timezone.now() > self.deadline
+
+    @property
+    def time_remaining_seconds(self):
+        remaining = (self.deadline - timezone.now()).total_seconds()
+        return max(0, int(remaining))
+
+    def grade(self):
+        """
+        Corrige automatiquement les réponses QCM / Vrai-Faux (comparaison
+        exacte à l'ensemble des choix corrects) et calcule le score total.
+        Les questions à réponse libre (courte/longue) ne sont pas notées
+        automatiquement : elles restent `is_correct=None` en attente d'une
+        correction manuelle par l'enseignant, et ne comptent pas dans le
+        score tant qu'elles n'ont pas été notées.
+        """
+        total_points = 0
+        earned_points = 0
+        for answer in self.answers.select_related('question').prefetch_related('selected_choices', 'question__choices'):
+            question = answer.question
+            total_points += float(question.points)
+            if question.type in ('qcm', 'qcm_multiple', 'vrai_faux'):
+                correct_ids = set(question.choices.filter(is_correct=True).values_list('id', flat=True))
+                selected_ids = set(answer.selected_choices.values_list('id', flat=True))
+                is_correct = selected_ids == correct_ids and len(correct_ids) > 0
+                answer.is_correct = is_correct
+                answer.points_earned = float(question.points) if is_correct else 0
+                answer.save(update_fields=['is_correct', 'points_earned'])
+                earned_points += answer.points_earned
+            elif answer.points_earned is not None:
+                # Réponse libre déjà corrigée manuellement par l'enseignant
+                earned_points += float(answer.points_earned)
+
+        self.score = round((earned_points / total_points) * float(self.quiz.max_grade), 2) if total_points > 0 else 0
+        self.save(update_fields=['score'])
+        return self.score
+
+
+class StudentAnswer(BaseModel):
+    """Réponse d'un étudiant à une question, pour une tentative de quiz donnée."""
+    attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='student_answers')
+    selected_choices = models.ManyToManyField(QuestionChoice, blank=True, related_name='selected_by')
+    text_answer = models.TextField(blank=True, help_text="Réponse libre (courte/longue) — correction manuelle")
+    is_correct = models.BooleanField(null=True, blank=True, help_text="None = non corrigé automatiquement")
+    points_earned = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        db_table = 'student_answers'
+        unique_together = ('attempt', 'question')
+        verbose_name = 'Réponse étudiant'
+
+    def __str__(self):
+        return f"{self.attempt} — Q{self.question.order}"
 
 
 class StudentProgress(BaseModel):

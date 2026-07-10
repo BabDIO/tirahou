@@ -39,11 +39,11 @@ def send_payment_reminders():
             title="Paiement en retard",
             message=f"Votre facture #{invoice.invoice_number} est en retard de {days_overdue} jours. "
                    f"Montant dû: {invoice.total_amount} FCFA. Veuillez régulariser votre situation.",
-            notification_type='payment',
+            type='paiement',
             priority='high'
         )
         count_overdue += 1
-    
+
     # Rappels pour factures à venir
     for invoice in upcoming_invoices:
         Notification.objects.create(
@@ -51,8 +51,8 @@ def send_payment_reminders():
             title="Échéance de paiement",
             message=f"Votre facture #{invoice.invoice_number} arrive à échéance dans 7 jours. "
                    f"Montant: {invoice.total_amount} FCFA. Date limite: {invoice.due_date.strftime('%d/%m/%Y')}.",
-            notification_type='payment',
-            priority='medium'
+            type='paiement',
+            priority='normal'
         )
         count_upcoming += 1
     

@@ -1,0 +1,1897 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\PC\\Desktop\\memoire\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--ui"
+    ],
+    "configFile": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\playwright.config.ts",
+    "rootDir": "C:/Users/PC/Desktop/memoire/frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/PC/Desktop/memoire/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/PC/Desktop/memoire/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report",
+          "open": "never"
+        }
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 3,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "00-health.spec.ts",
+      "file": "00-health.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "🏥 Health Check",
+          "file": "00-health.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Backend API devrait être accessible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4360,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:13.642Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\00-health-🏥-Health-Check--72658-API-devrait-être-accessible-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dd947566bc0d35587abc-737b133d1ebcc7ebb261",
+              "file": "00-health.spec.ts",
+              "line": 11,
+              "column": 3
+            },
+            {
+              "title": "Frontend devrait charger",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12350,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:18.215Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\00-health-🏥-Health-Check-Frontend-devrait-charger-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dd947566bc0d35587abc-d256681e7de8f0c823c5",
+              "file": "00-health.spec.ts",
+              "line": 19,
+              "column": 3
+            },
+            {
+              "title": "Page de connexion devrait être accessible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6325,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:35.831Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\00-health-🏥-Health-Check--cf4ef-ion-devrait-être-accessible-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dd947566bc0d35587abc-6b49a197828b601654f9",
+              "file": "00-health.spec.ts",
+              "line": 26,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "01-auth.spec.ts",
+      "file": "01-auth.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "🔐 Authentification",
+          "file": "01-auth.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "devrait afficher la page de connexion",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 19852,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:13.811Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-9f02d-ficher-la-page-de-connexion-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-c58559ead8d5821e7bf6",
+              "file": "01-auth.spec.ts",
+              "line": 13,
+              "column": 3
+            },
+            {
+              "title": "devrait refuser une connexion avec mauvais identifiants",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 9012,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:36.173Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-7addf-n-avec-mauvais-identifiants-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-97ec81a41fad9f8aa379",
+              "file": "01-auth.spec.ts",
+              "line": 22,
+              "column": 3
+            },
+            {
+              "title": "devrait connecter et déconnecter admin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 25805,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:47.176Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-5c7f6-necter-et-déconnecter-admin-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-db8d4dd5003f0e67c6c2",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            },
+            {
+              "title": "devrait connecter et déconnecter student",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 10997,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:57:22.234Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-c90bf-cter-et-déconnecter-student-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-e138dfec3610d2e34917",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            },
+            {
+              "title": "devrait connecter et déconnecter teacher",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 17040,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:57:34.737Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-e30ba-cter-et-déconnecter-teacher-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-48a3c2daf37a9c07b9af",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            },
+            {
+              "title": "devrait connecter et déconnecter scolarite",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 18708,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:57:54.153Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-92ae5-er-et-déconnecter-scolarite-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-ca45d0de295b79cb22a4",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            },
+            {
+              "title": "devrait connecter et déconnecter financier",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 24627,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:58:14.824Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-eee1e-er-et-déconnecter-financier-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-c4e3b42e2fcc9d02dae9",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            },
+            {
+              "title": "devrait connecter et déconnecter responsable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 21375,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:58:41.463Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-977ee--et-déconnecter-responsable-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-38cdec756de4e6ec74ae",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            },
+            {
+              "title": "devrait connecter et déconnecter bibliothecaire",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 13253,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:59:05.474Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\01-auth-🔐-Authentificatio-5f02f--déconnecter-bibliothecaire-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "791b3c4e0869e77b2651-aaf93db3d5a5f6c1c0d9",
+              "file": "01-auth.spec.ts",
+              "line": 37,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "02-student.spec.ts",
+      "file": "02-student.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "👨‍🎓 Étudiant",
+          "file": "02-student.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "devrait voir son dashboard étudiant",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 30735,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/student/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    23 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/student/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    23 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:18:24",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts",
+                          "column": 24,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   test(\u001b[32m'devrait voir son dashboard étudiant'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/dashboard\\/student/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m     \u001b[36mawait\u001b[39m verifyPageTitle(page\u001b[33m,\u001b[39m \u001b[35m/dashboard|tableau de bord/i\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m     \n \u001b[90m 21 |\u001b[39m     \u001b[90m// Capture du dashboard\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts",
+                            "column": 24,
+                            "line": 18
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/student/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    23 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   test(\u001b[32m'devrait voir son dashboard étudiant'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/dashboard\\/student/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m     \u001b[36mawait\u001b[39m verifyPageTitle(page\u001b[33m,\u001b[39m \u001b[35m/dashboard|tableau de bord/i\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m     \n \u001b[90m 21 |\u001b[39m     \u001b[90m// Capture du dashboard\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:18:24\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:13.705Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--399e1-voir-son-dashboard-étudiant-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--399e1-voir-son-dashboard-étudiant-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--399e1-voir-son-dashboard-étudiant-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--399e1-voir-son-dashboard-étudiant-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts",
+                        "column": 24,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-50d6552705475a4aa0aa",
+              "file": "02-student.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "devrait consulter ses notes",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 26,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 24122,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/notes|résultats/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/notes|résultats/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n\n    at verifyPageTitle (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:40:48)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:30:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 48,
+                          "line": 40
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:40\n\n\u001b[0m \u001b[90m 38 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 39 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m verifyPageTitle(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m title\u001b[33m:\u001b[39m string) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoContainText(title\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m }\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m \u001b[90m/**\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 48,
+                            "line": 40
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/notes|résultats/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:40\n\n\u001b[0m \u001b[90m 38 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 39 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m verifyPageTitle(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m title\u001b[33m:\u001b[39m string) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoContainText(title\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m }\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m \u001b[90m/**\u001b[39m\u001b[0m\n\u001b[2m    at verifyPageTitle (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:40:48)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:30:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:57:06.149Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-notes-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-notes-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-notes-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-notes-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 48,
+                        "line": 40
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-8dab0ff1302fa00c0d68",
+              "file": "02-student.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "devrait voir son emploi du temps",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 27373,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/emploi du temps|planning/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/emploi du temps|planning/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n\n    at verifyPageTitle (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:40:48)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:42:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 48,
+                          "line": 40
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:40\n\n\u001b[0m \u001b[90m 38 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 39 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m verifyPageTitle(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m title\u001b[33m:\u001b[39m string) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoContainText(title\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m }\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m \u001b[90m/**\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 48,
+                            "line": 40
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/emploi du temps|planning/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:40\n\n\u001b[0m \u001b[90m 38 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 39 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m verifyPageTitle(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m title\u001b[33m:\u001b[39m string) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoContainText(title\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m }\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m \u001b[90m/**\u001b[39m\u001b[0m\n\u001b[2m    at verifyPageTitle (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:40:48)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:42:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:57:39.191Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-voir-son-emploi-du-temps-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-voir-son-emploi-du-temps-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-voir-son-emploi-du-temps-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-voir-son-emploi-du-temps-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 48,
+                        "line": 40
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-db2d493d64e3c1d80617",
+              "file": "02-student.spec.ts",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "devrait consulter ses absences",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 29,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 42254,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Absences\")').first()\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Absences\")').first()\u001b[22m\n\n    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:51:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 14,
+                          "line": 13
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 14,
+                            "line": 13
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Absences\")').first()\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:51:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:58:18.489Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-absences-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-absences-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-absences-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-consulter-ses-absences-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 14,
+                        "line": 13
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-897989a6de1f778987fa",
+              "file": "02-student.spec.ts",
+              "line": 50,
+              "column": 3
+            },
+            {
+              "title": "devrait voir ses informations financières",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 32,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 26523,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Finances\")').first()\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Finances\")').first()\u001b[22m\n\n    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:61:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 14,
+                          "line": 13
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 14,
+                            "line": 13
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Finances\")').first()\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:61:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:59:43.879Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--fe20b-es-informations-financières-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--fe20b-es-informations-financières-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--fe20b-es-informations-financières-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--fe20b-es-informations-financières-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 14,
+                        "line": 13
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-42f862ee1bfb884255c6",
+              "file": "02-student.spec.ts",
+              "line": 60,
+              "column": 3
+            },
+            {
+              "title": "devrait accéder aux documents",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 34,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 23391,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/document/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/document/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n\n    at verifyPageTitle (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:40:48)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:73:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 48,
+                          "line": 40
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:40\n\n\u001b[0m \u001b[90m 38 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 39 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m verifyPageTitle(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m title\u001b[33m:\u001b[39m string) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoContainText(title\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m }\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m \u001b[90m/**\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 48,
+                            "line": 40
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2').first()\nExpected pattern: \u001b[32m/document/i\u001b[39m\nReceived string:  \u001b[31m\"Accès refusé\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2').first()\u001b[22m\n\u001b[2m    13 × locator resolved to <h1 class=\"text-2xl font-bold text-gray-900 mb-2\">Accès refusé</h1>\u001b[22m\n\u001b[2m       - unexpected value \"Accès refusé\"\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:40\n\n\u001b[0m \u001b[90m 38 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 39 |\u001b[39m \u001b[36mexport\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m verifyPageTitle(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m title\u001b[33m:\u001b[39m string) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoContainText(title\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m }\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m \u001b[90m/**\u001b[39m\u001b[0m\n\u001b[2m    at verifyPageTitle (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:40:48)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\02-student.spec.ts:73:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:01:21.948Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-accéder-aux-documents-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-accéder-aux-documents-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-accéder-aux-documents-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant-devrait-accéder-aux-documents-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 48,
+                        "line": 40
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-0e061402bf187555af12",
+              "file": "02-student.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "NE DEVRAIT PAS pouvoir accéder à la saisie des notes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 35,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 15504,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:01:53.643Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\02-student-👨‍🎓-Étudiant--67956-céder-à-la-saisie-des-notes-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7ede94bbb3c216953e0b-7634b0508e030fd04e8d",
+              "file": "02-student.spec.ts",
+              "line": 80,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "03-teacher.spec.ts",
+      "file": "03-teacher.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "👨‍🏫 Enseignant",
+          "file": "03-teacher.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "devrait voir son dashboard enseignant",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 32602,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/teacher/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    22 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/teacher/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    22 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts:18:24",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts",
+                          "column": 24,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   test(\u001b[32m'devrait voir son dashboard enseignant'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/dashboard\\/teacher/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m     \u001b[36mawait\u001b[39m verifyPageTitle(page\u001b[33m,\u001b[39m \u001b[35m/dashboard|tableau de bord/i\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m     \n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mscreenshot({ path\u001b[33m:\u001b[39m \u001b[32m'playwright-report/screenshots/teacher-home.png'\u001b[39m\u001b[33m,\u001b[39m fullPage\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts",
+                            "column": 24,
+                            "line": 18
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/teacher/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    22 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   test(\u001b[32m'devrait voir son dashboard enseignant'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/dashboard\\/teacher/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m     \u001b[36mawait\u001b[39m verifyPageTitle(page\u001b[33m,\u001b[39m \u001b[35m/dashboard|tableau de bord/i\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m     \n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mscreenshot({ path\u001b[33m:\u001b[39m \u001b[32m'playwright-report/screenshots/teacher-home.png'\u001b[39m\u001b[33m,\u001b[39m fullPage\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts:18:24\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:56:46.473Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-c1e77-ir-son-dashboard-enseignant-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-c1e77-ir-son-dashboard-enseignant-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-c1e77-ir-son-dashboard-enseignant-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-c1e77-ir-son-dashboard-enseignant-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts",
+                        "column": 24,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "17392527b0482896ce17-1f584d7433c7cf7222db",
+              "file": "03-teacher.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "devrait accéder à la saisie des notes",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 28,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 39991,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Saisie des notes\")').first()\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Saisie des notes\")').first()\u001b[22m\n\n    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts:25:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 14,
+                          "line": 13
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 14,
+                            "line": 13
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Saisie des notes\")').first()\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts:25:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:57:59.262Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-858a5-céder-à-la-saisie-des-notes-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-858a5-céder-à-la-saisie-des-notes-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-858a5-céder-à-la-saisie-des-notes-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-858a5-céder-à-la-saisie-des-notes-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 14,
+                        "line": 13
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "17392527b0482896ce17-eb98f2d925331e74e30e",
+              "file": "03-teacher.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "devrait pouvoir sélectionner un EC et une session",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 29063,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Saisie des notes\")').first()\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Saisie des notes\")').first()\u001b[22m\n\n    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts:36:11",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                          "column": 14,
+                          "line": 13
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                            "column": 14,
+                            "line": 13
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a:has-text(\"Saisie des notes\")').first()\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers\\navigation.ts:13\n\n\u001b[0m \u001b[90m 11 |\u001b[39m   \u001b[90m// Chercher le lien dans la navigation\u001b[39m\n \u001b[90m 12 |\u001b[39m   \u001b[36mconst\u001b[39m link \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m`a:has-text(\"${linkText}\")`\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 13 |\u001b[39m   \u001b[36mawait\u001b[39m link\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 14 |\u001b[39m   \n \u001b[90m 15 |\u001b[39m   \u001b[90m// Attendre que la page charge\u001b[39m\n \u001b[90m 16 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at navigateTo (C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts:13:14)\u001b[22m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\03-teacher.spec.ts:36:11\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:58:46.156Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-6e90e-ionner-un-EC-et-une-session-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-6e90e-ionner-un-EC-et-une-session-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-6e90e-ionner-un-EC-et-une-session-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-6e90e-ionner-un-EC-et-une-session-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\helpers\\navigation.ts",
+                        "column": 14,
+                        "line": 13
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "17392527b0482896ce17-396fc2603e03cb853248",
+              "file": "03-teacher.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "devrait voir la liste de ses cours",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 14127,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:59:27.661Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\03-teacher-👨‍🏫-Enseignan-95073--voir-la-liste-de-ses-cours-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "17392527b0482896ce17-f191fe3446a63c9f6faf",
+              "file": "03-teacher.spec.ts",
+              "line": 60,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "04-admin.spec.ts",
+      "file": "04-admin.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "🔐 Administrateur",
+          "file": "04-admin.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "devrait voir son dashboard admin",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 20896,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/admin/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    23 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/admin/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    23 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n\n    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\04-admin.spec.ts:18:24",
+                        "location": {
+                          "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\04-admin.spec.ts",
+                          "column": 24,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   test(\u001b[32m'devrait voir son dashboard admin'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/dashboard\\/admin/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m     \n \u001b[90m 20 |\u001b[39m     \u001b[90m// Vérifier les statistiques générales\u001b[39m\n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'body'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[35m/étudiant|enseignant|statistique/i\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\04-admin.spec.ts",
+                            "column": 24,
+                            "line": 18
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/dashboard\\/admin/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\nTimeout: 10000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 10000ms\u001b[22m\n\u001b[2m    23 × unexpected value \"http://localhost:3000/dashboard\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   test(\u001b[32m'devrait voir son dashboard admin'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/dashboard\\/admin/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m     \n \u001b[90m 20 |\u001b[39m     \u001b[90m// Vérifier les statistiques générales\u001b[39m\n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'body'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[35m/étudiant|enseignant|statistique/i\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\04-admin.spec.ts:18:24\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:59:20.329Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-devrait-voir-son-dashboard-admin-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-devrait-voir-son-dashboard-admin-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-devrait-voir-son-dashboard-admin-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-devrait-voir-son-dashboard-admin-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\e2e\\04-admin.spec.ts",
+                        "column": 24,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5769c553c9344d484035-59d54fd37ab8aefcddad",
+              "file": "04-admin.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "devrait accéder à la gestion des utilisateurs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 20365,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:00:03.893Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-8835e-la-gestion-des-utilisateurs-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5769c553c9344d484035-4a6c52200c20e89390f2",
+              "file": "04-admin.spec.ts",
+              "line": 26,
+              "column": 3
+            },
+            {
+              "title": "devrait pouvoir rechercher un utilisateur",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 17571,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:00:31.956Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-e99d2-r-rechercher-un-utilisateur-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5769c553c9344d484035-f371345ae122ef2e4ee1",
+              "file": "04-admin.spec.ts",
+              "line": 36,
+              "column": 3
+            },
+            {
+              "title": "devrait voir les statistiques globales",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 33,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 21438,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:00:54.104Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\04-admin-🔐-Administrateur-79866-r-les-statistiques-globales-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5769c553c9344d484035-de78638940be71f96918",
+              "file": "04-admin.spec.ts",
+              "line": 51,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "05-ui.spec.ts",
+      "file": "05-ui.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "🎨 Interface Utilisateur",
+          "file": "05-ui.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "devrait ouvrir la recherche globale avec Ctrl+K",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11721,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:59:45.453Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\05-ui-🎨-Interface-Utilisa-64fc0-cherche-globale-avec-Ctrl-K-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc099e67b9f6393b301e-7a9772bb34b273f18872",
+              "file": "05-ui.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "devrait rechercher du contenu",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 21186,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T10:59:58.937Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\05-ui-🎨-Interface-Utilisateur-devrait-rechercher-du-contenu-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc099e67b9f6393b301e-2023ce5bf7880dd85033",
+              "file": "05-ui.spec.ts",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "devrait ouvrir le centre de notifications",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12335,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:00:24.234Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\05-ui-🎨-Interface-Utilisa-60482--le-centre-de-notifications-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc099e67b9f6393b301e-9cb760243cd3db001f92",
+              "file": "05-ui.spec.ts",
+              "line": 38,
+              "column": 3
+            },
+            {
+              "title": "devrait changer le thème (clair/sombre)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11764,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:00:41.830Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\05-ui-🎨-Interface-Utilisa-d9e3f-nger-le-thème-clair-sombre--chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc099e67b9f6393b301e-9a32e4d6e1dcce1f0a49",
+              "file": "05-ui.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "devrait afficher le menu utilisateur",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 22546,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:00:56.424Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\05-ui-🎨-Interface-Utilisa-e0c34-fficher-le-menu-utilisateur-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc099e67b9f6393b301e-376ae68f58abac06b07d",
+              "file": "05-ui.spec.ts",
+              "line": 74,
+              "column": 3
+            },
+            {
+              "title": "devrait être responsive (mobile)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 20114,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-10T11:01:22.792Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\PC\\Desktop\\memoire\\frontend\\test-results\\05-ui-🎨-Interface-Utilisa-9e0a9-ait-être-responsive-mobile--chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc099e67b9f6393b301e-bebedde9e7189d578d84",
+              "file": "05-ui.spec.ts",
+              "line": 86,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-07-10T10:56:10.073Z",
+    "duration": 362045.2180000022,
+    "expected": 23,
+    "skipped": 0,
+    "unexpected": 10,
+    "flaky": 0
+  }
+}

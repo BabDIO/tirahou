@@ -57,7 +57,6 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
         # Enregistrer dans les présences si la session a un EC
         if session.course_space:
             try:
-                from apps.people.models import Student
                 student = request.user.student_profile
                 from apps.analytics_app.models import LearningActivity
                 LearningActivity.objects.create(
@@ -69,6 +68,24 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
                 )
             except Exception:
                 pass
+            # Fusion présence hybride (I5/J2) : si cette classe virtuelle est
+            # l'équivalent en ligne d'un créneau planifié, on marque
+            # directement l'étudiant présent sur la feuille de présence du
+            # créneau — un seul système de présence, quel que soit le canal.
+            if session.scheduled_session_id:
+                try:
+                    from apps.attendance.models import AttendanceSheet, AttendanceRecord
+                    student = request.user.student_profile
+                    sheet, _ = AttendanceSheet.objects.get_or_create(
+                        session=session.scheduled_session,
+                        defaults={'is_open': True, 'opened_at': timezone.now(), 'created_by': session.created_by},
+                    )
+                    AttendanceRecord.objects.update_or_create(
+                        sheet=sheet, student=student,
+                        defaults={'status': 'present', 'method': 'virtuel', 'marked_at': timezone.now()},
+                    )
+                except Exception:
+                    pass
         return Response({
             'detail': 'Rejoint la session.',
             'join_url': session.join_url,
@@ -82,8 +99,8 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
         try:
             participant = SessionParticipant.objects.get(session=session, user=request.user)
             if participant.joined_at:
-                duration = (timezone.now() - participant.joined_at).seconds
-                participant.duration_seconds = duration
+                duration_seconds = (timezone.now() - participant.joined_at).total_seconds()
+                participant.duration_minutes = max(1, int(duration_seconds // 60))
             participant.left_at = timezone.now()
             participant.save()
         except SessionParticipant.DoesNotExist:

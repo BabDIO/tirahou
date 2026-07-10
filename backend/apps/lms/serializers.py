@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     CourseSpace, CourseModule, CourseResource, Assignment,
     AssignmentSubmission, Quiz, Question, QuestionChoice,
-    QuizAttempt, StudentProgress,
+    QuizAttempt, StudentAnswer, StudentProgress,
 )
 
 
@@ -16,6 +16,7 @@ class CourseResourceSerializer(serializers.ModelSerializer):
 
 class CourseModuleSerializer(serializers.ModelSerializer):
     resources = CourseResourceSerializer(many=True, read_only=True)
+    prerequisite_module_title = serializers.CharField(source='prerequisite_module.title', read_only=True, default=None)
 
     class Meta:
         model = CourseModule
@@ -78,6 +79,31 @@ class QuizSerializer(serializers.ModelSerializer):
 
 
 class QuizAttemptSerializer(serializers.ModelSerializer):
+    time_remaining_seconds = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = QuizAttempt
+        fields = '__all__'
+
+
+class StudentAnswerSerializer(serializers.ModelSerializer):
+    selected_choices = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    question_text = serializers.CharField(source='question.text', read_only=True)
+    question_type = serializers.CharField(source='question.type', read_only=True)
+
+    class Meta:
+        model = StudentAnswer
+        fields = ['id', 'attempt', 'question', 'question_text', 'question_type',
+                  'selected_choices', 'text_answer', 'is_correct', 'points_earned']
+        read_only_fields = ['is_correct', 'points_earned']
+
+
+class QuizAttemptDetailSerializer(serializers.ModelSerializer):
+    answers = StudentAnswerSerializer(many=True, read_only=True)
+    quiz_title = serializers.CharField(source='quiz.title', read_only=True)
+    max_grade = serializers.DecimalField(source='quiz.max_grade', read_only=True, max_digits=5, decimal_places=2)
+    time_remaining_seconds = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = QuizAttempt
         fields = '__all__'

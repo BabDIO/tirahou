@@ -18,6 +18,8 @@ from .pdf_service import (
     generate_releve_notes,
     generate_fiche_inscription,
     generate_carte_etudiant,
+    generate_convocation,
+    generate_diplome,
 )
 
 
@@ -271,3 +273,91 @@ def student_transcript(request, student_id):
         return Response(data)
     except Student.DoesNotExist:
         return Response({'detail': 'Étudiant introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@extend_schema(
+    request={'application/json': {'type': 'object', 'properties': {
+        'student_id': {'type': 'string'}, 'event_title': {'type': 'string'},
+        'event_date': {'type': 'string'}, 'event_location': {'type': 'string'},
+        'extra_notes': {'type': 'string'},
+    }}},
+    responses={200: OpenApiResponse(description='PDF convocation')},
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_convocation_pdf(request):
+    try:
+        student = Student.objects.select_related('user').get(id=request.data.get('student_id'))
+        event_title = request.data.get('event_title', 'Convocation')
+        event_date = request.data.get('event_date', '')
+        event_location = request.data.get('event_location', '')
+        extra_notes = request.data.get('extra_notes', '')
+
+        verification_code = f"VER-{uuid.uuid4().hex[:12].upper()}"
+        university_name = _get_university_name()
+
+        pdf_buf = generate_convocation(
+            student.user.get_full_name(), event_title, event_date, event_location,
+            university_name, verification_code, extra_notes,
+        )
+
+        doc = GeneratedDocument.objects.create(
+            student=student, doc_type='convocation', title=event_title,
+            verification_code=verification_code, generated_by=request.user,
+            metadata={'event_date': event_date, 'event_location': event_location},
+        )
+        doc.file.save(f"convocation_{student.student_id}_{verification_code}.pdf", pdf_buf)
+
+        pdf_buf.seek(0)
+        response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="convocation_{student.student_id}.pdf"'
+        return response
+    except Student.DoesNotExist:
+        return Response({'detail': 'Étudiant introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(responses={200: OpenApiResponse(description='PDF diplôme / attestation de fin de cycle')})
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def generate_diplome_pdf(request, student_id):
+    try:
+        student = Student.objects.select_related('user').get(id=student_id)
+        academic_year_id = request.query_params.get('academic_year')
+        is_attestation = request.query_params.get('attestation') == 'true'
+        mention = request.query_params.get('mention', '')
+
+        enrollment = AdminEnrollment.objects.filter(student=student, status='validee')
+        if academic_year_id:
+            enrollment = enrollment.filter(academic_year_id=academic_year_id)
+        enrollment = enrollment.select_related('program', 'academic_year').latest('created_at')
+
+        verification_code = f"VER-{uuid.uuid4().hex[:12].upper()}"
+        university_name = _get_university_name()
+        doc_type = 'attestation_fin_cycle' if is_attestation else 'diplome'
+        doc_label = "Attestation de fin de cycle" if is_attestation else "Diplôme"
+
+        pdf_buf = generate_diplome(
+            student, enrollment.program, enrollment.academic_year,
+            university_name, verification_code, mention, is_attestation,
+        )
+
+        doc = GeneratedDocument.objects.create(
+            student=student, doc_type=doc_type,
+            title=f'{doc_label} — {enrollment.program.name}',
+            verification_code=verification_code, generated_by=request.user,
+            metadata={'academic_year': str(enrollment.academic_year.id), 'mention': mention},
+        )
+        doc.file.save(f"{doc_type}_{student.student_id}_{verification_code}.pdf", pdf_buf)
+
+        pdf_buf.seek(0)
+        response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{doc_type}_{student.student_id}.pdf"'
+        return response
+    except Student.DoesNotExist:
+        return Response({'detail': 'Étudiant introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+    except AdminEnrollment.DoesNotExist:
+        return Response({'detail': 'Aucune inscription validée trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

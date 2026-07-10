@@ -4,7 +4,11 @@ from rest_framework.response import Response
 from django.db.models import Count, Sum, Avg
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import LearningActivity, EngagementScore, DashboardStat
-from .serializers import LearningActivitySerializer, EngagementScoreSerializer, DashboardStatSerializer
+from .extensions_models import Badge, StudentBadge, Wallet, WalletTransaction
+from .serializers import (
+    LearningActivitySerializer, EngagementScoreSerializer, DashboardStatSerializer,
+    BadgeSerializer, StudentBadgeSerializer, WalletSerializer, WalletTransactionSerializer,
+)
 
 
 class LearningActivityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -33,6 +37,76 @@ class DashboardStatViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DashboardStatSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['stat_type', 'academic_year']
+
+
+class BadgeViewSet(viewsets.ModelViewSet):
+    """Catalogue des badges numériques (8.30.2 / S2)."""
+    queryset = Badge.objects.filter(is_active=True)
+    serializer_class = BadgeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['type', 'is_published']
+
+
+class StudentBadgeViewSet(viewsets.ModelViewSet):
+    """Attribution de badges aux étudiants."""
+    queryset = StudentBadge.objects.all().select_related('student__user', 'badge')
+    serializer_class = StudentBadgeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['student', 'badge']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return StudentBadge.objects.none()
+        user = self.request.user
+        qs = StudentBadge.objects.select_related('student__user', 'badge')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(awarded_by=self.request.user)
+
+
+class WalletViewSet(viewsets.ReadOnlyModelViewSet):
+    """Portefeuille de points/récompenses (8.30.3 / S3)."""
+    queryset = Wallet.objects.all().select_related('student__user').prefetch_related('transactions')
+    serializer_class = WalletSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Wallet.objects.none()
+        user = self.request.user
+        qs = Wallet.objects.select_related('student__user').prefetch_related('transactions')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        return qs
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        if not hasattr(request.user, 'student_profile'):
+            return Response({'error': 'Réservé aux étudiants.'}, status=404)
+        wallet, _ = Wallet.objects.get_or_create(student=request.user.student_profile)
+        return Response(WalletSerializer(wallet).data)
+
+
+class WalletTransactionViewSet(viewsets.ModelViewSet):
+    """Crédite/débite un portefeuille — usage administratif (attribution de points)."""
+    queryset = WalletTransaction.objects.all().select_related('wallet__student__user')
+    serializer_class = WalletTransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['wallet', 'type']
+
+    def perform_create(self, serializer):
+        transaction = serializer.save()
+        wallet = transaction.wallet
+        if transaction.type in ('credit', 'reward'):
+            wallet.balance += transaction.amount
+            wallet.total_earned += transaction.amount
+        else:
+            wallet.balance -= transaction.amount
+            wallet.total_spent += transaction.amount
+        wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
 
 
 @extend_schema(responses={200: OpenApiResponse(description='Statistiques globales du dashboard')})

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, ClipboardList, Eye, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { admissionsApi } from '../../api'
-import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard } from '../../components/ui'
+import { Search, ClipboardList, Eye, CheckCircle, XCircle, Clock, Megaphone } from 'lucide-react'
+import { admissionsApi, academicApi, programsApi } from '../../api'
+import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Select } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
+import { useToast } from '../../hooks/useToast'
 import type { Application } from '../../types'
 
 export default function AdmissionsPage() {
@@ -11,6 +12,7 @@ export default function AdmissionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [selected, setSelected] = useState<Application | null>(null)
+  const [publishOpen, setPublishOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -36,6 +38,9 @@ export default function AdmissionsPage() {
           <h1 className="page-title">Admissions & Candidatures</h1>
           <p className="text-gray-500 text-sm mt-1">{data?.count ?? 0} candidature(s)</p>
         </div>
+        <Button icon={<Megaphone className="w-4 h-4" />} onClick={() => setPublishOpen(true)}>
+          Publier les résultats
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -140,6 +145,48 @@ export default function AdmissionsPage() {
           </div>
         )}
       </Modal>
+
+      <Modal open={publishOpen} onClose={() => setPublishOpen(false)} title="Publier les résultats d'admission"
+        subtitle="Rend visibles les décisions déjà prises (admis / liste d'attente / refusé) pour un programme et une année" size="sm">
+        <PublishResultsForm onDone={() => setPublishOpen(false)} />
+      </Modal>
+    </div>
+  )
+}
+
+function PublishResultsForm({ onDone }: { onDone: () => void }) {
+  const toast = useToast()
+  const [program, setProgram] = useState('')
+  const [academicYear, setAcademicYear] = useState('')
+
+  const { data: programs } = useQuery({
+    queryKey: ['programs-list-publish'],
+    queryFn: () => programsApi.getPrograms({ page_size: 100 }).then(r => r.data),
+  })
+  const { data: years } = useQuery({
+    queryKey: ['years-list-publish'],
+    queryFn: () => academicApi.getAcademicYears().then(r => r.data),
+  })
+
+  const publishMut = useMutation({
+    mutationFn: () => admissionsApi.publishDecisions(program, academicYear),
+    onSuccess: (res) => {
+      toast.success((res.data as { detail?: string })?.detail ?? 'Résultats publiés')
+      onDone()
+    },
+    onError: () => toast.error('Erreur lors de la publication'),
+  })
+
+  return (
+    <div className="space-y-4">
+      <Select label="Programme" value={program} onChange={e => setProgram(e.target.value)}
+        options={[{ value: '', label: '— Sélectionner —' }, ...(programs?.results?.map((p: { id: string; name: string }) => ({ value: p.id, label: p.name })) ?? [])]} />
+      <Select label="Année académique" value={academicYear} onChange={e => setAcademicYear(e.target.value)}
+        options={[{ value: '', label: '— Sélectionner —' }, ...(years?.results?.map((y: { id: string; label: string }) => ({ value: y.id, label: y.label })) ?? [])]} />
+      <Button className="w-full" icon={<Megaphone className="w-4 h-4" />} loading={publishMut.isPending}
+        disabled={!program || !academicYear} onClick={() => publishMut.mutate()}>
+        Publier
+      </Button>
     </div>
   )
 }

@@ -14,7 +14,7 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Button variant="ghost" size="icon" className="h-9 w-9 relative">
           <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Changer le thème</span>
@@ -23,21 +23,21 @@ export function ThemeToggle() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem
           onClick={() => setTheme('light')}
-          className={theme === 'light' ? 'bg-accent' : ''}
+          className={theme === 'light' ? 'bg-gray-100 dark:bg-slate-800 font-semibold' : ''}
         >
           <Sun className="mr-2 h-4 w-4" />
           Clair
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme('dark')}
-          className={theme === 'dark' ? 'bg-accent' : ''}
+          className={theme === 'dark' ? 'bg-gray-100 dark:bg-slate-800 font-semibold' : ''}
         >
           <Moon className="mr-2 h-4 w-4" />
           Sombre
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme('system')}
-          className={theme === 'system' ? 'bg-accent' : ''}
+          className={theme === 'system' ? 'bg-gray-100 dark:bg-slate-800 font-semibold' : ''}
         >
           <Monitor className="mr-2 h-4 w-4" />
           Système

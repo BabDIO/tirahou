@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Search, Plus, CreditCard, CheckCircle, Download, Gift, TrendingUp, AlertCircle } from 'lucide-react'
+import { Search, Plus, CreditCard, CheckCircle, Download, Gift, TrendingUp, AlertCircle, Calendar, Clock } from 'lucide-react'
 import { financeApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Progress, Alert } from '../../components/ui'
 import { formatCurrency, formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
-import type { Invoice } from '../../types'
+import type { Invoice, Installment } from '../../types'
 import api from '../../lib/axios'
 
 const methodIcons: Record<string, string> = {
@@ -19,6 +19,7 @@ export default function FinancePage() {
   const [selected, setSelected] = useState<Invoice | null>(null)
   const [discountOpen, setDiscountOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [installmentsInvoice, setInstallmentsInvoice] = useState<Invoice | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -149,10 +150,16 @@ export default function FinancePage() {
                         <td><Badge label={inv.status_display} className={statusColor(inv.status)} dot /></td>
                         <td className="text-xs text-gray-400">{formatDate(inv.due_date)}</td>
                         <td className="text-right">
-                          <Button variant="ghost" size="sm" icon={<TrendingUp className="w-3.5 h-3.5" />}
-                            onClick={() => setSelected(inv)}>
-                            Paiement
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" icon={<Calendar className="w-3.5 h-3.5" />}
+                              onClick={() => setInstallmentsInvoice(inv)}>
+                              Échéancier
+                            </Button>
+                            <Button variant="ghost" size="sm" icon={<TrendingUp className="w-3.5 h-3.5" />}
+                              onClick={() => setSelected(inv)}>
+                              Paiement
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -185,6 +192,102 @@ export default function FinancePage() {
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle facture" size="md">
         <InvoiceCreateForm onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['invoices'] }) }} onCancel={() => setCreateOpen(false)} />
       </Modal>
+
+      {/* Installments Modal */}
+      <Modal open={!!installmentsInvoice} onClose={() => setInstallmentsInvoice(null)}
+        title="Échéancier de paiement" subtitle={installmentsInvoice?.invoice_number} size="md">
+        {installmentsInvoice && <InstallmentsPanel invoice={installmentsInvoice} />}
+      </Modal>
+    </div>
+  )
+}
+
+const installmentStatusBadge: Record<string, string> = {
+  payee: 'badge-green', en_attente: 'badge-yellow', en_retard: 'badge-red',
+}
+
+function InstallmentsPanel({ invoice }: { invoice: Invoice }) {
+  const qc = useQueryClient()
+  const toast = useToast()
+  const [form, setForm] = useState({ number: '', amount: '', due_date: '' })
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['installments', invoice.id],
+    queryFn: () => financeApi.getInstallments({ invoice: invoice.id }).then(r => r.data),
+  })
+
+  const markPaid = useMutation({
+    mutationFn: (id: string) => financeApi.markInstallmentPaid(id),
+    onSuccess: () => { toast.success('Échéance marquée payée'); qc.invalidateQueries({ queryKey: ['installments', invoice.id] }) },
+    onError: () => toast.error('Erreur lors de la mise à jour'),
+  })
+
+  const createMut = useMutation({
+    mutationFn: () => financeApi.createInstallment({
+      invoice: invoice.id, number: Number(form.number), amount: Number(form.amount), due_date: form.due_date,
+    }),
+    onSuccess: () => {
+      toast.success('Échéance créée')
+      setForm({ number: '', amount: '', due_date: '' })
+      qc.invalidateQueries({ queryKey: ['installments', invoice.id] })
+    },
+    onError: () => toast.error('Erreur lors de la création'),
+  })
+
+  const installments: Installment[] = (data?.results ?? data) ?? []
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-gray-50 rounded-xl p-3.5 flex items-center justify-between">
+        <span className="text-sm text-gray-600">Reste à payer</span>
+        <span className="font-bold text-red-500">{formatCurrency(invoice.remaining_amount)}</span>
+      </div>
+
+      {isLoading ? <Spinner /> : !installments.length ? (
+        <Empty message="Aucune échéance définie" icon={<Calendar className="w-8 h-8" />}
+          description="Ajoutez des échéances pour fractionner le paiement de cette facture." />
+      ) : (
+        <div className="space-y-2">
+          {installments.map(inst => (
+            <div key={inst.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Échéance #{inst.number}</p>
+                  <p className="text-xs text-gray-400">Due le {formatDate(inst.due_date)} · {formatCurrency(inst.amount)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge label={inst.status} className={installmentStatusBadge[inst.status] ?? 'badge-gray'} dot />
+                {inst.status !== 'payee' && (
+                  <Button variant="secondary" size="xs" loading={markPaid.isPending}
+                    onClick={() => markPaid.mutate(inst.id)}>Marquer payé</Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="pt-4 border-t border-gray-100">
+        <p className="label mb-2">Ajouter une échéance</p>
+        <div className="grid grid-cols-3 gap-2">
+          <input type="number" placeholder="N°" className="input" value={form.number}
+            onChange={e => setForm(f => ({ ...f, number: e.target.value }))} />
+          <input type="number" placeholder="Montant" className="input" value={form.amount}
+            onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
+          <input type="date" className="input" value={form.due_date}
+            onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
+        </div>
+        <Button className="w-full mt-3" size="sm" icon={<Plus className="w-3.5 h-3.5" />}
+          loading={createMut.isPending}
+          disabled={!form.number || !form.amount || !form.due_date}
+          onClick={() => createMut.mutate()}>
+          Ajouter l'échéance
+        </Button>
+      </div>
     </div>
   )
 }

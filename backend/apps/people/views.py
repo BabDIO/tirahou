@@ -2,12 +2,13 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg, Count
-from .models import Student, Teacher, AdminStaff, ParentGuardian
+from .models import Student, Teacher, AdminStaff, ParentGuardian, TeacherAvailability
 from .serializers import (
     StudentSerializer, StudentCreateSerializer,
     TeacherSerializer, TeacherCreateSerializer,
-    AdminStaffSerializer,
+    AdminStaffSerializer, AdminStaffCreateSerializer,
     ParentGuardianSerializer, ParentGuardianCreateSerializer, ParentGuardianBulkNotifySerializer,
+    TeacherAvailabilitySerializer,
 )
 
 
@@ -171,12 +172,33 @@ class TeacherViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Profil enseignant non trouvé.'}, status=404)
 
 
+class TeacherAvailabilityViewSet(viewsets.ModelViewSet):
+    queryset = TeacherAvailability.objects.all().select_related('teacher')
+    serializer_class = TeacherAvailabilitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['teacher', 'day_of_week']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return TeacherAvailability.objects.none()
+        user = self.request.user
+        qs = TeacherAvailability.objects.select_related('teacher__user')
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(teacher=user.teacher_profile)
+        return qs
+
+
 class AdminStaffViewSet(viewsets.ModelViewSet):
     queryset = AdminStaff.objects.filter(is_active=True).select_related('user').order_by('id')
     serializer_class = AdminStaffSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['service']
     search_fields = ['staff_id', 'user__first_name', 'user__last_name']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return AdminStaffCreateSerializer
+        return AdminStaffSerializer
 
 
 class ParentGuardianViewSet(viewsets.ModelViewSet):

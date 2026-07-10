@@ -105,6 +105,8 @@ class AdmissionDecision(BaseModel):
     acceptance_deadline = models.DateField(null=True, blank=True)
     accepted_by_student = models.BooleanField(null=True)
     accepted_at = models.DateTimeField(null=True, blank=True)
+    is_published = models.BooleanField(default=False, help_text="Résultat publié (consultable par le candidat)")
+    published_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'admission_decisions'

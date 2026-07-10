@@ -424,3 +424,148 @@ def generate_carte_etudiant(student, enrollment, university_name, verification_c
     c.save()
     buf.seek(0)
     return buf
+
+
+def generate_convocation(recipient_name, event_title, event_date, event_location, university_name, verification_code, extra_notes=''):
+    """Génère une convocation PDF (soutenance, examen, entretien...)."""
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm,
+        topMargin=3.5*cm, bottomMargin=3*cm,
+    )
+
+    title_style = ParagraphStyle('title', fontSize=16, fontName='Helvetica-Bold',
+                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=20)
+    body_style = ParagraphStyle('body', fontSize=10, fontName='Helvetica', leading=16, spaceAfter=8)
+    label_style = ParagraphStyle('label', fontSize=10, fontName='Helvetica-Bold', textColor=GRAY)
+
+    story = [
+        Paragraph('CONVOCATION', title_style),
+        HRFlowable(width='100%', thickness=1, color=LIGHT_BLUE, spaceAfter=20),
+    ]
+
+    data = [
+        ['Destinataire', recipient_name],
+        ['Objet', event_title],
+        ['Date', event_date],
+        ['Lieu', event_location or '—'],
+    ]
+    table = Table(data, colWidths=[5*cm, 12*cm])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), GRAY),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, LIGHT_GRAY]),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+    ]))
+    story.append(table)
+    story.append(Spacer(1, 20))
+
+    text = (
+        f"Vous êtes convoqué(e) à <b>{event_title}</b>, prévu(e) le <b>{event_date}</b>"
+        + (f" à <b>{event_location}</b>" if event_location else '') + ". "
+        "Merci de vous présenter avec une pièce d'identité valide."
+    )
+    story.append(Paragraph(text, body_style))
+    if extra_notes:
+        story.append(Spacer(1, 8))
+        story.append(Paragraph(extra_notes, body_style))
+    story.append(Spacer(1, 30))
+
+    verify_url = f'http://siguvh.edu/verify/{verification_code}'
+    qr_buf = generate_qr_code(verify_url)
+    qr_img = RLImage(qr_buf, width=3*cm, height=3*cm)
+    qr_table = Table([[qr_img, Paragraph(
+        f'<b>Code de vérification</b><br/>'
+        f'<font size="14" color="#2563eb"><b>{verification_code}</b></font>',
+        ParagraphStyle('qr', fontSize=10, leading=16)
+    )]], colWidths=[4*cm, 13*cm])
+    qr_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), LIGHT_GRAY),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('LEFTPADDING', (0, 0), (-1, -1), 12),
+    ]))
+    story.append(qr_table)
+
+    doc.build(
+        story,
+        onFirstPage=lambda c, d: _header_footer(c, d, university_name, 'Convocation', verification_code),
+        onLaterPages=lambda c, d: _header_footer(c, d, university_name, 'Convocation', verification_code),
+    )
+    buf.seek(0)
+    return buf
+
+
+def generate_diplome(student, program, academic_year, university_name, verification_code, mention='', is_final_cycle_attestation=False):
+    """Génère un diplôme (ou attestation de fin de cycle) PDF, en paysage."""
+    buf = io.BytesIO()
+    from reportlab.lib.pagesizes import landscape
+    doc = SimpleDocTemplate(
+        buf, pagesize=landscape(A4),
+        leftMargin=2.5*cm, rightMargin=2.5*cm,
+        topMargin=2.5*cm, bottomMargin=2.5*cm,
+    )
+
+    title_style = ParagraphStyle('title', fontSize=22, fontName='Helvetica-Bold',
+                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=16)
+    subtitle_style = ParagraphStyle('subtitle', fontSize=13, fontName='Helvetica',
+                                     textColor=GRAY, alignment=TA_CENTER, spaceAfter=24)
+    name_style = ParagraphStyle('name', fontSize=20, fontName='Helvetica-Bold',
+                                 textColor=PRIMARY, alignment=TA_CENTER, spaceAfter=16)
+    body_style = ParagraphStyle('body', fontSize=12, fontName='Helvetica',
+                                 alignment=TA_CENTER, leading=20, spaceAfter=10)
+
+    doc_label = "ATTESTATION DE FIN DE CYCLE" if is_final_cycle_attestation else "DIPLÔME"
+
+    story = [
+        Spacer(1, 20),
+        Paragraph(university_name, subtitle_style),
+        Paragraph(doc_label, title_style),
+        HRFlowable(width='60%', thickness=1.5, color=PRIMARY, spaceAfter=30, hAlign='CENTER'),
+        Paragraph("Le présent document est délivré à", body_style),
+        Paragraph(student.user.get_full_name(), name_style),
+        Paragraph(
+            f"Né(e) le {student.birth_date.strftime('%d/%m/%Y') if student.birth_date else '—'}, "
+            f"matricule <b>{student.student_id}</b>", body_style
+        ),
+        Paragraph(
+            f"pour avoir satisfait aux exigences du programme <b>{program.name}</b> "
+            f"au titre de l'année académique <b>{academic_year.label}</b>"
+            + (f", avec la mention <b>{mention}</b>" if mention else "") + ".",
+            body_style
+        ),
+        Spacer(1, 40),
+    ]
+
+    verify_url = f'http://siguvh.edu/verify/{verification_code}'
+    qr_buf = generate_qr_code(verify_url)
+    qr_img = RLImage(qr_buf, width=2.8*cm, height=2.8*cm)
+    footer_table = Table([[
+        qr_img,
+        Paragraph(
+            f'<font size="9" color="#6b7280">Code de vérification</font><br/>'
+            f'<font size="12" color="#2563eb"><b>{verification_code}</b></font>',
+            ParagraphStyle('qr', fontSize=9, leading=14, alignment=TA_LEFT)
+        ),
+        Paragraph(
+            f'<font size="9" color="#6b7280">Fait le</font><br/>'
+            f'<font size="11"><b>{timezone.now().strftime("%d/%m/%Y")}</b></font>',
+            ParagraphStyle('date', fontSize=9, leading=14, alignment=TA_RIGHT)
+        ),
+    ]], colWidths=[3.5*cm, 8*cm, 8*cm])
+    footer_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
+    story.append(footer_table)
+
+    doc.build(
+        story,
+        onFirstPage=lambda c, d: _header_footer(c, d, university_name, doc_label, verification_code),
+        onLaterPages=lambda c, d: _header_footer(c, d, university_name, doc_label, verification_code),
+    )
+    buf.seek(0)
+    return buf

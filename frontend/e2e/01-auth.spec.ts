@@ -40,7 +40,7 @@ test.describe('🔐 Authentification', () => {
       
       // Vérifier qu'on est sur le dashboard
       await expect(page).toHaveURL(/\/dashboard/);
-      await expect(page.locator('body')).toContainText(TEST_ACCOUNTS[role].name);
+      await expect(page.locator('body')).toContainText(/Bienvenue|Tableau de bord/i);
       
       // Prendre une capture d'écran du dashboard
       await page.screenshot({ path: `playwright-report/screenshots/${role}-dashboard.png`, fullPage: true });

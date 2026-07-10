@@ -37,7 +37,9 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
     peda_enrollments = PedaEnrollmentSerializer(many=True, read_only=True)
     student_name = serializers.SerializerMethodField()
     program_name = serializers.CharField(source='program.name', read_only=True)
+    previous_program_name = serializers.CharField(source='previous_program.name', read_only=True, default=None)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
 
     class Meta:
         model = AdminEnrollment

@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, MessageSquare, Megaphone, Check, CheckCheck, Trash2, Plus, Send, Filter } from 'lucide-react'
-import { Card, Spinner, Badge, Empty, Modal } from '../../components/ui'
+import { Bell, MessageSquare, Megaphone, CheckCheck, Trash2, Send, Users2, MessageCircle, Pin, Lock } from 'lucide-react'
+import { Card, Spinner, Badge, Empty, Modal, Button } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
+import { lmsApi } from '../../api'
 import api from '../../lib/axios'
 import { useRole } from '../../hooks/useRole'
 import toast from 'react-hot-toast'
+
+interface Forum {
+  id: string; title: string; description: string; course_space: string
+  course_space_title: string; is_open: boolean; posts_count: number
+  recent_posts: ForumPostT[]
+}
+interface ForumPostT {
+  id: string; content: string; author_name: string; is_pinned: boolean; created_at: string
+}
 
 interface Notification {
   id: string; title: string; message: string; type: string
@@ -37,11 +47,16 @@ const typeIcon: Record<string, string> = {
 
 export default function CommunicationPage() {
   const qc = useQueryClient()
-  const { isAdmin, isEnseignant, isScolarite } = useRole()
-  const [tab, setTab] = useState<'notifications' | 'announcements' | 'messages'>('notifications')
+  const { isAdmin, isEnseignant, isScolarite, isResponsable } = useRole()
+  const canModerateForums = isAdmin || isEnseignant || isResponsable
+  const [tab, setTab] = useState<'notifications' | 'announcements' | 'messages' | 'forums'>('notifications')
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread'>('all')
   const [showCompose, setShowCompose] = useState(false)
   const [showAnnounce, setShowAnnounce] = useState(false)
+  const [showNewForum, setShowNewForum] = useState(false)
+  const [activeForum, setActiveForum] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [newForum, setNewForum] = useState({ course_space: '', title: '', description: '' })
   const [composeData, setComposeData] = useState({ recipient: '', subject: '', body: '' })
   const [announceData, setAnnounceData] = useState({ title: '', content: '', audience: 'tous', is_pinned: false })
 
@@ -61,6 +76,31 @@ export default function CommunicationPage() {
   const { data: messagesData, isLoading: loadingMessages } = useQuery({
     queryKey: ['messages'],
     queryFn: () => api.get('/messages/').then(r => r.data),
+  })
+
+  // Forums
+  const { data: forumsData, isLoading: loadingForums } = useQuery({
+    queryKey: ['forums'],
+    queryFn: () => api.get('/forums/').then(r => r.data),
+    enabled: tab === 'forums',
+  })
+
+  const { data: courseSpaces } = useQuery({
+    queryKey: ['course-spaces-for-forum'],
+    queryFn: () => lmsApi.getCourseSpaces({ page_size: 100 }).then(r => r.data),
+    enabled: tab === 'forums' && canModerateForums,
+  })
+
+  const createForumMut = useMutation({
+    mutationFn: (d: object) => api.post('/forums/', d),
+    onSuccess: () => { toast.success('Forum créé'); setShowNewForum(false); setNewForum({ course_space: '', title: '', description: '' }); qc.invalidateQueries({ queryKey: ['forums'] }) },
+    onError: () => toast.error('Erreur lors de la création'),
+  })
+
+  const postReplyMut = useMutation({
+    mutationFn: (d: { forum: string; content: string }) => api.post('/forum-posts/', d),
+    onSuccess: () => { setReplyText(''); qc.invalidateQueries({ queryKey: ['forums'] }) },
+    onError: () => toast.error("Erreur lors de l'envoi — le forum est peut-être fermé"),
   })
 
   const markReadMut = useMutation({
@@ -94,15 +134,16 @@ export default function CommunicationPage() {
   const unreadCount = notifications.filter(n => !n.is_read).length
   const announcements: Announcement[] = announceData2?.results ?? []
   const messages: Message[] = messagesData?.results ?? []
+  const forums: Forum[] = forumsData?.results ?? []
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Communication</h1>
           <p className="text-gray-400 text-sm mt-0.5">Notifications, annonces et messagerie</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => setShowCompose(true)}
             className="flex items-center gap-2 px-3 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 text-sm font-semibold transition">
             <Send className="w-4 h-4" /> Nouveau message
@@ -113,20 +154,27 @@ export default function CommunicationPage() {
               <Megaphone className="w-4 h-4" /> Annonce
             </button>
           )}
+          {tab === 'forums' && canModerateForums && (
+            <button onClick={() => setShowNewForum(true)}
+              className="flex items-center gap-2 px-3 py-2 bg-cyan-600 text-white rounded-xl hover:bg-cyan-700 text-sm font-semibold transition">
+              <Users2 className="w-4 h-4" /> Nouveau forum
+            </button>
+          )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
         {[
           { key: 'notifications', label: 'Notifications', icon: Bell, count: unreadCount },
           { key: 'announcements', label: 'Annonces', icon: Megaphone, count: 0 },
           { key: 'messages', label: 'Messages', icon: MessageSquare, count: messages.filter(m => !m.is_read).length },
+          { key: 'forums', label: 'Forums', icon: Users2, count: 0 },
         ].map(({ key, label, icon: Icon, count }) => (
           <button key={key} onClick={() => setTab(key as typeof tab)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition ${tab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-            <Icon className="w-4 h-4" />
-            {label}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-lg text-sm font-semibold transition whitespace-nowrap ${tab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden sm:inline">{label}</span>
             {count > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-1.5 min-w-[18px] text-center leading-4 py-0.5">{count}</span>}
           </button>
         ))}
@@ -237,6 +285,71 @@ export default function CommunicationPage() {
         </div>
       )}
 
+      {/* Forums */}
+      {tab === 'forums' && (
+        <div className="space-y-3">
+          {loadingForums ? <Spinner /> : !forums.length ? (
+            <Empty icon={<Users2 className="w-8 h-8" />} message="Aucun forum disponible"
+              description={canModerateForums ? "Créez un forum pour lancer une discussion sur un cours." : "Vos enseignants n'ont pas encore ouvert de forum."} />
+          ) : (
+            forums.map(forum => (
+              <Card key={forum.id} noPadding>
+                <button onClick={() => setActiveForum(activeForum === forum.id ? null : forum.id)}
+                  className="w-full flex items-start justify-between gap-3 p-4 text-left hover:bg-gray-50/60 transition">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-4 h-4 text-cyan-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-900">{forum.title}</h3>
+                        {!forum.is_open && <Lock className="w-3.5 h-3.5 text-gray-400" />}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{forum.course_space_title} · {forum.posts_count} message(s)</p>
+                      {forum.description && <p className="text-sm text-gray-600 mt-1.5 line-clamp-2">{forum.description}</p>}
+                    </div>
+                  </div>
+                  <Badge label={forum.is_open ? 'Ouvert' : 'Fermé'} className={forum.is_open ? 'badge-green' : 'badge-gray'} dot />
+                </button>
+
+                {activeForum === forum.id && (
+                  <div className="border-t border-gray-100 p-4 space-y-3 bg-gray-50/50">
+                    {!forum.recent_posts?.length ? (
+                      <p className="text-sm text-gray-400 text-center py-4">Aucun message pour l'instant — soyez le premier à participer.</p>
+                    ) : (
+                      forum.recent_posts.map(post => (
+                        <div key={post.id} className="bg-white rounded-xl p-3 border border-gray-100">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                              {post.is_pinned && <Pin className="w-3 h-3 text-amber-500" />}
+                              {post.author_name}
+                            </p>
+                            <span className="text-xs text-gray-400">{formatDate(post.created_at)}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{post.content}</p>
+                        </div>
+                      ))
+                    )}
+                    {forum.is_open && (
+                      <div className="flex gap-2 pt-1">
+                        <input className="input flex-1" placeholder="Écrire un message..."
+                          value={replyText} onChange={e => setReplyText(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter' && replyText.trim()) postReplyMut.mutate({ forum: forum.id, content: replyText }) }} />
+                        <Button size="sm" icon={<Send className="w-3.5 h-3.5" />} loading={postReplyMut.isPending}
+                          disabled={!replyText.trim()}
+                          onClick={() => postReplyMut.mutate({ forum: forum.id, content: replyText })}>
+                          Envoyer
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
       {/* Modal Compose Message */}
       <Modal open={showCompose} onClose={() => setShowCompose(false)} title="Nouveau message" size="md">
         <div className="space-y-4">
@@ -303,6 +416,40 @@ export default function CommunicationPage() {
               disabled={!announceData.title || !announceData.content || createAnnounceMut.isPending}
               className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
               {createAnnounceMut.isPending ? 'Publication...' : 'Publier'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Nouveau Forum */}
+      <Modal open={showNewForum} onClose={() => setShowNewForum(false)} title="Nouveau forum de discussion" size="md">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Cours *</label>
+            <select className="input" value={newForum.course_space}
+              onChange={e => setNewForum(f => ({ ...f, course_space: e.target.value }))}>
+              <option value="">— Sélectionner un cours —</option>
+              {courseSpaces?.results?.map((cs: { id: string; title: string }) => (
+                <option key={cs.id} value={cs.id}>{cs.title}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Titre *</label>
+            <input className="input" value={newForum.title}
+              onChange={e => setNewForum(f => ({ ...f, title: e.target.value }))} placeholder="Ex: Questions sur le TP 3" />
+          </div>
+          <div>
+            <label className="label">Description</label>
+            <textarea className="input h-24 resize-none" value={newForum.description}
+              onChange={e => setNewForum(f => ({ ...f, description: e.target.value }))} />
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setShowNewForum(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+            <button onClick={() => createForumMut.mutate(newForum)}
+              disabled={!newForum.course_space || !newForum.title || createForumMut.isPending}
+              className="flex-1 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-semibold hover:bg-cyan-700 transition disabled:opacity-50">
+              {createForumMut.isPending ? 'Création...' : 'Créer le forum'}
             </button>
           </div>
         </div>

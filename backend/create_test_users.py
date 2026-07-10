@@ -5,7 +5,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
-from apps.people.models import Student, Teacher, AdminStaff
+from apps.accounts.models import Role
+from apps.people.models import Student, Teacher
 
 User = get_user_model()
 
@@ -80,39 +81,46 @@ for user_data in users_data:
             'username': email.split('@')[0],
             'first_name': user_data['first_name'],
             'last_name': user_data['last_name'],
-            'role': user_data['role'],
             'is_active': True,
             'is_staff': user_data['type'] == 'admin',
-            'is_superuser': user_data['role'] == 'admin_institutionnel'
+            'is_superuser': user_data['role'] == 'admin_institutionnel',
         }
     )
-    
+
+    role, _ = Role.objects.get_or_create(
+        name=user_data['role'],
+        defaults={'description': user_data['role'].replace('_', ' ').title()},
+    )
+    user.roles.add(role)
+
     if created:
         user.set_password(user_data['password'])
         user.save()
-        
-        if user_data['type'] == 'student':
-            Student.objects.get_or_create(
-                user=user,
-                defaults={
-                    'student_id': user_data['student_id'],
-                    'status': 'inscrit'
-                }
-            )
-        elif user_data['type'] == 'teacher':
-            Teacher.objects.get_or_create(
-                user=user,
-                defaults={
-                    'grade': user_data.get('grade', 'assistant')
-                }
-            )
-        
         print(f"✅ {user_data['role'].upper()}")
         print(f"   Email    : {email}")
         print(f"   Password : {user_data['password']}")
         print()
     else:
-        print(f"ℹ️  {email} existe déjà")
+        user.set_password(user_data['password'])
+        user.is_active = True
+        user.save(update_fields=['password', 'is_active'])
+        print(f"ℹ️  {email} mis à jour")
+
+    if user_data['type'] == 'student':
+        Student.objects.get_or_create(
+            user=user,
+            defaults={
+                'student_id': user_data['student_id'],
+                'status': 'inscrit',
+            },
+        )
+    elif user_data['type'] == 'teacher':
+        Teacher.objects.get_or_create(
+            user=user,
+            defaults={
+                'grade': user_data.get('grade', 'assistant'),
+            },
+        )
 
 print("="*50)
 print("✅ TOUS LES UTILISATEURS SONT PRÊTS !\n")

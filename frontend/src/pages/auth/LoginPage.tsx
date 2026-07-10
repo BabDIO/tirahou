@@ -6,11 +6,10 @@ import { useState } from 'react'
 import {
   Mail, Lock, Eye, EyeOff, ArrowRight,
   GraduationCap, Users, BarChart3, BookOpen,
-  CheckCircle, Sparkles, ChevronRight,
+  CheckCircle, Sparkles, ChevronRight, ShieldCheck,
 } from 'lucide-react'
 import { authApi } from '../../api'
 import { useAuthStore } from '../../store/authStore'
-import api from '../../lib/axios'
 
 const schema = z.object({
   email: z.string().email('Adresse email invalide'),
@@ -35,11 +34,26 @@ const FEATURES = [
   { icon: Users,         label: 'Multi-rôles & RBAC',     sub: '13 profils utilisateurs' },
 ]
 
+function isTruthyFlag(v: unknown): boolean {
+  if (Array.isArray(v)) return v.length > 0 && isTruthyFlag(v[0])
+  if (typeof v === 'string') return v.length > 0 && v.toLowerCase() !== 'false'
+  return !!v
+}
+
+function extractDetailStr(body: Record<string, unknown> | undefined): string | undefined {
+  const d = body?.detail
+  if (typeof d === 'string') return d
+  if (Array.isArray(d) && typeof d[0] === 'string') return d[0]
+  return undefined
+}
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [serverError, setServerError] = useState('')
   const [showDemo, setShowDemo] = useState(false)
+  const [mfaRequired, setMfaRequired] = useState(false)
+  const [mfaCode, setMfaCode] = useState('')
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -47,28 +61,51 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     setServerError('')
+    if (mfaRequired && !mfaCode.trim()) {
+      setServerError('Saisissez le code de votre application d\'authentification.')
+      return
+    }
     try {
-      const res = await authApi.login(data)
-      const { access, refresh } = res.data
+      const res = await authApi.login(mfaRequired ? { ...data, mfa_code: mfaCode.trim() } : data)
+      const { access, refresh, user } = res.data
       const { setAuth } = useAuthStore.getState()
-      localStorage.setItem('access_token', access)
-      const meRes = await api.get('/auth/me/')
-      setAuth(meRes.data, access, refresh)
+      setAuth(user, access, refresh)
       navigate('/dashboard')
     } catch (err: unknown) {
       const e = err as {
         isNetworkError?: boolean
-        response?: { status?: number; data?: { detail?: string; message?: string } }
+        response?: { status?: number; data?: Record<string, unknown> }
       }
       if (e?.isNetworkError || !e?.response) {
         setServerError('Serveur inaccessible. Vérifiez que le backend est démarré.')
         return
       }
+      const body = e.response?.data
+      if (isTruthyFlag(body?.mfa_required)) {
+        setMfaRequired(true)
+        setServerError(extractDetailStr(body) ?? 'Code de double authentification requis.')
+        return
+      }
+      if (isTruthyFlag(body?.account_locked)) {
+        setServerError(extractDetailStr(body) ?? 'Compte verrouillé après plusieurs échecs. Contactez un administrateur.')
+        return
+      }
       const s = e.response?.status
-      if (s === 401) setServerError('Email ou mot de passe incorrect.')
-      else if (s === 429) setServerError('Trop de tentatives. Patientez quelques minutes.')
-      else if (s === 403) setServerError('Compte désactivé. Contactez l\'administrateur.')
-      else setServerError(e.response?.data?.detail ?? e.response?.data?.message ?? 'Erreur inattendue.')
+      if (s === 401 || s === 400) {
+        setServerError(mfaRequired ? 'Code invalide.' : 'Email ou mot de passe incorrect.')
+      } else if (s === 429) {
+        setServerError('Trop de tentatives. Patientez quelques minutes.')
+      } else if (s === 403) {
+        setServerError('Compte désactivé. Contactez l\'administrateur.')
+      } else {
+        const detail = extractDetailStr(body)
+        const nonField = body?.non_field_errors
+        const message = body?.message
+        if (detail) setServerError(detail)
+        else if (Array.isArray(nonField) && nonField.length) setServerError(String(nonField[0]))
+        else if (typeof message === 'string') setServerError(message)
+        else setServerError('Erreur inattendue.')
+      }
     }
   }
 
@@ -225,6 +262,22 @@ export default function LoginPage() {
               </div>
               {errors.password && <p className="mt-1.5 text-xs text-red-600">⚠ {errors.password.message}</p>}
             </div>
+
+            {mfaRequired && (
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Code d'authentification</label>
+                <div className="relative">
+                  <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus
+                    placeholder="123456" maxLength={6}
+                    value={mfaCode} onChange={e => setMfaCode(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm text-gray-900 tracking-[0.3em] font-semibold placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-normal outline-none transition-all shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-gray-400">Ouvrez votre application d'authentification (Google Authenticator, Authy...)</p>
+              </div>
+            )}
 
             <button type="submit" disabled={isSubmitting}
               className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 active:scale-[0.99] text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-500/25 disabled:opacity-60 disabled:cursor-not-allowed text-sm">

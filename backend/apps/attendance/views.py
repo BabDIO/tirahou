@@ -31,11 +31,22 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def open(self, request, pk=None):
+        import io
+        import qrcode
+        from django.core.files.base import ContentFile
+
         sheet = self.get_object()
         sheet.is_open = True
         sheet.opened_at = timezone.now()
         sheet.save()
-        return Response({'detail': 'Feuille ouverte.', 'session_code': sheet.session_code})
+
+        if not sheet.qr_code:
+            qr_img = qrcode.make(sheet.session_code)
+            buf = io.BytesIO()
+            qr_img.save(buf, format='PNG')
+            sheet.qr_code.save(f'qr_{sheet.session_code}.png', ContentFile(buf.getvalue()), save=True)
+
+        return Response(AttendanceSheetSerializer(sheet).data)
 
     @action(detail=True, methods=['post'])
     def close(self, request, pk=None):

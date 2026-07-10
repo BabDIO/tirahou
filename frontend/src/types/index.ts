@@ -12,6 +12,7 @@ export interface User {
   is_active: boolean
   is_verified: boolean
   is_locked: boolean
+  mfa_enabled?: boolean
   created_at: string
 }
 
@@ -29,6 +30,7 @@ export interface AuthTokens {
 export interface LoginCredentials {
   email: string
   password: string
+  mfa_code?: string
 }
 
 export interface AuditLog {
@@ -204,6 +206,18 @@ export interface Teacher {
   bio: string
   office: string
   weekly_hours_quota: number
+  hourly_rate: number | null
+  contract_reference: string
+}
+
+export interface TeacherAvailability {
+  id: string
+  teacher: string
+  day_of_week: number
+  day_display: string
+  start_time: string
+  end_time: string
+  notes: string
 }
 
 export interface AdminStaff {
@@ -213,6 +227,7 @@ export interface AdminStaff {
   service: string
   position: string
   department: string | null
+  department_name?: string | null
 }
 
 // ── Admissions ────────────────────────────────────────────────────────────────
@@ -513,6 +528,7 @@ export interface AttendanceSheet {
   id: string
   session: string
   session_code: string
+  qr_code?: string | null
   is_open: boolean
   opened_at: string | null
   closed_at: string | null

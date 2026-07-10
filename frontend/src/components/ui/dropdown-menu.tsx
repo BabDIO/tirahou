@@ -101,7 +101,7 @@ export function DropdownMenuContent({ children, align = 'start', className }: Dr
       {/* Menu content */}
       <div
         className={cn(
-          'absolute z-50 mt-2 min-w-[12rem] rounded-xl bg-white border border-gray-200 shadow-xl py-1',
+          'absolute z-50 mt-2 min-w-[12rem] rounded-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-xl py-1',
           'animate-in fade-in-0 zoom-in-95 duration-100',
           alignClasses[align],
           className
@@ -136,10 +136,10 @@ export function DropdownMenuItem({ children, onClick, disabled, className }: Dro
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        'w-full flex items-center gap-2 px-3 py-2 text-sm text-left',
-        'hover:bg-gray-100 transition-colors',
+        'w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 dark:text-slate-300',
+        'hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors',
         'disabled:opacity-50 disabled:cursor-not-allowed',
-        'focus:outline-none focus:bg-gray-100',
+        'focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800',
         className
       )}
     >

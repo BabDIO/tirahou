@@ -324,6 +324,24 @@ LOGGING = {
 # Créer le dossier logs si nécessaire
 (BASE_DIR / 'logs').mkdir(exist_ok=True)
 
+# ── Notifications push web (VAPID) ────────────────────────────────────────────
+# Clés générées pour le développement — à régénérer en production via
+# `python -c "from py_vapid import Vapid02; v=Vapid02(); v.generate_keys()"`
+# et fournir via variables d'environnement.
+VAPID_PUBLIC_KEY = os.environ.get(
+    'VAPID_PUBLIC_KEY',
+    'BG5qpVoWgZos6X7yVKl6dFuhgudFf4iIGPc-AfOazO7hj289zd0zmuC7hppxL1H2T1wqvzjbHk1hAnItMnxUlo8'
+)
+VAPID_PRIVATE_KEY = os.environ.get(
+    'VAPID_PRIVATE_KEY',
+    '-----BEGIN PRIVATE KEY-----\n'
+    'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQghQZuqIqkWAue+xHW\n'
+    'qNxhxOLrluOnoU8ureILQ+BpG7+hRANCAARuaqVaFoGaLOl+8lSpenRboYLnRX+I\n'
+    'iBj3PgHzmszu4Y9vPc3dM5rgu4aacS9R9k9cKr842x5NYQJyLTJ8VJaP\n'
+    '-----END PRIVATE KEY-----\n'
+)
+VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'admin@tirahou.edu')
+
 # ── Sécurité production ───────────────────────────────────────────────────────
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True

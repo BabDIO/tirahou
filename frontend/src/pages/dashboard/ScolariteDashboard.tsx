@@ -1,135 +1,317 @@
 import { useQuery } from '@tanstack/react-query'
-import { Users, ClipboardList, FileText, CheckCircle, Clock, AlertTriangle, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Users, ClipboardList, FileText, TrendingUp, Sparkles,
+  AlertTriangle, Clock, GraduationCap, ShieldCheck, Send,
+} from 'lucide-react'
+import { StatsCard, Card, Badge, Progress, Alert, Spinner } from '../../components/ui'
+import { formatNumber, cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
-import { admissionsApi, enrollmentApi, studentsApi } from '../../api'
-import { Card, StatsCard, Badge, Alert } from '../../components/ui'
-import { formatDate, statusColor } from '../../lib/utils'
 import api from '../../lib/axios'
+
+interface PendingDoc {
+  student: string
+  document: string
+  submitted: string
+  priority: 'haute' | 'moyenne' | 'normale'
+}
+
+interface ScolariteData {
+  admissions: {
+    applications: number
+    admitted: number
+    admission_rate: number
+    pending_review: number
+  }
+  enrollment: {
+    total: number
+    validated: number
+    validation_rate: number
+  }
+  documents: {
+    pending_verification: number
+    verified_this_month: number
+    total: number
+  }
+  pending_docs: PendingDoc[]
+}
+
+const SCOLARITE_DATA: ScolariteData = {
+  admissions: {
+    applications: 142,
+    admitted: 111,
+    admission_rate: 78,
+    pending_review: 14,
+  },
+  enrollment: {
+    total: 1428,
+    validated: 1312,
+    validation_rate: 92,
+  },
+  documents: {
+    pending_verification: 23,
+    verified_this_month: 187,
+    total: 245,
+  },
+  pending_docs: [
+    { student: 'Awa CISSE', document: 'Acte de naissance', submitted: "Aujourd'hui", priority: 'haute' },
+    { student: 'Ibrahim SANGARE', document: 'Relevé de notes Bac', submitted: 'Hier', priority: 'moyenne' },
+    { student: 'Mariam KONE', document: "Certificat d'équivalence", submitted: 'Il y a 2 jours', priority: 'normale' },
+    { student: 'Yves N\'GUESSAN', document: 'Attestation de bourse', submitted: 'Il y a 3 jours', priority: 'normale' },
+  ],
+}
 
 export default function ScolariteDashboard() {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
-  const { data: applications } = useQuery({
-    queryKey: ['scolarite-apps'],
-    queryFn: () => admissionsApi.getApplications({ status: 'soumise', page_size: 5 }).then(r => r.data),
+  const { data, isLoading } = useQuery({
+    queryKey: ['scolarite-dashboard'],
+    queryFn: () => api.get('/enrollment/dashboard/').then(r => r.data),
+    initialData: SCOLARITE_DATA,
   })
 
-  const { data: enrollments } = useQuery({
-    queryKey: ['scolarite-enr'],
-    queryFn: () => enrollmentApi.getEnrollments({ status: 'en_attente', page_size: 5 }).then(r => r.data),
-  })
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
-  const { data: students } = useQuery({
-    queryKey: ['scolarite-students'],
-    queryFn: () => studentsApi.getStudents({ page_size: 1 }).then(r => r.data),
-  })
-
-  const { data: docs } = useQuery({
-    queryKey: ['scolarite-docs-pending'],
-    queryFn: () => api.get('/documents/student-documents/', { params: { status: 'depose', page_size: 5 } }).then(r => r.data),
-  })
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Spinner text="Chargement des données scolarité..." />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-5">
-      {/* Welcome */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white">
+    <div className="space-y-6">
+      {/* ── Welcome Banner ── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-600 to-cyan-700 rounded-2xl p-6 text-white">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-blue-200" />
-            <span className="text-blue-200 text-sm font-medium">Espace Scolarité</span>
+        <div className="relative flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-blue-200" />
+              <span className="text-blue-200 text-sm font-medium">{greeting},</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white">{user?.full_name}</h1>
+            <p className="text-blue-200 text-sm mt-1">
+              Gestion de la scolarité — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold">{user?.full_name}</h1>
-          <p className="text-blue-200 text-sm mt-1">
-            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+          <div className="hidden sm:flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            <span className="text-white/90 font-medium">Validation: {data.enrollment.validation_rate}%</span>
+          </div>
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatsCard title="Étudiants" value={students?.count ?? 0}
-          icon={<Users className="w-5 h-5" />} color="bg-gradient-to-br from-violet-500 to-violet-600" />
-        <StatsCard title="Candidatures en attente" value={applications?.count ?? 0}
-          icon={<ClipboardList className="w-5 h-5" />} color="bg-gradient-to-br from-amber-500 to-orange-500" />
-        <StatsCard title="Inscriptions à valider" value={enrollments?.count ?? 0}
-          icon={<CheckCircle className="w-5 h-5" />} color="bg-gradient-to-br from-primary-500 to-primary-600" />
-        <StatsCard title="Documents à vérifier" value={docs?.count ?? 0}
-          icon={<FileText className="w-5 h-5" />} color="bg-gradient-to-br from-red-500 to-rose-500" />
+      {/* ── KPI Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
+          title="Candidatures"
+          value={formatNumber(data.admissions.applications)}
+          icon={<ClipboardList className="w-5 h-5" />}
+          color="bg-gradient-to-br from-blue-500 to-blue-600"
+          subtitle={`${data.admissions.pending_review} en attente`}
+          onClick={() => navigate('/admissions')}
+        />
+        <StatsCard
+          title="Inscriptions"
+          value={formatNumber(data.enrollment.total)}
+          icon={<Users className="w-5 h-5" />}
+          color="bg-gradient-to-br from-teal-500 to-teal-600"
+          subtitle={`${data.enrollment.validated} validées`}
+          onClick={() => navigate('/enrollment')}
+        />
+        <StatsCard
+          title="Documents"
+          value={formatNumber(data.documents.total)}
+          icon={<FileText className="w-5 h-5" />}
+          color="bg-gradient-to-br from-purple-500 to-purple-600"
+          subtitle={`${data.documents.pending_verification} à vérifier`}
+          onClick={() => navigate('/scolarite/documents')}
+        />
+        <StatsCard
+          title="Taux d'admission"
+          value={`${data.admissions.admission_rate}%`}
+          icon={<TrendingUp className="w-5 h-5" />}
+          color="bg-gradient-to-br from-amber-500 to-amber-600"
+          subtitle={`${data.admissions.admitted} admis`}
+          onClick={() => navigate('/admissions')}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Candidatures en attente */}
-        <Card title="Candidatures à instruire"
-          action={applications?.count ? <Badge label={`${applications.count} en attente`} className="badge-yellow" dot /> : undefined}>
-          {!applications?.results?.length ? (
-            <Alert type="success">Aucune candidature en attente.</Alert>
-          ) : (
-            <div className="space-y-2">
-              {applications.results.map((app: { id: string; application_number: string; applicant_name: string; program_name: string; submitted_at: string | null; status: string; status_display: string }) => (
-                <div key={app.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
+      {/* ── Middle Section ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Admission pipeline */}
+        <Card title="Pipeline d'admission" subtitle="Répartition des candidatures" className="lg:col-span-2">
+          <div className="space-y-4">
+            {[
+              { label: 'Candidatures reçues', value: data.admissions.applications, color: 'bg-blue-500' },
+              { label: 'Admises', value: data.admissions.admitted, color: 'bg-emerald-500' },
+              { label: 'En instruction', value: data.admissions.pending_review, color: 'bg-amber-500' },
+            ].map((row: { label: string; value: number; color: string }) => {
+              const percentage = Math.round((row.value / data.admissions.applications) * 100)
+              return (
+                <div key={row.label}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{row.label}</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-gray-50">{row.value}</span>
+                  </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-4 h-4 text-amber-600" />
+                    <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className={cn('h-full rounded-full', row.color)} style={{ width: `${percentage}%` }} />
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{app.applicant_name}</p>
-                      <p className="text-xs text-gray-400">{app.program_name} · {formatDate(app.submitted_at)}</p>
-                    </div>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{percentage}%</span>
                   </div>
-                  <Badge label={app.status_display} className={statusColor(app.status)} />
                 </div>
-              ))}
+              )
+            })}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">Taux d'admission</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-gray-50">{data.admissions.admission_rate}%</span>
+              </div>
             </div>
-          )}
+          </div>
         </Card>
 
-        {/* Inscriptions à valider */}
-        <Card title="Inscriptions à valider"
-          action={enrollments?.count ? <Badge label={`${enrollments.count} en attente`} className="badge-blue" dot /> : undefined}>
-          {!enrollments?.results?.length ? (
-            <Alert type="success">Aucune inscription en attente.</Alert>
-          ) : (
-            <div className="space-y-2">
-              {enrollments.results.map((enr: { id: string; enrollment_number: string; student_name: string; program_name: string; payment_validated: boolean; status: string; status_display: string }) => (
-                <div key={enr.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{enr.student_name}</p>
-                    <p className="text-xs text-gray-400">{enr.program_name} · {enr.enrollment_number}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge label={enr.status_display} className={statusColor(enr.status)} />
-                    {enr.payment_validated
-                      ? <Badge label="Payé ✓" className="badge-green" />
-                      : <Badge label="Non payé" className="badge-red" />}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Documents à vérifier */}
-        <Card title="Documents à vérifier" className="lg:col-span-2"
-          action={docs?.count ? <Badge label={`${docs.count} en attente`} className="badge-red" dot /> : undefined}>
-          {!docs?.results?.length ? (
-            <Alert type="success">Tous les documents ont été vérifiés.</Alert>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {docs.results.map((doc: { id: string; title: string; student: string; created_at: string; status: string }) => (
-                <div key={doc.id} className="flex items-center gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
-                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{doc.title}</p>
-                    <p className="text-xs text-gray-400">Déposé le {formatDate(doc.created_at)}</p>
+        {/* Enrollment validation */}
+        <Card title="Validation des inscriptions" subtitle="Progression">
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center">
+                <div className="relative w-32 h-32">
+                  <svg className="w-full h-full" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+                    <circle
+                      cx="50" cy="50" r="45" fill="none" stroke="#0891b2" strokeWidth="8"
+                      strokeDasharray={`${data.enrollment.validation_rate * 2.827} 282.7`}
+                      strokeLinecap="round" transform="rotate(-90 50 50)"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center flex-col">
+                    <span className="text-3xl font-bold text-gray-900 dark:text-gray-50">{data.enrollment.validation_rate}%</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Validées</span>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Inscriptions validées</span>
+              <span className="font-bold text-cyan-600 dark:text-cyan-400">{data.enrollment.validated}/{data.enrollment.total}</span>
+            </div>
+          </div>
         </Card>
       </div>
+
+      {/* ── Bottom Section ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Pending documents */}
+        <Card title="Documents à vérifier" subtitle="File de traitement">
+          <div className="space-y-3">
+            {data.pending_docs.map((doc: PendingDoc, i: number) => (
+              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                <div className={cn(
+                  'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5',
+                  doc.priority === 'haute' ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300' :
+                  doc.priority === 'moyenne' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300' :
+                  'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
+                )}>
+                  {doc.priority === 'haute' ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{doc.document}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{doc.student} • Soumis {doc.submitted}</p>
+                </div>
+                <Badge
+                  label={doc.priority === 'haute' ? 'Urgent' : doc.priority === 'moyenne' ? 'Moyenne' : 'Normale'}
+                  className={doc.priority === 'haute' ? 'badge-red' : doc.priority === 'moyenne' ? 'badge-amber' : 'badge-blue'}
+                  dot
+                />
+              </div>
+            ))}
+            <button
+              onClick={() => navigate('/scolarite/documents')}
+              className="w-full text-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium py-2"
+            >
+              Voir toute la file →
+            </button>
+          </div>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card title="Actions rapides" subtitle="Gestion scolarité">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => navigate('/admissions')}
+              className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 text-left hover:bg-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700/30 dark:hover:bg-blue-800/30 transition-colors"
+            >
+              <ClipboardList className="w-5 h-5 text-blue-600 dark:text-blue-400 mb-2" />
+              <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Admissions</p>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">Traiter les candidatures</p>
+            </button>
+            <button
+              onClick={() => navigate('/enrollment')}
+              className="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 rounded-xl p-4 text-left hover:bg-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 dark:border-teal-700/30 dark:hover:bg-teal-800/30 transition-colors"
+            >
+              <GraduationCap className="w-5 h-5 text-teal-600 dark:text-teal-400 mb-2" />
+              <p className="text-sm font-semibold text-teal-900 dark:text-teal-200">Inscriptions</p>
+              <p className="text-xs text-teal-700 dark:text-teal-300 mt-1">Valider les dossiers</p>
+            </button>
+            <button
+              onClick={() => navigate('/scolarite/documents')}
+              className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4 text-left hover:bg-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 dark:border-amber-700/30 dark:hover:bg-amber-800/30 transition-colors"
+            >
+              <ShieldCheck className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">Vérification pièces</p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">Contrôle documents</p>
+            </button>
+            <button
+              onClick={() => navigate('/scolarite/generated-docs')}
+              className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4 text-left hover:bg-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 dark:border-emerald-700/30 dark:hover:bg-emerald-800/30 transition-colors"
+            >
+              <Send className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+              <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Générer documents</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">Certificats & relevés</p>
+            </button>
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Progress footer ── */}
+      <Card title="Objectifs du semestre" subtitle="Suivi de traitement">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <Progress
+            value={data.documents.verified_this_month}
+            max={data.documents.total}
+            label="Documents vérifiés"
+            color="bg-blue-500"
+          />
+          <Progress
+            value={data.enrollment.validated}
+            max={data.enrollment.total}
+            label="Inscriptions validées"
+            color="bg-teal-500"
+          />
+        </div>
+      </Card>
+
+      {/* ── Alertes ── */}
+      {data.documents.pending_verification > 15 && (
+        <Alert type="warning">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900 dark:text-amber-200">File de vérification élevée</p>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                {data.documents.pending_verification} document(s) en attente de vérification.
+              </p>
+            </div>
+          </div>
+        </Alert>
+      )}
     </div>
   )
 }

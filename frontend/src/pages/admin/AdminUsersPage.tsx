@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Plus, Shield, Lock, Unlock, Edit, Users } from 'lucide-react'
-import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Alert, Avatar } from '../../components/ui'
-import { authApi } from '../../api'
+import { Search, Plus, Shield, Lock, Unlock, Edit, Users, Briefcase } from 'lucide-react'
+import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Alert, Avatar, Tabs } from '../../components/ui'
+import { authApi, adminStaffApi, academicApi } from '../../api'
 import { formatDate } from '../../lib/utils'
-import type { User, Role } from '../../types'
+import type { User, Role, AdminStaff } from '../../types'
 import api from '../../lib/axios'
+import { useToast } from '../../hooks/useToast'
 
 const roleBadgeColor: Record<string, string> = {
   super_admin: 'badge-red', admin_institutionnel: 'badge-red',
@@ -14,16 +15,30 @@ const roleBadgeColor: Record<string, string> = {
   enseignant: 'badge-yellow', etudiant: 'badge-gray', bibliothecaire: 'badge-yellow',
 }
 
+const SERVICE_LABEL: Record<string, string> = {
+  scolarite: 'Scolarité', finance: 'Finance', rh: 'Ressources Humaines',
+  informatique: 'Informatique', bibliotheque: 'Bibliothèque', direction: 'Direction', autre: 'Autre',
+}
+
 export default function AdminUsersPage() {
+  const [tab, setTab] = useState<'users' | 'staff'>('users')
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [editUser, setEditUser] = useState<User | null>(null)
+  const [createStaffOpen, setCreateStaffOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-users', page, search],
     queryFn: () => authApi.getUsers({ page, search }).then(r => r.data),
+    enabled: tab === 'users',
+  })
+
+  const { data: staffData, isLoading: staffLoading } = useQuery({
+    queryKey: ['admin-staff', page, search],
+    queryFn: () => adminStaffApi.getStaff({ page, search }).then(r => r.data),
+    enabled: tab === 'staff',
   })
 
   const { data: roles } = useQuery({
@@ -48,13 +63,30 @@ export default function AdminUsersPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Gestion des Utilisateurs</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} utilisateur(s) enregistré(s)</p>
+          <p className="text-gray-400 text-sm mt-0.5">
+            {tab === 'users' ? `${data?.count ?? 0} utilisateur(s) enregistré(s)` : `${staffData?.count ?? 0} membre(s) du personnel`}
+          </p>
         </div>
-        <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
-          Nouvel utilisateur
-        </Button>
+        {tab === 'users' ? (
+          <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
+            Nouvel utilisateur
+          </Button>
+        ) : (
+          <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateStaffOpen(true)}>
+            Nouveau personnel
+          </Button>
+        )}
       </div>
 
+      <Tabs
+        tabs={[
+          { key: 'users', label: 'Comptes utilisateurs', icon: <Users className="w-4 h-4" /> },
+          { key: 'staff', label: 'Personnel administratif', icon: <Briefcase className="w-4 h-4" /> },
+        ]}
+        active={tab} onChange={k => { setTab(k as typeof tab); setPage(1) }} variant="underline"
+      />
+
+      {tab === 'users' && (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatsCard title="Total utilisateurs" value={data?.count ?? 0}
           icon={<Users className="w-5 h-5" />} color="bg-gradient-to-br from-primary-500 to-primary-600" />
@@ -63,7 +95,9 @@ export default function AdminUsersPage() {
         <StatsCard title="Verrouillés" value={locked}
           icon={<Lock className="w-5 h-5" />} color="bg-gradient-to-br from-red-500 to-rose-500" />
       </div>
+      )}
 
+      {tab === 'users' && (
       <Card noPadding>
         <div className="p-4">
           <Input placeholder="Rechercher par nom, email..." leftIcon={<Search className="w-4 h-4" />}
@@ -140,6 +174,53 @@ export default function AdminUsersPage() {
           </>
         )}
       </Card>
+      )}
+
+      {tab === 'staff' && (
+      <Card noPadding>
+        <div className="p-4">
+          <Input placeholder="Rechercher par nom, matricule..." leftIcon={<Search className="w-4 h-4" />}
+            value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+        </div>
+
+        {staffLoading ? <Spinner text="Chargement du personnel..." /> : !staffData?.results?.length ? (
+          <Empty message="Aucun membre du personnel administratif" icon={<Briefcase className="w-8 h-8" />}
+            description="Rattachez un compte utilisateur existant à un service pour l'ajouter ici." />
+        ) : (
+          <>
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Personnel</th><th>Matricule</th><th>Service</th><th>Poste</th><th className="text-right">Département</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffData.results.map((s: AdminStaff) => (
+                    <tr key={s.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <Avatar name={s.user.full_name} size="md" color="bg-slate-100 text-slate-700" />
+                          <div>
+                            <p className="font-semibold text-sm text-gray-900">{s.user.full_name}</p>
+                            <p className="text-xs text-gray-400">{s.user.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="font-mono text-xs text-gray-500">{s.staff_id}</td>
+                      <td><Badge label={SERVICE_LABEL[s.service] ?? s.service} className="badge-blue" /></td>
+                      <td className="text-sm text-gray-600">{s.position || '—'}</td>
+                      <td className="text-right text-sm text-gray-500">{s.department_name || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={page} total={staffData.count} pageSize={20} onChange={setPage} />
+          </>
+        )}
+      </Card>
+      )}
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Créer un utilisateur" size="md">
         <CreateUserForm
@@ -157,6 +238,87 @@ export default function AdminUsersPage() {
           />
         )}
       </Modal>
+
+      <Modal open={createStaffOpen} onClose={() => setCreateStaffOpen(false)} title="Nouveau personnel administratif" size="md">
+        <CreateStaffForm
+          onSuccess={() => { setCreateStaffOpen(false); queryClient.invalidateQueries({ queryKey: ['admin-staff'] }) }}
+        />
+      </Modal>
+    </div>
+  )
+}
+
+function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
+  const toast = useToast()
+  const [form, setForm] = useState({ user: '', service: 'scolarite', position: '', department: '' })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const { data: users } = useQuery({
+    queryKey: ['users-for-staff'],
+    queryFn: () => authApi.getUsers({ page_size: 200 }).then(r => r.data),
+  })
+  const { data: departments } = useQuery({
+    queryKey: ['departments-list'],
+    queryFn: () => academicApi.getDepartments().then(r => r.data),
+  })
+
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleSubmit = async () => {
+    if (!form.user || !form.service) { setError('Compte utilisateur et service requis'); return }
+    setLoading(true); setError('')
+    try {
+      await adminStaffApi.createStaff({
+        user: form.user, service: form.service, position: form.position || undefined,
+        department: form.department || undefined,
+      })
+      toast.success('Personnel ajouté')
+      onSuccess()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(err?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || "Erreur lors de la création — ce compte est peut-être déjà rattaché à un profil.")
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <Alert type="error">{error}</Alert>}
+      <div>
+        <label className="label">Compte utilisateur *</label>
+        <select className="input bg-white" value={form.user} onChange={e => set('user', e.target.value)}>
+          <option value="">— Sélectionner un compte —</option>
+          {users?.results?.map((u: User) => (
+            <option key={u.id} value={u.id}>{u.full_name} — {u.email}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Service *</label>
+        <select className="input bg-white" value={form.service} onChange={e => set('service', e.target.value)}>
+          {Object.entries(SERVICE_LABEL).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Poste</label>
+        <input className="input" value={form.position} onChange={e => set('position', e.target.value)}
+          placeholder="Ex: Chargé de scolarité" />
+      </div>
+      <div>
+        <label className="label">Département</label>
+        <select className="input bg-white" value={form.department} onChange={e => set('department', e.target.value)}>
+          <option value="">— Aucun —</option>
+          {departments?.results?.map((d: { id: string; name: string }) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      </div>
+      <Button className="w-full" onClick={handleSubmit} loading={loading} icon={<Briefcase className="w-4 h-4" />}>
+        Ajouter le personnel
+      </Button>
     </div>
   )
 }

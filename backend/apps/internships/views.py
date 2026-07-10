@@ -196,7 +196,33 @@ class DefenseViewSet(viewsets.ModelViewSet):
             icon='calendar',
             color='blue'
         )
-        return Response({'detail': 'Soutenance planifiée.'})
+        # Génération automatique de la convocation officielle (PDF + QR)
+        try:
+            import uuid
+            from apps.documents.models import GeneratedDocument
+            from apps.documents.pdf_service import generate_convocation
+            from apps.academic.models import University
+
+            uni = University.objects.filter(is_active=True).first()
+            university_name = uni.name if uni else 'Université Virtuelle Hybride'
+            verification_code = f"VER-{uuid.uuid4().hex[:12].upper()}"
+            student = defense.thesis.student
+            pdf_buf = generate_convocation(
+                student.user.get_full_name(),
+                f"Soutenance — {defense.thesis.title}",
+                str(defense.scheduled_date), defense.location,
+                university_name, verification_code,
+            )
+            doc = GeneratedDocument.objects.create(
+                student=student, doc_type='convocation',
+                title=f"Convocation soutenance — {defense.thesis.title}",
+                verification_code=verification_code, generated_by=request.user,
+            )
+            doc.file.save(f"convocation_soutenance_{student.student_id}_{verification_code}.pdf", pdf_buf)
+        except Exception:
+            pass  # La planification reste valide même si la convocation échoue à se générer
+
+        return Response({'detail': 'Soutenance planifiée, convocation générée.'})
 
     @action(detail=True, methods=['post'])
     def record_grade(self, request, pk=None):
@@ -208,6 +234,27 @@ class DefenseViewSet(viewsets.ModelViewSet):
         defense.status = 'terminee'
         defense.save()
         # Mettre à jour le statut de la thèse
-        defense.thesis.status = 'soutenu'
-        defense.thesis.save()
-        return Response({'detail': 'Note de soutenance enregistrée.'})
+        thesis = defense.thesis
+        thesis.status = 'soutenu'
+        thesis.save()
+
+        # Publication automatique au catalogue de la bibliothèque, si le
+        # mémoire/thèse final a bien été déposé (voir Thesis.submit_final).
+        if thesis.final_file:
+            from apps.library.models import LibraryDocument
+
+            program = thesis.student.current_program
+            doc_type = 'these' if program and program.type == 'doctorat' else 'memoire'
+            LibraryDocument.objects.update_or_create(
+                title=thesis.title,
+                author=thesis.student.user.get_full_name(),
+                defaults={
+                    'type': doc_type,
+                    'year': timezone.now().year,
+                    'file': thesis.final_file,
+                    'access_level': 'public' if thesis.is_published else 'restricted',
+                    'uploaded_by': request.user,
+                },
+            )
+
+        return Response({'detail': 'Note de soutenance enregistrée, document archivé en bibliothèque.'})

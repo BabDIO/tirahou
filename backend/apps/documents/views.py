@@ -59,6 +59,13 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
         doc.save()
         return Response({'detail': 'Document rejeté.'})
 
+    @action(detail=True, methods=['post'])
+    def archive(self, request, pk=None):
+        doc = self.get_object()
+        doc.status = 'archive'
+        doc.save()
+        return Response({'detail': 'Document archivé.'})
+
 
 class GeneratedDocumentViewSet(viewsets.ModelViewSet):
     queryset = GeneratedDocument.objects.all().select_related('student')

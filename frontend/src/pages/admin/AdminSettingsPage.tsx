@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Settings, Building2, Calendar, Shield, Save, Globe, Bell, Database } from 'lucide-react'
-import { Card, Spinner, Alert, Badge } from '../../components/ui'
+import { Settings, Building2, Calendar, Shield, Save, Globe, Bell, Database, Webhook, Trash2, Send, CheckCircle2, XCircle } from 'lucide-react'
+import { Card, Spinner, Alert, Badge, Button } from '../../components/ui'
 import { academicApi } from '../../api'
 import api from '../../lib/axios'
+import { formatDate } from '../../lib/utils'
 import toast from 'react-hot-toast'
+
+const WEBHOOK_EVENTS = [
+  { value: 'grade.published', label: 'Note publiée' },
+  { value: 'semester_result.published', label: 'Résultat semestriel publié' },
+  { value: 'payment.received', label: 'Paiement reçu' },
+  { value: 'enrollment.validated', label: 'Inscription validée' },
+  { value: 'admission.decided', label: "Décision d'admission" },
+  { value: 'document.generated', label: 'Document généré' },
+]
 
 export default function AdminSettingsPage() {
   const qc = useQueryClient()
@@ -49,8 +59,43 @@ export default function AdminSettingsPage() {
     { key: 'university', label: 'Université', icon: Building2 },
     { key: 'academic', label: 'Années académiques', icon: Calendar },
     { key: 'roles', label: 'Rôles & Permissions', icon: Shield },
+    { key: 'webhooks', label: 'Webhooks', icon: Webhook },
     { key: 'system', label: 'Système', icon: Settings },
   ]
+
+  const [webhookForm, setWebhookForm] = useState({ url: '', event_type: 'grade.published', secret: '', description: '' })
+
+  const { data: webhooks, isLoading: loadWebhooks } = useQuery({
+    queryKey: ['webhook-subscriptions'],
+    queryFn: () => api.get('/webhook-subscriptions/').then(r => r.data),
+    enabled: activeSection === 'webhooks',
+  })
+
+  const { data: webhookDeliveries } = useQuery({
+    queryKey: ['webhook-deliveries'],
+    queryFn: () => api.get('/webhook-deliveries/').then(r => r.data),
+    enabled: activeSection === 'webhooks',
+  })
+
+  const createWebhookMut = useMutation({
+    mutationFn: (d: object) => api.post('/webhook-subscriptions/', d),
+    onSuccess: () => {
+      toast.success('Abonnement webhook créé')
+      setWebhookForm({ url: '', event_type: 'grade.published', secret: '', description: '' })
+      qc.invalidateQueries({ queryKey: ['webhook-subscriptions'] })
+    },
+    onError: () => toast.error('Erreur — vérifiez que l\'URL est valide'),
+  })
+
+  const deleteWebhookMut = useMutation({
+    mutationFn: (id: string) => api.delete(`/webhook-subscriptions/${id}/`),
+    onSuccess: () => { toast.success('Abonnement supprimé'); qc.invalidateQueries({ queryKey: ['webhook-subscriptions'] }) },
+  })
+
+  const testWebhookMut = useMutation({
+    mutationFn: (id: string) => api.post(`/webhook-subscriptions/${id}/test/`),
+    onSuccess: () => { toast.success('Événement de test envoyé'); qc.invalidateQueries({ queryKey: ['webhook-deliveries'] }) },
+  })
 
   const years = academicYears?.results ?? []
   const unis = universities?.results ?? []
@@ -205,6 +250,91 @@ export default function AdminSettingsPage() {
                 ))}
               </div>
             </Card>
+          )}
+
+          {/* === WEBHOOKS === */}
+          {activeSection === 'webhooks' && (
+            <div className="space-y-4">
+              <Alert type="info">
+                Les webhooks permettent à un système tiers de recevoir automatiquement un événement TIRAHOU (note publiée, paiement reçu...) via une requête HTTP signée.
+              </Alert>
+
+              <Card title="Abonnements actifs" noPadding>
+                {loadWebhooks ? <Spinner /> : !webhooks?.results?.length ? (
+                  <p className="text-sm text-gray-400 p-4">Aucun abonnement configuré.</p>
+                ) : (
+                  <div>
+                    {webhooks.results.map((w: { id: string; url: string; event_type_display: string; description: string; is_active: boolean }) => (
+                      <div key={w.id} className="flex items-center justify-between px-4 py-3 border-b border-gray-50 last:border-0">
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 text-sm">{w.event_type_display}</p>
+                          <p className="text-xs text-gray-500 truncate">{w.url}</p>
+                          {w.description && <p className="text-xs text-gray-400">{w.description}</p>}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge label={w.is_active ? 'Actif' : 'Inactif'} className={w.is_active ? 'badge-green' : 'badge-gray'} dot />
+                          <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />}
+                            loading={testWebhookMut.isPending} onClick={() => testWebhookMut.mutate(w.id)}>Tester</Button>
+                          <Button variant="ghost" size="sm" icon={<Trash2 className="w-3.5 h-3.5" />}
+                            onClick={() => deleteWebhookMut.mutate(w.id)} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              <Card title="Nouvel abonnement">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label className="label">URL de destination *</label>
+                    <input className="input" type="url" placeholder="https://mon-systeme.example.com/webhooks/tirahou"
+                      value={webhookForm.url} onChange={e => setWebhookForm(f => ({ ...f, url: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label">Événement *</label>
+                    <select className="input bg-white" value={webhookForm.event_type}
+                      onChange={e => setWebhookForm(f => ({ ...f, event_type: e.target.value }))}>
+                      {WEBHOOK_EVENTS.map(ev => <option key={ev.value} value={ev.value}>{ev.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Clé secrète (optionnel)</label>
+                    <input className="input font-mono text-xs" placeholder="Pour signer le payload (HMAC-SHA256)"
+                      value={webhookForm.secret} onChange={e => setWebhookForm(f => ({ ...f, secret: e.target.value }))} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="label">Description</label>
+                    <input className="input" value={webhookForm.description}
+                      onChange={e => setWebhookForm(f => ({ ...f, description: e.target.value }))} placeholder="Ex: Synchronisation ENT partenaire" />
+                  </div>
+                </div>
+                <button onClick={() => createWebhookMut.mutate(webhookForm)}
+                  disabled={!webhookForm.url || createWebhookMut.isPending}
+                  className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
+                  <Save className="w-4 h-4" /> {createWebhookMut.isPending ? 'Création...' : 'Créer l\'abonnement'}
+                </button>
+              </Card>
+
+              {(webhookDeliveries?.results?.length ?? 0) > 0 && (
+                <Card title="Historique des livraisons" subtitle="20 dernières tentatives">
+                  <div className="space-y-2">
+                    {webhookDeliveries.results.slice(0, 20).map((d: { id: string; event_type: string; success: boolean; status_code: number | null; created_at: string }) => (
+                      <div key={d.id} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg text-sm">
+                        <div className="flex items-center gap-2">
+                          {d.success ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+                          <span className="font-medium text-gray-700">{d.event_type}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          {d.status_code && <span>HTTP {d.status_code}</span>}
+                          <span>{formatDate(d.created_at, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
           )}
 
           {/* === SYSTÈME === */}

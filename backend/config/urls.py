@@ -69,6 +69,9 @@ urlpatterns = [
 
     # API Utilitaires (health, info, stats)
     path(API_V1, include('apps.api.urls')),
+
+    # Webhooks sortants
+    path(API_V1, include('apps.core.urls')),
 ]
 
 if settings.DEBUG:

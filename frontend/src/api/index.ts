@@ -1,7 +1,7 @@
 import api from '../lib/axios'
 import type {
   LoginCredentials, AuthTokens, User,
-  PaginatedResponse, Student, Teacher, Program,
+  PaginatedResponse, Student, Teacher, TeacherAvailability, Program,
   Application, AdminEnrollment, Invoice, Payment,
   Grade, SemesterResult, CourseSpace, ScheduledSession,
   Notification, DashboardData, AcademicYear, Faculty, Department,
@@ -23,6 +23,9 @@ export const authApi = {
     api.post(`/users/${userId}/roles/`, { role_ids: roleIds }),
   getRoles: () => api.get('/roles/'),
   getAuditLogs: (params?: object) => api.get('/audit-logs/', { params }),
+  mfaSetup: () => api.post<{ secret: string; qr_code: string }>('/auth/mfa/setup/'),
+  mfaVerifySetup: (code: string) => api.post('/auth/mfa/verify-setup/', { code }),
+  mfaDisable: (password: string) => api.post('/auth/mfa/disable/', { password }),
 }
 
 // ── Academic ──────────────────────────────────────────────────────────────────
@@ -52,10 +55,13 @@ export const programsApi = {
   deleteProgram: (id: string) => api.delete(`/programs/${id}/`),
   getMaquette: (id: string) => api.get(`/programs/${id}/maquette/`),
   getSemesters: (params?: object) => api.get('/semesters/', { params }),
+  createSemester: (data: object) => api.post('/semesters/', data),
   getUEs: (params?: object) => api.get('/ues/', { params }),
   createUE: (data: object) => api.post('/ues/', data),
   getECs: (params?: object) => api.get('/ecs/', { params }),
   createEC: (data: object) => api.post('/ecs/', data),
+  updateEC: (id: string, data: object) => api.patch(`/ecs/${id}/`, data),
+  duplicateProgram: (id: string, data: object) => api.post(`/programs/${id}/duplicate/`, data),
   getGroups: (params?: object) => api.get('/groups/', { params }),
   createGroup: (data: object) => api.post('/groups/', data),
 }
@@ -79,6 +85,13 @@ export const teachersApi = {
   updateTeacher: (id: string, data: Partial<Teacher>) => api.patch<Teacher>(`/teachers/${id}/`, data),
 }
 
+export const teacherAvailabilityApi = {
+  getAvailabilities: (params?: object) =>
+    api.get<PaginatedResponse<TeacherAvailability>>('/teacher-availabilities/', { params }),
+  createAvailability: (data: Partial<TeacherAvailability>) => api.post('/teacher-availabilities/', data),
+  deleteAvailability: (id: string) => api.delete(`/teacher-availabilities/${id}/`),
+}
+
 export const adminStaffApi = {
   getStaff: (params?: object) => api.get('/admin-staff/', { params }),
   createStaff: (data: object) => api.post('/admin-staff/', data),
@@ -100,6 +113,10 @@ export const admissionsApi = {
   validateDocument: (id: string) => api.post(`/application-documents/${id}/validate/`),
   rejectDocument: (id: string, reason: string) =>
     api.post(`/application-documents/${id}/reject/`, { reason }),
+  publishDecisions: (program: string, academicYear: string) =>
+    api.post('/applications/publish_decisions/', { program, academic_year: academicYear }),
+  checkResult: (applicationNumber: string) =>
+    api.get('/admissions/check-result/', { params: { application_number: applicationNumber } }),
 }
 
 // ── Enrollment ────────────────────────────────────────────────────────────────
@@ -114,6 +131,8 @@ export const enrollmentApi = {
   createPedaEnrollment: (data: object) => api.post('/peda-enrollments/', data),
   confirmPedaEnrollment: (id: string) => api.post(`/peda-enrollments/${id}/confirm/`),
   getUEEnrollments: (params?: object) => api.get('/ue-enrollments/', { params }),
+  createUEEnrollment: (data: object) => api.post('/ue-enrollments/', data),
+  deleteUEEnrollment: (id: string) => api.delete(`/ue-enrollments/${id}/`),
 }
 
 // ── Finance ───────────────────────────────────────────────────────────────────
@@ -149,6 +168,8 @@ export const documentsApi = {
     api.post(`/documents/student-documents/${id}/validate/`),
   rejectDocument: (id: string, reason: string) =>
     api.post(`/documents/student-documents/${id}/reject/`, { reason }),
+  archiveDocument: (id: string) =>
+    api.post(`/documents/student-documents/${id}/archive/`),
   getGeneratedDocuments: (params?: object) =>
     api.get('/documents/generated-documents/', { params }),
   generateDocument: (data: object) =>
@@ -161,6 +182,14 @@ export const documentsApi = {
     api.get(`/documents/generate/certificat/${studentId}/`, { params, responseType: 'blob' }),
   generateRelevePDF: (studentId: string, params?: object) =>
     api.get(`/documents/generate/releve/${studentId}/`, { params, responseType: 'blob' }),
+  generateCarteEtudiantPDF: (studentId: string) =>
+    api.get(`/documents/generate/carte-etudiant/${studentId}/`, { responseType: 'blob' }),
+  generateFicheInscriptionPDF: (studentId: string) =>
+    api.get(`/documents/generate/fiche-inscription/${studentId}/`, { responseType: 'blob' }),
+  generateConvocationPDF: (data: object) =>
+    api.post('/documents/generate/convocation/', data, { responseType: 'blob' }),
+  generateDiplomePDF: (studentId: string, params?: object) =>
+    api.get(`/documents/generate/diplome/${studentId}/`, { params, responseType: 'blob' }),
   computeResults: (semesterId: string, sessionId: string) =>
     api.post('/documents/compute-results/', { semester_id: semesterId, session_id: sessionId }),
   getTranscript: (studentId: string, params?: object) =>
@@ -190,6 +219,11 @@ export const evaluationApi = {
     api.post('/semester-results/publish_all/', { exam_session_id: examSessionId }),
   getJuries: (params?: object) => api.get('/juries/', { params }),
   createJury: (data: object) => api.post('/juries/', data),
+  updateJury: (id: string, data: object) => api.patch(`/juries/${id}/`, data),
+  downloadPV: (params?: object) => api.get('/semester-results/pv/', { params, responseType: 'blob' }),
+  getRoomAssignments: (params?: object) => api.get('/exam-room-assignments/', { params }),
+  createRoomAssignment: (data: object) => api.post('/exam-room-assignments/', data),
+  deleteRoomAssignment: (id: string) => api.delete(`/exam-room-assignments/${id}/`),
   getGradeContests: (params?: object) => api.get('/grade-contests/', { params }),
   createGradeContest: (data: object) => api.post('/grade-contests/', data),
   acceptContest: (id: string, data: object) => api.post(`/grade-contests/${id}/accept/`, data),
@@ -358,6 +392,12 @@ export const analyticsApi = {
     api.get('/grades/template/', { responseType: 'blob' }),
   exportPayments: (params?: object) =>
     api.get('/analytics/export/payments/', { params, responseType: 'blob' }),
+  // Badges & Wallet (S2/S3)
+  getBadges: (params?: object) => api.get('/analytics/badges/', { params }),
+  createBadge: (data: object) => api.post('/analytics/badges/', data),
+  getStudentBadges: (params?: object) => api.get('/analytics/student-badges/', { params }),
+  awardBadge: (data: object) => api.post('/analytics/student-badges/', data),
+  getMyWallet: () => api.get('/analytics/wallets/me/'),
 }
 
 // ── Bibliothèque ──────────────────────────────────────────────────────────────

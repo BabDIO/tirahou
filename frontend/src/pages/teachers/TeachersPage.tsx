@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Plus, Eye, UserCheck, Download, Mail, Phone, BookOpen, X } from 'lucide-react'
-import { teachersApi, academicApi } from '../../api'
+import { Search, Plus, Eye, UserCheck, Download, Mail, Phone, BookOpen, X, Clock, Trash2 } from 'lucide-react'
+import { teachersApi, academicApi, teacherAvailabilityApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Avatar, Alert, Tabs, Select } from '../../components/ui'
 import { statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import api from '../../lib/axios'
-import type { Teacher } from '../../types'
+import type { Teacher, TeacherAvailability } from '../../types'
+
+const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
 const gradeColors: Record<string, string> = {
   professeur: 'badge-purple',
@@ -162,6 +164,7 @@ export default function TeachersPage() {
 
 function TeacherDetail({ teacher }: { teacher: Teacher }) {
   const [tab, setTab] = useState('info')
+  const isExternal = teacher.status === 'vacataire' || teacher.status === 'invite'
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -177,8 +180,11 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
         </div>
       </div>
 
-      <Tabs tabs={[{ key: 'info', label: 'Informations' }, { key: 'cours', label: 'Cours assignés' }]}
-        active={tab} onChange={setTab} variant="underline" />
+      <Tabs tabs={[
+        { key: 'info', label: 'Informations' },
+        { key: 'dispo', label: 'Disponibilités' },
+        { key: 'cours', label: 'Cours assignés' },
+      ]} active={tab} onChange={setTab} variant="underline" />
 
       {tab === 'info' && (
         <div className="grid grid-cols-2 gap-3">
@@ -187,6 +193,10 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
             ['Département', teacher.department_name ?? '—'],
             ['Téléphone', teacher.user.phone || '—'],
             ['Spécialités', teacher.specialities || '—'],
+            ...(isExternal ? [
+              ['Référence contrat', teacher.contract_reference || '—'],
+              ['Taux horaire', teacher.hourly_rate != null ? `${teacher.hourly_rate} FCFA/h` : '—'],
+            ] : []),
           ].map(([label, value]) => (
             <div key={label} className="bg-gray-50 rounded-xl p-3.5">
               <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
@@ -195,6 +205,8 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
           ))}
         </div>
       )}
+
+      {tab === 'dispo' && <TeacherAvailabilityPanel teacher={teacher} />}
 
       {tab === 'cours' && (
         <Alert type="info">Les cours assignés seront affichés ici depuis le module LMS.</Alert>
@@ -215,6 +227,75 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
   )
 }
 
+function TeacherAvailabilityPanel({ teacher }: { teacher: Teacher }) {
+  const toast = useToast()
+  const qc = useQueryClient()
+  const [form, setForm] = useState({ day_of_week: '0', start_time: '08:00', end_time: '10:00', notes: '' })
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['teacher-availabilities', teacher.id],
+    queryFn: () => teacherAvailabilityApi.getAvailabilities({ teacher: teacher.id }).then(r => r.data),
+  })
+
+  const createMut = useMutation({
+    mutationFn: () => teacherAvailabilityApi.createAvailability({
+      teacher: teacher.id, day_of_week: Number(form.day_of_week) as never,
+      start_time: form.start_time as never, end_time: form.end_time as never, notes: form.notes,
+    }),
+    onSuccess: () => {
+      toast.success('Créneau ajouté')
+      setForm(f => ({ ...f, notes: '' }))
+      qc.invalidateQueries({ queryKey: ['teacher-availabilities', teacher.id] })
+    },
+    onError: () => toast.error('Erreur lors de l\'ajout du créneau'),
+  })
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => teacherAvailabilityApi.deleteAvailability(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['teacher-availabilities', teacher.id] }),
+  })
+
+  const slots: TeacherAvailability[] = data?.results ?? []
+
+  return (
+    <div className="space-y-4">
+      {isLoading ? <Spinner /> : !slots.length ? (
+        <Empty icon={<Clock className="w-8 h-8" />} message="Aucun créneau de disponibilité déclaré" />
+      ) : (
+        <div className="space-y-2">
+          {slots.map(slot => (
+            <div key={slot.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                  <Clock className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{slot.day_display}</p>
+                  <p className="text-xs text-gray-400">{slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)} {slot.notes && `· ${slot.notes}`}</p>
+                </div>
+              </div>
+              <button onClick={() => deleteMut.mutate(slot.id)} className="p-1.5 hover:bg-red-100 rounded-lg transition text-gray-400 hover:text-red-500">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <select className="input" value={form.day_of_week} onChange={e => setForm(f => ({ ...f, day_of_week: e.target.value }))}>
+          {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+        </select>
+        <input type="time" className="input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
+        <input type="time" className="input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
+        <Button size="sm" icon={<Plus className="w-3.5 h-3.5" />} loading={createMut.isPending} onClick={() => createMut.mutate()}>
+          Ajouter
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -222,8 +303,9 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
   const [form, setForm] = useState({
     email: '', first_name: '', last_name: '', phone: '', password: '',
     grade: 'assistant', status: 'permanent', specialities: '', bio: '', office: '',
-    department: '', weekly_hours_quota: 8,
+    department: '', weekly_hours_quota: 8, hourly_rate: '', contract_reference: '',
   })
+  const isExternal = form.status === 'vacataire' || form.status === 'invite'
 
   const { data: departments } = useQuery({
     queryKey: ['departments-list'],
@@ -256,6 +338,8 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         user: userRes.data.id, grade: form.grade as never, status: form.status as never,
         department: form.department || undefined, specialities: form.specialities,
         bio: form.bio, office: form.office, weekly_hours_quota: form.weekly_hours_quota,
+        hourly_rate: (isExternal && form.hourly_rate) ? Number(form.hourly_rate) as never : undefined,
+        contract_reference: isExternal ? form.contract_reference : undefined,
       } as never)
     },
     onSuccess: () => {
@@ -319,6 +403,20 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           </div>
         </div>
       </div>
+      {isExternal && (
+        <div>
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Contrat (vacataire / invité)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Référence de contrat" placeholder="CTR-2026-014"
+              value={form.contract_reference} onChange={e => set('contract_reference', e.target.value)} />
+            <div>
+              <label className="label">Taux horaire (FCFA)</label>
+              <input type="number" className="input" min={0}
+                value={form.hourly_rate} onChange={e => set('hourly_rate', e.target.value)} />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex gap-3 pt-2 border-t border-gray-100">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={create.isPending} icon={<UserCheck className="w-4 h-4" />}>

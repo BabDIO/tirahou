@@ -44,6 +44,22 @@ export default function TeacherCoursesPage() {
     onError: () => toast.error('Erreur lors du téléversement'),
   })
 
+  const setPrerequisiteMut = useMutation({
+    mutationFn: ({ id, prerequisite_module }: { id: string; prerequisite_module: string | null }) =>
+      api.patch(`/course-modules/${id}/`, { prerequisite_module }),
+    onSuccess: () => { toast.success('Prérequis mis à jour'); qc.invalidateQueries({ queryKey: ['modules', selectedSpace] }) },
+  })
+
+  const createVersionMut = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      return api.post(`/course-resources/${id}/create_version/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    },
+    onSuccess: () => { toast.success('Nouvelle version publiée'); qc.invalidateQueries({ queryKey: ['modules', selectedSpace] }) },
+    onError: () => toast.error('Erreur lors de la nouvelle version'),
+  })
+
   const courses = data?.results ?? []
   const mods = modules?.results ?? []
   const progressList = progress?.results ?? []
@@ -138,19 +154,37 @@ export default function TeacherCoursesPage() {
 
               {/* Modules */}
               <div className="space-y-2">
-                {mods.map((mod: { id: string; title: string; order: number; resources?: { id: string; title: string; type: string }[] }) => (
+                {mods.map((mod: { id: string; title: string; order: number; prerequisite_module: string | null; resources?: { id: string; title: string; type: string; version: number }[] }) => (
                   <Card key={mod.id} noPadding>
                     <div className="p-3">
-                      <p className="font-semibold text-sm text-gray-900 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded bg-primary-100 text-primary-700 text-xs font-black flex items-center justify-center">{mod.order}</span>
-                        {mod.title}
-                        <span className="text-xs text-gray-400 font-normal">{mod.resources?.length ?? 0} ressource(s)</span>
-                      </p>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="font-semibold text-sm text-gray-900 flex items-center gap-2">
+                          <span className="w-6 h-6 rounded bg-primary-100 text-primary-700 text-xs font-black flex items-center justify-center">{mod.order}</span>
+                          {mod.title}
+                          <span className="text-xs text-gray-400 font-normal">{mod.resources?.length ?? 0} ressource(s)</span>
+                        </p>
+                        <select className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
+                          value={mod.prerequisite_module ?? ''}
+                          onChange={e => setPrerequisiteMut.mutate({ id: mod.id, prerequisite_module: e.target.value || null })}>
+                          <option value="">Aucun prérequis</option>
+                          {mods.filter((m: { id: string }) => m.id !== mod.id).map((m: { id: string; title: string }) => (
+                            <option key={m.id} value={m.id}>Prérequis : {m.title}</option>
+                          ))}
+                        </select>
+                      </div>
                       {mod.resources?.map(r => (
                         <div key={r.id} className="ml-8 mt-1.5 flex items-center gap-2 text-xs text-gray-600">
                           <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                           <span>{r.title}</span>
                           <Badge label={r.type} className="badge-gray" />
+                          {r.version > 1 && <Badge label={`v${r.version}`} className="badge-blue" />}
+                          <label className="text-primary-600 hover:text-primary-700 cursor-pointer font-medium">
+                            Nouvelle version
+                            <input type="file" className="hidden" onChange={e => {
+                              const file = e.target.files?.[0]
+                              if (file) createVersionMut.mutate({ id: r.id, file })
+                            }} />
+                          </label>
                         </div>
                       ))}
                     </div>

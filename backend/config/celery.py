@@ -28,6 +28,11 @@ app.conf.beat_schedule = {
         'task': 'apps.finance.tasks.send_payment_reminders',
         'schedule': crontab(hour=9, minute=0),  # Chaque jour à 9h
     },
+    # Envoyer les rappels d'examens (3 jours avant le début de session)
+    'send-exam-reminders': {
+        'task': 'apps.evaluation.tasks.send_exam_reminders',
+        'schedule': crontab(hour=8, minute=0),  # Chaque jour à 8h
+    },
     # Calculer les statistiques quotidiennes
     'calculate-daily-statistics': {
         'task': 'apps.analytics_app.tasks.calculate_daily_stats',

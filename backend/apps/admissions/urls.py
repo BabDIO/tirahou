@@ -6,4 +6,7 @@ router = DefaultRouter()
 router.register('applications', views.ApplicationViewSet)
 router.register('application-documents', views.ApplicationDocumentViewSet)
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('admissions/check-result/', views.check_admission_result, name='check_admission_result'),
+    path('', include(router.urls)),
+]

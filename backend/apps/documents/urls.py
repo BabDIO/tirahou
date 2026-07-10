@@ -5,6 +5,7 @@ from .pdf_views import (
     generate_certificat_pdf, generate_releve_pdf,
     compute_results, student_transcript,
     generate_fiche_inscription_pdf, generate_carte_etudiant_pdf,
+    generate_convocation_pdf, generate_diplome_pdf,
 )
 
 router = DefaultRouter()
@@ -19,6 +20,8 @@ urlpatterns = [
     path('generate/releve/<uuid:student_id>/', generate_releve_pdf, name='generate_releve'),
     path('generate/fiche-inscription/<uuid:student_id>/', generate_fiche_inscription_pdf, name='generate_fiche_inscription'),
     path('generate/carte-etudiant/<uuid:student_id>/', generate_carte_etudiant_pdf, name='generate_carte_etudiant'),
+    path('generate/convocation/', generate_convocation_pdf, name='generate_convocation'),
+    path('generate/diplome/<uuid:student_id>/', generate_diplome_pdf, name='generate_diplome'),
     path('compute-results/', compute_results, name='compute_results'),
     path('transcript/<uuid:student_id>/', student_transcript, name='student_transcript'),
 ]

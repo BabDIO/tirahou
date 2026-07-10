@@ -29,6 +29,9 @@ class VirtualClassSession(BaseModel):
     ]
 
     course_space = models.ForeignKey(CourseSpace, on_delete=models.CASCADE, related_name='virtual_sessions')
+    scheduled_session = models.ForeignKey('scheduling_app.ScheduledSession', on_delete=models.SET_NULL, null=True, blank=True,
+                                           related_name='virtual_class_sessions',
+                                           help_text="Créneau physique correspondant (mode hybride) — permet de fusionner la présence salle + en ligne")
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, default='hybride')

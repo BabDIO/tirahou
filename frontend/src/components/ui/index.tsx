@@ -5,7 +5,7 @@ import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type R
 // ── Button ────────────────────────────────────────────────────────────────────
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success'
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'icon'
   loading?: boolean
   icon?: ReactNode
 }
@@ -24,6 +24,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       sm: 'px-3 py-1.5 text-xs rounded-lg',
       md: 'px-4 py-2 text-sm rounded-lg',
       lg: 'px-5 py-2.5 text-sm rounded-xl',
+      icon: 'p-2 rounded-xl',
     }
     return (
       <button
@@ -188,8 +189,8 @@ export const Card = ({ children, className, title, subtitle, action, noPadding, 
     {(title || action) && (
       <div className={cn('flex items-start justify-between gap-4', !noPadding && 'mb-5')}>
         <div>
-          {title && <h3 className="section-title">{title}</h3>}
-          {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+          {title && <h3 className="section-title dark:text-slate-200">{title}</h3>}
+          {subtitle && <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">{subtitle}</p>}
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
       </div>
@@ -290,20 +291,39 @@ interface StatsCardProps {
   color?: string
   trend?: { value: number; label: string }
   subtitle?: string
+  onClick?: () => void
 }
-export const StatsCard = ({ title, value, icon, color = 'bg-primary-500', trend, subtitle }: StatsCardProps) => (
-  <div className="card p-5 flex items-start gap-4 group hover:shadow-md transition-all duration-200">
+export const StatsCard = ({ title, value, icon, color = 'bg-primary-500', trend, subtitle, onClick }: StatsCardProps) => (
+  <div 
+    className={cn(
+      "card p-5 flex items-start gap-4 group hover:shadow-md transition-all duration-200",
+      onClick && "cursor-pointer hover:scale-[1.02]"
+    )}
+    onClick={onClick}
+    role={onClick ? "button" : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onKeyDown={
+      onClick
+        ? (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              onClick()
+            }
+          }
+        : undefined
+    }
+  >
     <div className={cn('p-3 rounded-xl text-white flex-shrink-0 shadow-sm', color)}>
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide truncate">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1 tabular-nums leading-none">{value}</p>
-      {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide truncate dark:text-gray-400">{title}</p>
+      <p className="text-2xl font-bold text-gray-900 mt-1 tabular-nums leading-none dark:text-gray-50">{value}</p>
+      {subtitle && <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">{subtitle}</p>}
       {trend && (
         <div className={cn(
           'flex items-center gap-1 mt-1.5 text-xs font-medium',
-          trend.value > 0 ? 'text-emerald-600' : trend.value < 0 ? 'text-red-500' : 'text-gray-400'
+          trend.value > 0 ? 'text-emerald-600 dark:text-emerald-400' : trend.value < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400 dark:text-gray-500'
         )}>
           {trend.value > 0 ? <TrendingUp className="w-3 h-3" /> : trend.value < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
           {Math.abs(trend.value)}% {trend.label}

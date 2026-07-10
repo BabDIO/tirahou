@@ -24,6 +24,8 @@ class AdminEnrollment(BaseModel):
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
     type = models.CharField(max_length=30, choices=TYPE_CHOICES, default='premiere_inscription')
+    previous_program = models.ForeignKey(Program, on_delete=models.SET_NULL, null=True, blank=True,
+                                          related_name='+', help_text="Programme d'origine (transfert uniquement)")
     enrollment_number = models.CharField(max_length=20, unique=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_attente')
     validated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='validated_enrollments')

@@ -12,6 +12,7 @@ from .serializers import (
     RoleSerializer, AuditLogSerializer, ChangePasswordSerializer,
     CustomTokenObtainSerializer,
 )
+from .permissions import HasModulePermission
 
 
 def log_action(user, action, module, obj_type='', obj_id='', description='', request=None):
@@ -59,9 +60,72 @@ class LogoutView(APIView):
             return Response({'detail': 'Token invalide.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class MfaSetupView(APIView):
+    """Génère un nouveau secret TOTP + QR code de provisionnement (non actif tant que non vérifié)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        import pyotp
+        import qrcode
+        import io
+        import base64
+
+        user = request.user
+        secret = pyotp.random_base32()
+        user.mfa_secret = secret
+        user.mfa_enabled = False
+        user.save(update_fields=['mfa_secret', 'mfa_enabled'])
+
+        uri = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name='TIRAHOU')
+        img = qrcode.make(uri)
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        qr_b64 = base64.b64encode(buf.getvalue()).decode()
+
+        return Response({'secret': secret, 'qr_code': f'data:image/png;base64,{qr_b64}'})
+
+
+class MfaVerifySetupView(APIView):
+    """Confirme l'activation du MFA après scan du QR code et saisie d'un code valide."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        import pyotp
+
+        user = request.user
+        code = (request.data.get('code') or '').strip()
+        if not user.mfa_secret:
+            return Response({'detail': 'Aucune configuration MFA en attente. Relancez la configuration.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not pyotp.TOTP(user.mfa_secret).verify(code, valid_window=1):
+            return Response({'detail': 'Code invalide.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.mfa_enabled = True
+        user.save(update_fields=['mfa_enabled'])
+        log_action(user, 'update', 'accounts', description='Double authentification activée', request=request)
+        return Response({'detail': 'Double authentification activée avec succès.'})
+
+
+class MfaDisableView(APIView):
+    """Désactive le MFA après confirmation du mot de passe."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        password = request.data.get('password') or ''
+        if not user.check_password(password):
+            return Response({'detail': 'Mot de passe incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.mfa_enabled = False
+        user.mfa_secret = ''
+        user.save(update_fields=['mfa_enabled', 'mfa_secret'])
+        log_action(user, 'update', 'accounts', description='Double authentification désactivée', request=request)
+        return Response({'detail': 'Double authentification désactivée.'})
+
+
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.filter(is_active=True).prefetch_related('roles')
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'accounts'
 
     def get_queryset(self):
         user = self.request.user
@@ -84,7 +148,8 @@ class UserListCreateView(generics.ListCreateAPIView):
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasModulePermission]
+    permission_module = 'accounts'
 
     def get_serializer_class(self):
         return UserUpdateSerializer if self.request.method in ['PUT', 'PATCH'] else UserSerializer

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, FileText, Upload, CheckCircle, XCircle, Eye, Download, Plus, QrCode, Shield } from 'lucide-react'
+import { Search, FileText, Upload, CheckCircle, XCircle, Eye, Download, Plus, QrCode, Shield, Archive } from 'lucide-react'
 import { documentsApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
+import { saveAs } from 'file-saver'
 import type { StudentDocument, GeneratedDocument } from '../../types'
 
 type Tab = 'student-docs' | 'generated'
@@ -60,6 +61,11 @@ export default function DocumentsPage() {
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) => documentsApi.rejectDocument(id, reason),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['student-documents'] }); toast.success('Document rejeté'); setRejectOpen(false) },
+  })
+
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => documentsApi.archiveDocument(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['student-documents'] }); toast.success('Document archivé') },
   })
 
   const deposes = studentDocs?.results?.filter((d: StudentDocument) => d.status === 'depose').length ?? 0
@@ -176,6 +182,13 @@ export default function DocumentsPage() {
                                   Rejeter
                                 </Button>
                               </>
+                            )}
+                            {doc.status === 'valide' && (
+                              <Button variant="ghost" size="sm" icon={<Archive className="w-3.5 h-3.5" />}
+                                loading={archiveMutation.isPending}
+                                onClick={() => archiveMutation.mutate(doc.id)}>
+                                Archiver
+                              </Button>
                             )}
                           </div>
                         </td>
@@ -330,21 +343,57 @@ function RejectForm({ onSubmit, onCancel, loading }: { onSubmit: (r: string) => 
   )
 }
 
+const GENERATABLE_TYPES = [
+  { value: 'certificat_scolarite', label: 'Certificat de scolarité' },
+  { value: 'releve_notes', label: 'Relevé de notes' },
+  { value: 'fiche_inscription', label: "Fiche d'inscription" },
+  { value: 'carte_etudiant', label: 'Carte étudiant' },
+  { value: 'convocation', label: 'Convocation' },
+  { value: 'diplome', label: 'Diplôme' },
+  { value: 'attestation_fin_cycle', label: 'Attestation de fin de cycle' },
+]
+
 function GenerateDocForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
   const toast = useToast()
-  const [form, setForm] = useState({ student: '', doc_type: 'certificat_scolarite', title: '' })
+  const [form, setForm] = useState({
+    student: '', doc_type: 'certificat_scolarite',
+    event_title: '', event_date: '', event_location: '', mention: '',
+  })
   const [loading, setLoading] = useState(false)
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault()
-    if (!form.student || !form.doc_type) { toast.error('Étudiant et type requis'); return }
+    if (!form.student) { toast.error('ID étudiant requis'); return }
+    if (form.doc_type === 'convocation' && (!form.event_title || !form.event_date)) {
+      toast.error('Objet et date requis pour une convocation'); return
+    }
     setLoading(true)
     try {
-      await documentsApi.generateDocument(form)
+      let res
+      switch (form.doc_type) {
+        case 'certificat_scolarite': res = await documentsApi.generateCertificatPDF(form.student); break
+        case 'releve_notes': res = await documentsApi.generateRelevePDF(form.student); break
+        case 'fiche_inscription': res = await documentsApi.generateFicheInscriptionPDF(form.student); break
+        case 'carte_etudiant': res = await documentsApi.generateCarteEtudiantPDF(form.student); break
+        case 'convocation':
+          res = await documentsApi.generateConvocationPDF({
+            student_id: form.student, event_title: form.event_title,
+            event_date: form.event_date, event_location: form.event_location,
+          })
+          break
+        case 'diplome':
+        case 'attestation_fin_cycle':
+          res = await documentsApi.generateDiplomePDF(form.student, {
+            mention: form.mention, attestation: form.doc_type === 'attestation_fin_cycle',
+          })
+          break
+        default: throw new Error('Type non supporté')
+      }
+      saveAs(new Blob([res.data], { type: 'application/pdf' }), `${form.doc_type}.pdf`)
       toast.success('Document généré avec succès')
       onSuccess()
-    } catch { toast.error('Erreur lors de la génération') }
+    } catch { toast.error('Erreur lors de la génération — vérifiez que cet étudiant a une inscription validée') }
     finally { setLoading(false) }
   }
 
@@ -357,22 +406,37 @@ function GenerateDocForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
       <div>
         <label className="label">Type de document *</label>
         <select className="input bg-white" value={form.doc_type} onChange={e => set('doc_type', e.target.value)}>
-          <option value="fiche_inscription">Fiche d'inscription</option>
-          <option value="certificat_scolarite">Certificat de scolarité</option>
-          <option value="certificat_frequentation">Certificat de fréquentation</option>
-          <option value="attestation_reussite">Attestation de réussite</option>
-          <option value="releve_notes">Relevé de notes</option>
-          <option value="bulletin">Bulletin</option>
-          <option value="convocation">Convocation</option>
-          <option value="carte_etudiant">Carte étudiant</option>
-          <option value="diplome">Diplôme</option>
+          {GENERATABLE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
-      <div>
-        <label className="label">Titre personnalisé (optionnel)</label>
-        <input className="input" value={form.title} onChange={e => set('title', e.target.value)}
-          placeholder="Laisser vide pour titre automatique" />
-      </div>
+
+      {form.doc_type === 'convocation' && (
+        <>
+          <div>
+            <label className="label">Objet de la convocation *</label>
+            <input className="input" value={form.event_title} onChange={e => set('event_title', e.target.value)}
+              placeholder="Ex: Entretien disciplinaire" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Date *</label>
+              <input type="date" className="input" value={form.event_date} onChange={e => set('event_date', e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Lieu</label>
+              <input className="input" value={form.event_location} onChange={e => set('event_location', e.target.value)} />
+            </div>
+          </div>
+        </>
+      )}
+
+      {(form.doc_type === 'diplome' || form.doc_type === 'attestation_fin_cycle') && (
+        <div>
+          <label className="label">Mention (optionnel)</label>
+          <input className="input" value={form.mention} onChange={e => set('mention', e.target.value)} placeholder="Ex: Bien" />
+        </div>
+      )}
+
       <div className="flex gap-3 pt-2 border-t border-gray-100">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<Shield className="w-4 h-4" />}>

@@ -13,6 +13,7 @@ import DashboardPage from './pages/dashboard/DashboardPage'
 import ProfilePage from './pages/profile/ProfilePage'
 // Vérification publique
 import VerifyDocumentPage from './pages/verify/VerifyDocumentPage'
+import VerifyAdmissionPage from './pages/verify/VerifyAdmissionPage'
 // Admin / Scolarité
 import StudentsPage from './pages/students/StudentsPage'
 import TeachersPage from './pages/teachers/TeachersPage'
@@ -66,6 +67,7 @@ import ResponsableProgramPage from './pages/responsable/ResponsableProgramPage'
 import ResponsableGroupsPage from './pages/responsable/ResponsableGroupsPage'
 // Pages bibliothécaire
 import BibliothecairePage from './pages/bibliothecaire/BibliothecairePage'
+import TestPage from './pages/TestPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,9 +97,11 @@ export default function App() {
             {/* ── Public ── */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/test" element={<TestPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/verify" element={<VerifyDocumentPage />} />
             <Route path="/verify/:code" element={<VerifyDocumentPage />} />
+            <Route path="/verify-admission" element={<VerifyAdmissionPage />} />
 
           {/* ── Protected ── */}
           <Route element={<ProtectedRoute />}>
@@ -116,19 +120,31 @@ export default function App() {
 
               {/* ── ADMIN / SCOLARITÉ ── */}
               <Route element={<ProtectedRoute allowedRoles={[...SCOLARITE]} />}>
-                <Route path="/students" element={<StudentsPage />} />
                 <Route path="/admissions" element={<AdmissionsPage />} />
                 <Route path="/enrollment" element={<EnrollmentPage />} />
+              </Route>
+
+              {/* ── ÉTUDIANTS — consultés aussi par Finance et Responsable ── */}
+              <Route element={<ProtectedRoute allowedRoles={[...SCOLARITE, 'admin_financier', 'responsable_pedagogique', 'chef_departement']} />}>
+                <Route path="/students" element={<StudentsPage />} />
+              </Route>
+
+              {/* ── DOCUMENTS — consultés aussi par la bibliothèque ── */}
+              <Route element={<ProtectedRoute allowedRoles={[...SCOLARITE, 'bibliothecaire']} />}>
                 <Route path="/documents" element={<DocumentsPage />} />
               </Route>
 
               {/* ── ADMIN SEULEMENT ── */}
               <Route element={<ProtectedRoute allowedRoles={[...ADMIN]} />}>
                 <Route path="/academic" element={<AcademicPage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
                 <Route path="/admin/audit" element={<AdminAuditPage />} />
                 <Route path="/admin/settings" element={<AdminSettingsPage />} />
+              </Route>
+
+              {/* ── ANALYTICS — Admin + Responsable pédagogique ── */}
+              <Route element={<ProtectedRoute allowedRoles={[...ADMIN, 'responsable_pedagogique', 'chef_departement']} />}>
+                <Route path="/analytics" element={<AnalyticsPage />} />
               </Route>
 
               {/* ── ADMIN + RESPONSABLE ── */}

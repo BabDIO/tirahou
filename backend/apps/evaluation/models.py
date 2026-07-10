@@ -72,6 +72,29 @@ class ExamSession(BaseModel):
         return f"{self.semester} — {self.get_session_type_display()} ({self.academic_year})"
 
 
+class ExamRoomAssignment(BaseModel):
+    """
+    Planification d'un examen : salle, créneau et surveillants pour un EC
+    donné d'une session d'examen (8.20 / G7 du cahier des charges).
+    """
+    exam_session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name='room_assignments')
+    ec = models.ForeignKey(EC, on_delete=models.CASCADE, related_name='exam_room_assignments')
+    room = models.ForeignKey('scheduling_app.Room', on_delete=models.SET_NULL, null=True, related_name='exam_assignments')
+    invigilators = models.ManyToManyField(User, blank=True, related_name='exam_invigilations')
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
+    notes = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        db_table = 'exam_room_assignments'
+        unique_together = ('exam_session', 'ec')
+        ordering = ['start_datetime']
+        verbose_name = 'Planification d\'examen'
+
+    def __str__(self):
+        return f"{self.ec.code} — {self.room} ({self.start_datetime:%d/%m/%Y %H:%M})"
+
+
 class Grade(BaseModel):
     """
     Note individuelle d'un étudiant pour un EC (Élément Constitutif).
@@ -258,6 +281,15 @@ class Grade(BaseModel):
             sent_at=timezone.now()
         )
 
+        try:
+            from apps.core.tasks import dispatch_webhook
+            dispatch_webhook('grade.published', {
+                'student_id': str(self.student_id), 'student_number': self.student.student_id,
+                'ec_code': self.ec.code, 'final_grade': float(self.final_grade) if self.final_grade is not None else None,
+            })
+        except Exception:
+            pass
+
 
 class UEResult(BaseModel):
     """
@@ -376,17 +408,28 @@ class UEResult(BaseModel):
         
         if total_coef == 0:
             return None
-        
+
         self.average = round(total_weighted / total_coef, 2)
-        
-        # Déterminer la décision
+
+        # Étudiant absent à toutes les évaluations de l'UE : décision figée,
+        # non réévaluée par la compensation semestrielle.
+        if all(g.is_absent for g in grades):
+            self.decision = 'absent'
+            self.credits_obtained = 0
+            self.save()
+            return self.average
+
+        # Décision provisoire : la compensation éventuelle (voir
+        # SemesterResult.calculate_semester_average) n'est déterminable
+        # qu'une fois la moyenne du semestre connue.
         if self.average >= 10:
             self.decision = 'valide'
             self.credits_obtained = self.ue.credits
+            self.is_capitalized = True
         else:
             self.decision = 'ajourné'
             self.credits_obtained = 0
-        
+
         self.save()
         return self.average
     
@@ -451,46 +494,74 @@ class SemesterResult(BaseModel):
         return f"{self.student} — {self.semester} : {self.average}/20"
     
     def calculate_semester_average(self):
-        """Calcule la moyenne du semestre à partir des résultats des UE"""
-        ue_results = UEResult.objects.filter(
+        """
+        Calcule la moyenne du semestre à partir des résultats des UE et applique
+        les règles de progression LMD du règlement pédagogique en vigueur
+        (validation, compensation, dette, redoublement, exclusion, épuisement
+        de scolarité) — voir apps.academic.models.LMDRegulation.
+        """
+        ue_results = list(UEResult.objects.filter(
             student=self.student,
             ue__semester=self.semester,
             exam_session=self.exam_session
-        ).select_related('ue')
-        
-        if not ue_results.exists():
+        ).select_related('ue').exclude(average=None))
+
+        if not ue_results:
             return None
-        
-        # Calcul pondéré par les crédits
-        total_weighted = 0
-        total_credits = 0
-        validated = 0
-        failed = 0
-        
-        for ue_result in ue_results:
-            if ue_result.average is not None:
-                credits = ue_result.ue.credits
-                total_weighted += float(ue_result.average) * credits
-                total_credits += credits
-                
-                if ue_result.decision == 'valide':
-                    validated += 1
-                    self.credits_obtained += ue_result.credits_obtained
-                else:
-                    failed += 1
-        
+
+        # Moyenne semestrielle pondérée par les crédits de chaque UE
+        total_weighted = sum(float(r.average) * r.ue.credits for r in ue_results)
+        total_credits = sum(r.ue.credits for r in ue_results)
         if total_credits == 0:
             return None
-        
+
         self.average = round(total_weighted / total_credits, 2)
         self.total_credits = total_credits
+
+        regulation = self.semester.program.regulation
+        passing_grade = float(regulation.passing_grade) if regulation else 10.0
+        compensation_allowed = regulation.compensation_allowed if regulation else True
+        compensation_min = float(regulation.compensation_min_grade) if regulation else 8.0
+        semester_admitted = self.average >= passing_grade
+
+        # Appliquer la compensation UE par UE maintenant que la moyenne
+        # semestrielle globale est connue (une UE <10 ne peut être compensée
+        # que si le semestre est globalement admis et que sa moyenne ne
+        # descend pas sous le plancher de compensation du règlement).
+        validated, failed, credits_obtained = 0, 0, 0
+        for ue_result in ue_results:
+            if ue_result.decision == 'absent':
+                failed += 1
+                continue
+            avg = float(ue_result.average)
+            if avg >= passing_grade:
+                pass  # déjà 'valide' depuis calculate_ue_average
+            elif semester_admitted and compensation_allowed and avg >= compensation_min:
+                ue_result.decision = 'compense'
+                ue_result.credits_obtained = ue_result.ue.credits
+                ue_result.is_capitalized = True
+            elif semester_admitted:
+                ue_result.decision = 'dette'
+                ue_result.credits_obtained = 0
+            else:
+                ue_result.decision = 'ajourné'
+                ue_result.credits_obtained = 0
+            ue_result.save(update_fields=['decision', 'credits_obtained', 'is_capitalized'])
+
+            if ue_result.decision in ('valide', 'compense'):
+                validated += 1
+            else:
+                failed += 1
+            credits_obtained += ue_result.credits_obtained
+
         self.ues_validated = validated
         self.ues_failed = failed
-        
-        # Calculer le GPA (0-4)
+        self.credits_obtained = credits_obtained
+
+        # GPA (0-4)
         self.gpa = round((float(self.average) / 20) * 4, 2)
-        
-        # Déterminer la mention
+
+        # Mention
         if self.average >= 16:
             self.mention = "Très Bien"
         elif self.average >= 14:
@@ -501,17 +572,39 @@ class SemesterResult(BaseModel):
             self.mention = "Passable"
         else:
             self.mention = ""
-        
-        # Déterminer la décision
-        if self.average >= 10 and failed == 0:
-            self.decision = 'admis'
-        elif self.average >= 10 and failed <= 2:  # Compensation possible
-            self.decision = 'admis'
-        else:
-            self.decision = 'ajourné'
-        
+
+        self.decision = self._determine_progression_decision(semester_admitted, regulation)
         self.save()
         return self.average
+
+    def _determine_progression_decision(self, semester_admitted, regulation):
+        """
+        Détermine admis / ajourné / redoublant / exclu / épuisement de
+        scolarité selon l'historique de l'étudiant sur ce semestre précis
+        et la durée réglementaire maximale du cycle (LMDRegulation).
+        """
+        if semester_admitted:
+            return 'admis'
+
+        max_years = regulation.max_years_allowed if regulation else 5
+
+        # Tentatives déjà effectuées sur ce même semestre (hors calcul en cours)
+        previous_attempts = SemesterResult.objects.filter(
+            student=self.student, semester=self.semester
+        ).exclude(pk=self.pk).count()
+
+        # Nombre d'années académiques distinctes passées dans ce programme
+        years_spent = SemesterResult.objects.filter(
+            student=self.student, semester__program=self.semester.program
+        ).exclude(pk=self.pk).values('exam_session__academic_year').distinct().count() + 1
+
+        if years_spent > max_years:
+            return 'epuisement'
+        if previous_attempts >= 2:
+            return 'exclu'
+        if previous_attempts == 1:
+            return 'redoublant'
+        return 'ajourné'
     
     def calculate_rank(self):
         """Calcule le classement de l'étudiant dans le semestre"""
@@ -563,6 +656,44 @@ class SemesterResult(BaseModel):
             is_sent=True,
             sent_at=timezone.now()
         )
+
+        self._award_excellence_badge()
+
+    def _award_excellence_badge(self):
+        """
+        Attribution automatique d'un badge « Excellence académique » +
+        points de portefeuille pour les mentions Bien/Très Bien (8.30.2/3
+        — S2/S3). Best-effort : ne bloque jamais la publication des
+        résultats si l'app analytics_app n'est pas disponible.
+        """
+        if self.decision != 'admis' or self.mention not in ('Bien', 'Très Bien'):
+            return
+        try:
+            from apps.analytics_app.extensions_models import Badge, StudentBadge, Wallet, WalletTransaction
+            badge, _ = Badge.objects.get_or_create(
+                name='Excellence académique', type='excellence',
+                defaults={
+                    'description': "Décerné pour une mention Bien ou Très Bien à l'issue d'un semestre.",
+                    'criteria': 'Moyenne semestrielle avec mention Bien ou Très Bien.',
+                    'points': 50,
+                },
+            )
+            student_badge, created = StudentBadge.objects.get_or_create(
+                student=self.student, badge=badge,
+                defaults={'reason': f"{self.semester} — mention {self.mention}"},
+            )
+            if created:
+                wallet, _ = Wallet.objects.get_or_create(student=self.student)
+                transaction = WalletTransaction.objects.create(
+                    wallet=wallet, type='reward', amount=badge.points,
+                    description=f"Badge Excellence académique — {self.semester}",
+                    reference=str(student_badge.id),
+                )
+                wallet.balance += transaction.amount
+                wallet.total_earned += transaction.amount
+                wallet.save(update_fields=['balance', 'total_earned', 'updated_at'])
+        except Exception:
+            pass
 
 
 class Jury(BaseModel):

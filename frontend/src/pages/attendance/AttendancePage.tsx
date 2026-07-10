@@ -304,7 +304,16 @@ export default function AttendancePage() {
               ))}
             </div>
             {selected.is_open ? (
-              <Alert type="warning">Cette feuille est actuellement ouverte pour l'émargement.</Alert>
+              <>
+                <Alert type="warning">Cette feuille est actuellement ouverte pour l'émargement.</Alert>
+                {selected.qr_code && (
+                  <div className="text-center bg-gray-50 rounded-2xl p-5">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-3">Code à scanner ou saisir</p>
+                    <img src={selected.qr_code} alt="QR code de la séance" className="w-40 h-40 mx-auto rounded-xl border border-gray-200 bg-white p-2" />
+                    <p className="font-mono text-lg font-bold text-gray-800 tracking-widest mt-3">{selected.session_code}</p>
+                  </div>
+                )}
+              </>
             ) : (
               <Alert type="info">Cette feuille est fermée.</Alert>
             )}

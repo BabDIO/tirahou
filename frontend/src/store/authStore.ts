@@ -1,21 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { User as ApiUser } from '../types'
 
-interface User {
-  id: string
-  email: string
-  name: string
-  role: string
-  avatar?: string
+export type AuthUser = ApiUser & { role: string }
+
+function derivePrimaryRole(user: ApiUser): string {
+  return user.roles?.[0]?.name ?? ''
 }
 
 interface AuthStore {
-  user: User | null
+  user: AuthUser | null
   token: string | null
+  refreshToken: string | null
   isAuthenticated: boolean
-  login: (user: User, token: string) => void
+  setAuth: (user: ApiUser, access: string, refresh: string) => void
   logout: () => void
-  updateUser: (user: Partial<User>) => void
+  updateUser: (user: Partial<AuthUser>) => void
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -23,15 +23,29 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
-      login: (user, token) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+      setAuth: (user, access, refresh) => {
+        localStorage.setItem('access_token', access)
+        localStorage.setItem('refresh_token', refresh)
+        set({
+          user: { ...user, role: derivePrimaryRole(user) },
+          token: access,
+          refreshToken: refresh,
+          isAuthenticated: true,
+        })
+      },
+      logout: () => {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false })
+      },
       updateUser: (userData) => set((state) => ({
-        user: state.user ? { ...state.user, ...userData } : null
-      }))
+        user: state.user ? { ...state.user, ...userData } : null,
+      })),
     }),
     {
-      name: 'auth-storage'
+      name: 'auth-storage',
     }
   )
 )

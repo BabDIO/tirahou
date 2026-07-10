@@ -47,6 +47,7 @@ class Role(BaseModel):
 
 class Permission(BaseModel):
     MODULE_CHOICES = [
+        ('accounts', 'Comptes & Rôles'),
         ('academic', 'Académique'),
         ('programs', 'Programmes'),
         ('people', 'Personnes'),
@@ -123,6 +124,8 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     failed_login_attempts = models.PositiveSmallIntegerField(default=0)
     is_locked = models.BooleanField(default=False)
+    mfa_enabled = models.BooleanField(default=False, help_text="Double authentification (TOTP) activée")
+    mfa_secret = models.CharField(max_length=64, blank=True, help_text="Secret TOTP (base32), vide tant que non activé")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']

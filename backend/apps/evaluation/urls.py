@@ -9,6 +9,7 @@ router.register('semester-results', views.SemesterResultViewSet)
 router.register('juries', views.JuryViewSet)
 router.register('grade-contests', views.GradeContestViewSet)
 router.register('ue-results', views.UEResultViewSet, basename='ue-results')
+router.register('exam-room-assignments', views.ExamRoomAssignmentViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

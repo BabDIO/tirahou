@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Student, Teacher, AdminStaff, ParentGuardian
+from .models import Student, Teacher, AdminStaff, ParentGuardian, TeacherAvailability
 from apps.accounts.serializers import UserSerializer
 import uuid
 
@@ -66,9 +66,18 @@ class TeacherSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TeacherAvailabilitySerializer(serializers.ModelSerializer):
+    day_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
+
+    class Meta:
+        model = TeacherAvailability
+        fields = '__all__'
+
+
 class AdminStaffSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     service_display = serializers.CharField(source='get_service_display', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True, default=None)
 
     class Meta:
         model = AdminStaff
@@ -105,6 +114,28 @@ class TeacherCreateSerializer(serializers.ModelSerializer):
             validated_data['teacher_id'] = f"ENS-{uuid.uuid4().hex[:8].upper()}"
 
         return Teacher.objects.create(user=user, **validated_data)
+
+
+class AdminStaffCreateSerializer(serializers.ModelSerializer):
+    user = serializers.UUIDField(write_only=True)
+
+    class Meta:
+        model = AdminStaff
+        fields = ['user', 'staff_id', 'service', 'position', 'department']
+        extra_kwargs = {
+            'staff_id': {'required': False, 'allow_blank': True},
+        }
+
+    def create(self, validated_data):
+        from apps.accounts.models import User
+
+        user_id = validated_data.pop('user')
+        user = User.objects.get(id=user_id)
+
+        if not validated_data.get('staff_id'):
+            validated_data['staff_id'] = f"ADM-{uuid.uuid4().hex[:8].upper()}"
+
+        return AdminStaff.objects.create(user=user, **validated_data)
 
 
 class ParentGuardianSerializer(serializers.ModelSerializer):

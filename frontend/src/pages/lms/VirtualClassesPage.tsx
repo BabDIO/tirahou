@@ -231,7 +231,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
   const [form, setForm] = useState({
     course_space: '', title: '', description: '', mode: 'hybride',
     provider: 'bbb', scheduled_start: '', scheduled_end: '',
-    is_recorded: false, room_capacity: 100,
+    is_recorded: false, room_capacity: 100, scheduled_session: '',
   })
   const [loading, setLoading] = useState(false)
   const set = (k: string, v: string | boolean | number) => setForm(f => ({ ...f, [k]: v }))
@@ -239,6 +239,12 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
   const { data: spaces } = useQuery({
     queryKey: ['course-spaces-list'],
     queryFn: () => lmsApi.getCourseSpaces({ page_size: 200 }).then(r => r.data),
+  })
+
+  const { data: physicalSessions } = useQuery({
+    queryKey: ['scheduled-sessions-for-hybrid'],
+    queryFn: () => import('../../api').then(({ schedulingApi }) => schedulingApi.getSessions({ page_size: 100 }).then(r => r.data)),
+    enabled: form.mode === 'hybride',
   })
 
   const handleSubmit = async (ev: React.FormEvent) => {
@@ -249,7 +255,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     }
     setLoading(true)
     try {
-      await virtualClassApi.createSession(form)
+      await virtualClassApi.createSession({ ...form, scheduled_session: form.scheduled_session || undefined })
       toast.success('Session créée avec succès')
       onSuccess()
     } catch { toast.error('Erreur lors de la création') }
@@ -314,6 +320,18 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           <label htmlFor="is_recorded" className="text-sm text-gray-700 cursor-pointer">Enregistrement activé</label>
         </div>
       </div>
+      {form.mode === 'hybride' && (
+        <div>
+          <label className="label">Créneau physique correspondant</label>
+          <select className="input bg-white" value={form.scheduled_session} onChange={e => set('scheduled_session', e.target.value)}>
+            <option value="">— Aucun (classe 100% en ligne) —</option>
+            {physicalSessions?.results?.map((s: { id: string; ec_name?: string; start_datetime: string; room_name?: string }) => (
+              <option key={s.id} value={s.id}>{s.ec_name ?? 'Séance'} — {s.room_name ?? ''} — {new Date(s.start_datetime).toLocaleString('fr-FR')}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-400">Relier au créneau permet de fusionner présence en salle et en ligne sur une seule feuille de présence.</p>
+        </div>
+      )}
       <div>
         <label className="label">Description (optionnel)</label>
         <textarea className="input min-h-[60px] resize-none" value={form.description}

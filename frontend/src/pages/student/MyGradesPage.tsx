@@ -12,13 +12,15 @@
  */
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Award, TrendingUp, Target, BookOpen } from 'lucide-react'
-import { Card, StatsCard, Tabs, Badge, Spinner, Empty } from '../../components/ui'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Award, TrendingUp, Target, BookOpen, AlertTriangle } from 'lucide-react'
+import { Card, StatsCard, Tabs, Badge, Spinner, Empty, Modal, Button } from '../../components/ui'
 import PageHeader from '../../components/layout/PageHeader'
 import LineChart from '../../components/charts/LineChart'
 import BarChart from '../../components/charts/BarChart'
+import { evaluationApi } from '../../api'
 import api from '../../lib/axios'
+import toast from 'react-hot-toast'
 
 interface Grade {
   id: string
@@ -35,6 +37,8 @@ interface Grade {
 export default function MyGradesPage() {
   const [selectedSemester, setSelectedSemester] = useState('all')
   const [selectedSession, setSelectedSession] = useState('current')
+  const [contestGrade, setContestGrade] = useState<Grade | null>(null)
+  const qc = useQueryClient()
 
   // Récupérer les notes
   const { data: grades, isLoading } = useQuery({
@@ -51,6 +55,19 @@ export default function MyGradesPage() {
   const { data: stats } = useQuery({
     queryKey: ['my-grades-stats'],
     queryFn: () => api.get('/evaluation/student/statistics/').then(r => r.data)
+  })
+
+  const contestMut = useMutation({
+    mutationFn: (data: { grade_id: string; reason: string }) => evaluationApi.submitGradeContest(data),
+    onSuccess: () => {
+      toast.success('Réclamation envoyée à la scolarité')
+      setContestGrade(null)
+      qc.invalidateQueries({ queryKey: ['my-grades'] })
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { error?: string } } }
+      toast.error(e?.response?.data?.error ?? 'Erreur lors de l\'envoi de la réclamation')
+    },
   })
 
   // Calculer les statistiques locales
@@ -173,6 +190,9 @@ export default function MyGradesPage() {
                   <th className="text-center px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
                     Statut
                   </th>
+                  <th className="text-right px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -190,8 +210,8 @@ export default function MyGradesPage() {
                     </td>
                     <td className="text-center px-4 py-3">
                       <span className={`font-bold ${
-                        (grade.final_grade || 0) >= 10 
-                          ? 'text-emerald-600' 
+                        (grade.final_grade || 0) >= 10
+                          ? 'text-emerald-600'
                           : 'text-red-600'
                       }`}>
                         {grade.final_grade?.toFixed(2) || '—'}/20
@@ -203,6 +223,14 @@ export default function MyGradesPage() {
                         className={(grade.final_grade || 0) >= 10 ? 'badge-green' : 'badge-red'}
                       />
                     </td>
+                    <td className="text-right px-4 py-3">
+                      {(grade.status === 'validee' || grade.status === 'publiee') && (
+                        <button onClick={() => setContestGrade(grade)}
+                          className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 ml-auto">
+                          <AlertTriangle className="w-3 h-3" /> Contester
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -210,6 +238,48 @@ export default function MyGradesPage() {
           </div>
         )}
       </Card>
+
+      {/* Modal contestation */}
+      <Modal open={!!contestGrade} onClose={() => setContestGrade(null)}
+        title="Contester une note" subtitle={contestGrade?.ec_name} size="sm">
+        {contestGrade && (
+          <ContestForm
+            grade={contestGrade}
+            loading={contestMut.isPending}
+            onSubmit={(reason) => contestMut.mutate({ grade_id: contestGrade.id, reason })}
+            onCancel={() => setContestGrade(null)}
+          />
+        )}
+      </Modal>
+    </div>
+  )
+}
+
+function ContestForm({ grade, loading, onSubmit, onCancel }: {
+  grade: Grade; loading: boolean; onSubmit: (reason: string) => void; onCancel: () => void
+}) {
+  const [reason, setReason] = useState('')
+  return (
+    <div className="space-y-4">
+      <div className="bg-gray-50 rounded-xl p-3.5 flex items-center justify-between">
+        <span className="text-sm text-gray-600">Note finale</span>
+        <span className={`font-bold ${(grade.final_grade || 0) >= 10 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {grade.final_grade?.toFixed(2) ?? '—'}/20
+        </span>
+      </div>
+      <div>
+        <label className="label">Motif de la contestation *</label>
+        <textarea className="input min-h-[100px] resize-none" value={reason}
+          onChange={e => setReason(e.target.value)}
+          placeholder="Expliquez pourquoi vous contestez cette note (erreur de saisie, contre-vérification demandée...)" />
+      </div>
+      <div className="flex gap-3 pt-2 border-t border-gray-100">
+        <Button variant="secondary" className="flex-1" onClick={onCancel}>Annuler</Button>
+        <Button className="flex-1" variant="danger" loading={loading} disabled={!reason.trim()}
+          onClick={() => onSubmit(reason)}>
+          Envoyer la réclamation
+        </Button>
+      </div>
     </div>
   )
 }
