@@ -70,8 +70,17 @@ export default function MyGradesPage() {
     },
   })
 
+  // Normaliser les notes : l'API renvoie les DecimalField Django sous forme
+  // de chaînes (ex. "15.00"), pas de nombres — .toFixed() plante dessus.
+  const normalizedGrades: Grade[] = (grades ?? []).map((g: Grade) => ({
+    ...g,
+    cc_grade: g.cc_grade !== null && g.cc_grade !== undefined ? Number(g.cc_grade) : null,
+    exam_grade: g.exam_grade !== null && g.exam_grade !== undefined ? Number(g.exam_grade) : null,
+    final_grade: g.final_grade !== null && g.final_grade !== undefined ? Number(g.final_grade) : null,
+  }))
+
   // Calculer les statistiques locales
-  const validGrades = grades?.filter((g: Grade) => g.final_grade !== null && !g.is_absent) || []
+  const validGrades = normalizedGrades.filter((g: Grade) => g.final_grade !== null && !g.is_absent)
   const average = validGrades.length > 0
     ? (validGrades.reduce((sum: number, g: Grade) => sum + (g.final_grade || 0), 0) / validGrades.length).toFixed(2)
     : '—'
