@@ -418,6 +418,28 @@ export const analyticsApi = {
     api.post(`/analytics/student-certifications/${studentCertificationId}/certify/`, data),
 }
 
+// ── Marketplace de cours (Phase 4) ──────────────────────────────────────────────
+export const marketplaceApi = {
+  getCourses: (params?: object) => api.get('/marketplace/courses/', { params }),
+  getCourse: (id: string) => api.get(`/marketplace/courses/${id}/`),
+  createCourse: (data: object) => api.post('/marketplace/courses/', data),
+  updateCourse: (id: string, data: object) => api.patch(`/marketplace/courses/${id}/`, data),
+  deleteCourse: (id: string) => api.delete(`/marketplace/courses/${id}/`),
+  getMyCourses: () => api.get('/marketplace/courses/my_courses/'),
+  publishCourse: (id: string) => api.post(`/marketplace/courses/${id}/publish/`),
+  archiveCourse: (id: string) => api.post(`/marketplace/courses/${id}/archive/`),
+  getLessons: (params?: object) => api.get('/marketplace/lessons/', { params }),
+  createLesson: (data: object) => api.post('/marketplace/lessons/', data),
+  updateLesson: (id: string, data: object) => api.patch(`/marketplace/lessons/${id}/`, data),
+  deleteLesson: (id: string) => api.delete(`/marketplace/lessons/${id}/`),
+  completeLesson: (id: string) => api.post(`/marketplace/lessons/${id}/complete/`),
+  purchaseCourse: (courseId: string) => api.post('/marketplace/purchases/purchase/', { course: courseId }),
+  getMyPurchases: () => api.get('/marketplace/purchases/my_purchases/'),
+  getReviews: (params?: object) => api.get('/marketplace/reviews/', { params }),
+  createReview: (data: { course: string; rating: number; comment: string }) =>
+    api.post('/marketplace/reviews/', data),
+}
+
 // ── Bibliothèque ──────────────────────────────────────────────────────────────
 export const libraryApi = {
   getDocuments: (params?: object) => api.get('/library/', { params }),

@@ -45,6 +45,9 @@ import MyVirtualClassesPage from './pages/student/MyVirtualClassesPage'
 import MyInternshipPage from './pages/student/MyInternshipPage'
 import MyWalletPage from './pages/student/MyWalletPage'
 import MyCertificationsPage from './pages/student/MyCertificationsPage'
+import MarketplacePage from './pages/marketplace/MarketplacePage'
+import MarketplaceCourseDetailPage from './pages/marketplace/MarketplaceCourseDetailPage'
+import MyMarketplaceCoursesPage from './pages/marketplace/MyMarketplaceCoursesPage'
 import MyCoursesPage from './pages/student/MyCoursesPage'
 import CourseDetailPage from './pages/student/CourseDetailPage'
 // Pages enseignant
@@ -120,6 +123,12 @@ export default function App() {
               {/* Bibliothèque — tous */}
               <Route element={<ProtectedRoute allowedRoles={[...ALL]} />}>
                 <Route path="/library" element={<LibraryPage />} />
+              </Route>
+
+              {/* Marketplace de cours — tous */}
+              <Route element={<ProtectedRoute allowedRoles={[...ALL]} />}>
+                <Route path="/marketplace" element={<MarketplacePage />} />
+                <Route path="/marketplace/:id" element={<MarketplaceCourseDetailPage />} />
               </Route>
 
               {/* ── ADMIN / SCOLARITÉ ── */}
@@ -202,6 +211,7 @@ export default function App() {
                 <Route path="/my-assignments" element={<MyAssignmentsPage />} />
                 <Route path="/my-students" element={<MyStudentsPage />} />
                 <Route path="/my-internships-teacher" element={<MyInternshipsTeacherPage />} />
+                <Route path="/marketplace/my-courses" element={<MyMarketplaceCoursesPage />} />
               </Route>
 
               {/* ── ÉTUDIANT ── */}

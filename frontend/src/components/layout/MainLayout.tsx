@@ -10,7 +10,7 @@ import {
   ChevronDown, LogOut, Settings, Menu, BookMarked,
   UserCheck, Building2, Award, MessageSquare, ChevronRight,
   Search, HelpCircle, Zap, Library, Briefcase, Home, Shield, Gift, UserPlus,
-  Wallet as WalletIcon,
+  Wallet as WalletIcon, Store as StoreIcon,
 } from 'lucide-react'
 import { Avatar, ThemeToggle } from '../ui'
 import GlobalSearch from '../search/GlobalSearch'
@@ -55,6 +55,7 @@ const ADMIN_NAV = [
       { to: '/scheduling', icon: Calendar, label: 'Emploi du temps', color: 'text-fuchsia-400' },
       { to: '/internships', icon: Briefcase, label: 'Stages & Mémoires', color: 'text-orange-400' },
       { to: '/library', icon: Library, label: 'Bibliothèque', color: 'text-amber-400' },
+      { to: '/marketplace', icon: StoreIcon, label: 'Marketplace', color: 'text-orange-400' },
     ],
   },
   {
@@ -162,6 +163,8 @@ const ENSEIGNANT_NAV = [
     group: 'Ressources',
     items: [
       { to: '/library', icon: Library, label: 'Bibliothèque', color: 'text-amber-400' },
+      { to: '/marketplace', icon: StoreIcon, label: 'Marketplace', color: 'text-orange-400' },
+      { to: '/marketplace/my-courses', icon: BookMarked, label: 'Mes cours marketplace', color: 'text-orange-400' },
       { to: '/communication', icon: MessageSquare, label: 'Communication', color: 'text-rose-400' },
     ],
   },
@@ -195,6 +198,7 @@ const ETUDIANT_NAV = [
       { to: '/my-schedule', icon: Calendar, label: 'Mon Emploi du temps', color: 'text-fuchsia-400' },
       { to: '/my-internship', icon: Briefcase, label: 'Mon Stage / Mémoire', color: 'text-orange-400' },
       { to: '/library', icon: Library, label: 'Bibliothèque', color: 'text-amber-400' },
+      { to: '/marketplace', icon: StoreIcon, label: 'Marketplace', color: 'text-orange-400' },
     ],
   },
   {
@@ -255,6 +259,7 @@ const BIBLIOTHECAIRE_NAV = [
     items: [
       { to: '/bibliothecaire', icon: Library, label: 'Gestion fonds documentaire', color: 'text-amber-400' },
       { to: '/library', icon: BookOpen, label: 'Catalogue public', color: 'text-cyan-400' },
+      { to: '/marketplace', icon: StoreIcon, label: 'Marketplace', color: 'text-orange-400' },
       { to: '/documents', icon: FileText, label: 'Documents étudiants', color: 'text-indigo-400' },
     ],
   },
@@ -290,6 +295,8 @@ const breadcrumbMap: Record<string, string> = {
   '/my-wallet': 'Mon Portefeuille',
   '/my-certifications': 'Micro-certifications',
   '/admin/gamification': 'Badges & Récompenses',
+  '/marketplace': 'Marketplace de cours',
+  '/marketplace/my-courses': 'Mes cours marketplace',
   '/finance/journal': 'Journal de Caisse',
   '/finance/scholarships': 'Bourses & Exonérations',
   '/responsable/programs': 'Pilotage Pédagogique',

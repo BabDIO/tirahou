@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.analytics_app',
     'apps.api',
     'apps.library',
+    'apps.marketplace',
 ]
 
 MIDDLEWARE = [

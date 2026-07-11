@@ -67,6 +67,9 @@ urlpatterns = [
     # Bibliothèque numérique
     path(API_V1, include('apps.library.urls')),
 
+    # Marketplace de cours
+    path(API_V1 + 'marketplace/', include('apps.marketplace.urls')),
+
     # API Utilitaires (health, info, stats)
     path(API_V1, include('apps.api.urls')),
 
