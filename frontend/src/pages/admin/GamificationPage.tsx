@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Award, Wallet, Plus, Trophy, Sparkles, Coins, Gift } from 'lucide-react'
-import { analyticsApi } from '../../api'
+import { Award, Wallet, Plus, Trophy, Sparkles, Coins, Gift, GraduationCap, CheckCircle } from 'lucide-react'
+import { analyticsApi, programsApi } from '../../api'
 import { Card, Button, Input, Textarea, Select, Badge, Spinner, Tabs, Modal } from '../../components/ui'
 import api from '../../lib/axios'
 import useDebounce from '../../hooks/useDebounce'
@@ -45,6 +45,33 @@ interface StudentOption {
   student_id: string
   full_name?: string
   user?: { first_name: string; last_name: string }
+}
+
+interface CertificationItem {
+  id: string
+  title: string
+  code: string
+  duration_hours: number
+  credits: number
+  status: string
+  status_display: string
+  is_free: boolean
+  enrolled_count: number
+}
+
+interface StudentCertificationItem {
+  id: string
+  student_name: string
+  status: string
+  status_display: string
+  score: string | null
+  enrolled_at: string
+  certification_detail: CertificationItem
+}
+
+const CERT_STATUS_BADGE: Record<string, string> = {
+  enrolled: 'badge-blue', in_progress: 'badge-amber', completed: 'badge-green',
+  certified: 'badge-purple', failed: 'badge-red',
 }
 
 function StudentPicker({ value, onSelect }: { value: string; onSelect: (id: string, label: string) => void }) {
@@ -94,9 +121,13 @@ function StudentPicker({ value, onSelect }: { value: string; onSelect: (id: stri
 }
 
 export default function GamificationPage() {
-  const [tab, setTab] = useState<'badges' | 'award' | 'wallets'>('badges')
+  const [tab, setTab] = useState<'badges' | 'award' | 'wallets' | 'certifications'>('badges')
   const [createBadgeOpen, setCreateBadgeOpen] = useState(false)
   const [badgeForm, setBadgeForm] = useState({ name: '', description: '', type: 'completion', points: 10, criteria: '', is_published: true })
+  const [createCertOpen, setCreateCertOpen] = useState(false)
+  const [certForm, setCertForm] = useState({ title: '', code: '', description: '', program: '', duration_hours: 20, credits: 3, badge: '', price: 0, is_free: true, status: 'published' })
+  const [certifyingId, setCertifyingId] = useState<string | null>(null)
+  const [certifyScore, setCertifyScore] = useState('')
   const [awardStudentId, setAwardStudentId] = useState('')
   const [awardStudentLabel, setAwardStudentLabel] = useState('')
   const [awardBadgeId, setAwardBadgeId] = useState('')
@@ -117,6 +148,24 @@ export default function GamificationPage() {
     queryKey: ['wallets'],
     queryFn: () => analyticsApi.getWallets({ ordering: '-balance' }).then(r => (r.data.results ?? r.data) as WalletItem[]),
     enabled: tab === 'wallets',
+  })
+
+  const { data: certifications, isLoading: loadingCerts } = useQuery({
+    queryKey: ['micro-certifications'],
+    queryFn: () => analyticsApi.getMicroCertifications().then(r => (r.data.results ?? r.data) as CertificationItem[]),
+    enabled: tab === 'certifications',
+  })
+
+  const { data: enrollments, isLoading: loadingEnrollments } = useQuery({
+    queryKey: ['student-certifications'],
+    queryFn: () => analyticsApi.getMyCertifications().then(r => (r.data.results ?? r.data) as StudentCertificationItem[]),
+    enabled: tab === 'certifications',
+  })
+
+  const { data: programs } = useQuery({
+    queryKey: ['programs-list'],
+    queryFn: () => programsApi.getPrograms({ page_size: 200 }).then(r => r.data.results ?? []),
+    enabled: createCertOpen,
   })
 
   const createBadgeMutation = useMutation({
@@ -151,6 +200,27 @@ export default function GamificationPage() {
     onError: () => toast.error('Erreur lors de la mise à jour du portefeuille'),
   })
 
+  const createCertMutation = useMutation({
+    mutationFn: () => analyticsApi.createMicroCertification({ ...certForm, program: certForm.program || null, badge: certForm.badge || null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['micro-certifications'] })
+      toast.success('Micro-certification créée avec succès')
+      setCreateCertOpen(false)
+      setCertForm({ title: '', code: '', description: '', program: '', duration_hours: 20, credits: 3, badge: '', price: 0, is_free: true, status: 'published' })
+    },
+    onError: () => toast.error('Erreur lors de la création (code déjà utilisé ?)'),
+  })
+
+  const certifyMutation = useMutation({
+    mutationFn: (id: string) => analyticsApi.certifyStudent(id, { status: 'certified', score: certifyScore ? Number(certifyScore) : undefined }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-certifications'] })
+      toast.success('Étudiant certifié — badge attribué automatiquement s\'il est lié')
+      setCertifyingId(null); setCertifyScore('')
+    },
+    onError: () => toast.error('Erreur lors de la certification'),
+  })
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,7 +228,13 @@ export default function GamificationPage() {
           <h1 className="page-title">Badges & Récompenses</h1>
           <p className="text-gray-500 text-sm mt-1">Gamification pédagogique — badges numériques et portefeuille de points</p>
         </div>
-        <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateBadgeOpen(true)}>Créer un badge</Button>
+        <div className="flex gap-2">
+          {tab === 'certifications' ? (
+            <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateCertOpen(true)}>Créer une certification</Button>
+          ) : (
+            <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateBadgeOpen(true)}>Créer un badge</Button>
+          )}
+        </div>
       </div>
 
       <Tabs
@@ -166,6 +242,7 @@ export default function GamificationPage() {
           { key: 'badges', label: 'Catalogue de badges', icon: <Award className="w-4 h-4" /> },
           { key: 'award', label: 'Attribution', icon: <Gift className="w-4 h-4" /> },
           { key: 'wallets', label: 'Portefeuilles', icon: <Wallet className="w-4 h-4" /> },
+          { key: 'certifications', label: 'Micro-certifications', icon: <GraduationCap className="w-4 h-4" /> },
         ]}
         active={tab}
         onChange={(k) => setTab(k as typeof tab)}
@@ -270,6 +347,113 @@ export default function GamificationPage() {
           </Card>
         )
       )}
+
+      {/* Micro-certifications */}
+      {tab === 'certifications' && (
+        loadingCerts || loadingEnrollments ? <Spinner text="Chargement des certifications..." /> : (
+          <div className="space-y-5">
+            <Card title="Catalogue" subtitle={`${certifications?.length ?? 0} certification(s)`}>
+              {(!certifications || certifications.length === 0) ? (
+                <p className="text-sm text-gray-400 text-center py-6">Aucune micro-certification créée pour le moment.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {certifications.map((c) => (
+                    <Card key={c.id} noPadding className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{c.title}</p>
+                        <Badge label={c.status_display} className={c.status === 'published' ? 'badge-green' : 'badge-gray'} dot />
+                      </div>
+                      <p className="text-xs text-gray-500 font-mono">{c.code}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                        <span>{c.duration_hours}h</span>
+                        <span>{c.credits} crédit(s)</span>
+                        <span>{c.enrolled_count} inscrit(s)</span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <Card title="Inscriptions & certification" subtitle={`${enrollments?.length ?? 0} inscription(s)`}>
+              {(!enrollments || enrollments.length === 0) ? (
+                <p className="text-sm text-gray-400 text-center py-6">Aucun étudiant inscrit pour le moment.</p>
+              ) : (
+                <div className="space-y-2">
+                  {enrollments.map((e) => (
+                    <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{e.student_name}</p>
+                        <p className="text-xs text-gray-500">{e.certification_detail.title}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <Badge label={e.status_display} className={CERT_STATUS_BADGE[e.status] ?? 'badge-gray'} dot />
+                        {e.status !== 'certified' && (
+                          certifyingId === e.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number" min="0" max="20" placeholder="Note/20"
+                                className="w-24" value={certifyScore}
+                                onChange={(ev) => setCertifyScore(ev.target.value)}
+                              />
+                              <Button size="sm" icon={<CheckCircle className="w-3.5 h-3.5" />}
+                                disabled={certifyMutation.isPending}
+                                onClick={() => certifyMutation.mutate(e.id)}>
+                                Certifier
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button size="sm" variant="secondary" onClick={() => setCertifyingId(e.id)}>Certifier</Button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )
+      )}
+
+      {/* Create certification modal */}
+      <Modal open={createCertOpen} onClose={() => setCreateCertOpen(false)} title="Créer une micro-certification">
+        <div className="space-y-4">
+          <Input label="Titre" value={certForm.title} onChange={(e) => setCertForm({ ...certForm, title: e.target.value })} />
+          <Input label="Code" value={certForm.code} onChange={(e) => setCertForm({ ...certForm, code: e.target.value.toUpperCase() })} placeholder="Ex: MC-DATA-01" />
+          <Textarea label="Description" value={certForm.description} onChange={(e) => setCertForm({ ...certForm, description: e.target.value })} rows={2} />
+          <Select label="Programme (optionnel)" value={certForm.program} onChange={(e) => setCertForm({ ...certForm, program: e.target.value })}>
+            <option value="">Aucun programme spécifique</option>
+            {programs?.map((p: { id: string; name: string }) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Durée (heures)" type="number" min="1" value={certForm.duration_hours} onChange={(e) => setCertForm({ ...certForm, duration_hours: Number(e.target.value) })} />
+            <Input label="Crédits ECTS" type="number" min="0" value={certForm.credits} onChange={(e) => setCertForm({ ...certForm, credits: Number(e.target.value) })} />
+          </div>
+          <Select label="Badge attribué à la certification (optionnel)" value={certForm.badge} onChange={(e) => setCertForm({ ...certForm, badge: e.target.value })}>
+            <option value="">Aucun badge</option>
+            {badges?.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </Select>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={certForm.is_free} onChange={(e) => setCertForm({ ...certForm, is_free: e.target.checked })} />
+            Gratuit
+          </label>
+          {!certForm.is_free && (
+            <Input label="Prix (FCFA)" type="number" min="0" value={certForm.price} onChange={(e) => setCertForm({ ...certForm, price: Number(e.target.value) })} />
+          )}
+          <Select label="Statut" value={certForm.status} onChange={(e) => setCertForm({ ...certForm, status: e.target.value })}
+            options={[{ value: 'draft', label: 'Brouillon' }, { value: 'published', label: 'Publié' }]} />
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="secondary" onClick={() => setCreateCertOpen(false)}>Annuler</Button>
+            <Button
+              disabled={!certForm.title || !certForm.code || createCertMutation.isPending}
+              onClick={() => createCertMutation.mutate()}
+            >
+              {createCertMutation.isPending ? 'Création...' : 'Créer la certification'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Create badge modal */}
       <Modal open={createBadgeOpen} onClose={() => setCreateBadgeOpen(false)} title="Créer un badge">

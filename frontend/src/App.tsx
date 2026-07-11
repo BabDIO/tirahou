@@ -44,6 +44,7 @@ import MyAttendancePage from './pages/student/MyAttendancePage'
 import MyVirtualClassesPage from './pages/student/MyVirtualClassesPage'
 import MyInternshipPage from './pages/student/MyInternshipPage'
 import MyWalletPage from './pages/student/MyWalletPage'
+import MyCertificationsPage from './pages/student/MyCertificationsPage'
 import MyCoursesPage from './pages/student/MyCoursesPage'
 import CourseDetailPage from './pages/student/CourseDetailPage'
 // Pages enseignant
@@ -216,6 +217,7 @@ export default function App() {
                 <Route path="/my-virtual-classes" element={<MyVirtualClassesPage />} />
                 <Route path="/my-internship" element={<MyInternshipPage />} />
                 <Route path="/my-wallet" element={<MyWalletPage />} />
+                <Route path="/my-certifications" element={<MyCertificationsPage />} />
               </Route>
 
             </Route>

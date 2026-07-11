@@ -14,6 +14,8 @@ router.register('badges', views.BadgeViewSet)
 router.register('student-badges', views.StudentBadgeViewSet)
 router.register('wallets', views.WalletViewSet)
 router.register('wallet-transactions', views.WalletTransactionViewSet)
+router.register('micro-certifications', views.MicroCertificationViewSet)
+router.register('student-certifications', views.StudentCertificationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

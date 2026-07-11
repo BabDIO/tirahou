@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import LearningActivity, EngagementScore, DashboardStat
-from .extensions_models import Badge, StudentBadge, Wallet, WalletTransaction
+from .extensions_models import (
+    Badge, StudentBadge, Wallet, WalletTransaction,
+    MicroCertification, StudentCertification,
+)
 
 
 class LearningActivitySerializer(serializers.ModelSerializer):
@@ -59,6 +62,32 @@ class WalletSerializer(serializers.ModelSerializer):
 
     def get_student_name(self, obj):
         return obj.student.user.get_full_name()
+
+
+class MicroCertificationSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    program_name = serializers.CharField(source='program.name', read_only=True)
+    badge_name = serializers.CharField(source='badge.name', read_only=True)
+    enrolled_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MicroCertification
+        fields = '__all__'
+        read_only_fields = ['created_by']
+
+    def get_enrolled_count(self, obj):
+        return obj.studentcertification_set.count()
+
+
+class StudentCertificationSerializer(serializers.ModelSerializer):
+    student_name = serializers.SerializerMethodField()
+    certification_detail = MicroCertificationSerializer(source='certification', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = StudentCertification
+        fields = '__all__'
+        read_only_fields = ['verification_code', 'enrolled_at']
 
     def get_student_name(self, obj):
         return obj.student.user.get_full_name()

@@ -4,10 +4,14 @@ from rest_framework.response import Response
 from django.db.models import Count, Sum, Avg
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import LearningActivity, EngagementScore, DashboardStat
-from .extensions_models import Badge, StudentBadge, Wallet, WalletTransaction
+from .extensions_models import (
+    Badge, StudentBadge, Wallet, WalletTransaction,
+    MicroCertification, StudentCertification,
+)
 from .serializers import (
     LearningActivitySerializer, EngagementScoreSerializer, DashboardStatSerializer,
     BadgeSerializer, StudentBadgeSerializer, WalletSerializer, WalletTransactionSerializer,
+    MicroCertificationSerializer, StudentCertificationSerializer,
 )
 
 
@@ -136,6 +140,83 @@ class WalletTransactionViewSet(viewsets.ModelViewSet):
             wallet.balance -= transaction.amount
             wallet.total_spent += transaction.amount
         wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
+
+
+class MicroCertificationViewSet(viewsets.ModelViewSet):
+    """Catalogue des micro-certifications (8.30.2)."""
+    queryset = MicroCertification.objects.filter(is_active=True).select_related('program', 'badge').order_by('-created_at')
+    serializer_class = MicroCertificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['status', 'program', 'is_free']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return MicroCertification.objects.none()
+        qs = super().get_queryset()
+        user = self.request.user
+        # Les étudiants ne voient que les certifications publiées
+        if hasattr(user, 'student_profile'):
+            return qs.filter(status='published')
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+class StudentCertificationViewSet(viewsets.ModelViewSet):
+    """Inscriptions et progression des étudiants sur les micro-certifications."""
+    queryset = StudentCertification.objects.all().select_related('student__user', 'certification')
+    serializer_class = StudentCertificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['student', 'certification', 'status']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return StudentCertification.objects.none()
+        user = self.request.user
+        qs = StudentCertification.objects.select_related('student__user', 'certification')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        return qs
+
+    @action(detail=False, methods=['post'])
+    def enroll(self, request):
+        """Un étudiant s'inscrit à une micro-certification publiée."""
+        if not hasattr(request.user, 'student_profile'):
+            return Response({'detail': 'Réservé aux étudiants.'}, status=403)
+        certification_id = request.data.get('certification')
+        try:
+            certification = MicroCertification.objects.get(id=certification_id, status='published')
+        except MicroCertification.DoesNotExist:
+            return Response({'detail': 'Micro-certification introuvable ou non publiée.'}, status=404)
+        student = request.user.student_profile
+        if StudentCertification.objects.filter(student=student, certification=certification).exists():
+            return Response({'detail': 'Vous êtes déjà inscrit à cette certification.'}, status=400)
+        sc = StudentCertification.objects.create(student=student, certification=certification)
+        return Response(StudentCertificationSerializer(sc).data, status=201)
+
+    @action(detail=True, methods=['post'])
+    def certify(self, request, pk=None):
+        """Marque la certification comme complétée/certifiée pour un étudiant (usage administratif)."""
+        from django.utils import timezone
+        sc = self.get_object()
+        score = request.data.get('score')
+        status_value = request.data.get('status', 'certified')
+        if status_value not in dict(StudentCertification.STATUS_CHOICES):
+            return Response({'detail': 'Statut invalide.'}, status=400)
+        sc.status = status_value
+        if score is not None:
+            sc.score = score
+        if status_value in ('completed', 'certified'):
+            sc.completed_at = timezone.now()
+        sc.save()
+        # Récompense automatique : attribuer le badge lié si certifié
+        if status_value == 'certified' and sc.certification.badge_id:
+            StudentBadge.objects.get_or_create(
+                student=sc.student, badge=sc.certification.badge,
+                defaults={'awarded_by': request.user, 'reason': f'Micro-certification: {sc.certification.title}'},
+            )
+        return Response(StudentCertificationSerializer(sc).data)
 
 
 @extend_schema(responses={200: OpenApiResponse(description='Statistiques globales du dashboard')})

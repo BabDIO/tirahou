@@ -184,6 +184,7 @@ const ETUDIANT_NAV = [
       { to: '/my-finance', icon: CreditCard, label: 'Mes Paiements', color: 'text-green-400' },
       { to: '/my-attendance-student', icon: UserCheck, label: 'Mon Assiduité', color: 'text-lime-400' },
       { to: '/my-wallet', icon: WalletIcon, label: 'Mon Portefeuille', color: 'text-fuchsia-400' },
+      { to: '/my-certifications', icon: GraduationCap, label: 'Micro-certifications', color: 'text-indigo-400' },
     ],
   },
   {
@@ -287,6 +288,7 @@ const breadcrumbMap: Record<string, string> = {
   '/scolarite/generated-docs': 'Documents Académiques',
   '/scolarite/parents': 'Parents & Tuteurs',
   '/my-wallet': 'Mon Portefeuille',
+  '/my-certifications': 'Micro-certifications',
   '/admin/gamification': 'Badges & Récompenses',
   '/finance/journal': 'Journal de Caisse',
   '/finance/scholarships': 'Bourses & Exonérations',

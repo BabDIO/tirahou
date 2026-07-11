@@ -17,28 +17,13 @@ export function PlaceholderPage({ title, description }: PlaceholderProps) {
 }
 
 // ── Pages Phase 4 (extensions stratégiques) ───────────────────────────────────
-// Ces pages seront implémentées dans les phases ultérieures du projet
+// Micro-certifications et Wallet sont implémentées (voir pages/student/MyWalletPage.tsx,
+// pages/student/MyCertificationsPage.tsx, pages/admin/GamificationPage.tsx).
 
 /** Marketplace de cours — Phase 4 */
 export const MarketplacePage = () => (
   <PlaceholderPage
     title="Marketplace de cours"
     description="La marketplace permettra la publication et la vente de cours par les enseignants. Disponible en Phase 4."
-  />
-)
-
-/** Micro-certifications & badges — Phase 4 */
-export const MicroCertPage = () => (
-  <PlaceholderPage
-    title="Micro-certifications & Badges"
-    description="Parcours modulaires et badges numériques pour valoriser les compétences. Disponible en Phase 4."
-  />
-)
-
-/** Wallet interne / crédits académiques — Phase 4 */
-export const WalletPage = () => (
-  <PlaceholderPage
-    title="Portefeuille numérique"
-    description="Gestion des crédits académiques et récompenses. Disponible en Phase 4."
   />
 )

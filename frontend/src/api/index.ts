@@ -408,6 +408,14 @@ export const analyticsApi = {
   getWallets: (params?: object) => api.get('/analytics/wallets/', { params }),
   creditWallet: (data: { student: string; type: string; amount: number; description: string }) =>
     api.post('/analytics/wallets/credit/', data),
+  // Micro-certifications (8.30.2)
+  getMicroCertifications: (params?: object) => api.get('/analytics/micro-certifications/', { params }),
+  createMicroCertification: (data: object) => api.post('/analytics/micro-certifications/', data),
+  getMyCertifications: (params?: object) => api.get('/analytics/student-certifications/', { params }),
+  enrollCertification: (certificationId: string) =>
+    api.post('/analytics/student-certifications/enroll/', { certification: certificationId }),
+  certifyStudent: (studentCertificationId: string, data: { status: string; score?: number }) =>
+    api.post(`/analytics/student-certifications/${studentCertificationId}/certify/`, data),
 }
 
 // ── Bibliothèque ──────────────────────────────────────────────────────────────
