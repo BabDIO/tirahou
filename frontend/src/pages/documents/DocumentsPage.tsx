@@ -77,7 +77,7 @@ export default function DocumentsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">GED & Documents</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Gestion électronique des documents académiques</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gestion électronique des documents académiques</p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setGenerateOpen(true)}>
@@ -149,23 +149,23 @@ export default function DocumentsPage() {
                   <tbody>
                     {studentDocs.results.map((doc: StudentDocument) => (
                       <tr key={doc.id}>
-                        <td className="font-semibold text-gray-900 text-sm">{doc.student}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{doc.student}</td>
                         <td>
-                          <p className="font-medium text-gray-900 text-sm">{doc.title}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="font-medium text-gray-900 dark:text-gray-50 text-sm">{doc.title}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
                             {doc.file_size > 0 ? `${(doc.file_size / 1024).toFixed(1)} Ko` : ''}
                           </p>
                         </td>
-                        <td className="text-sm text-gray-600">{doc.category}</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400">{doc.category}</td>
                         <td>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-mono">
+                          <span className="text-xs bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-mono">
                             v{doc.version}
                           </span>
                         </td>
                         <td>
                           <Badge label={doc.status} className={statusDoc[doc.status] ?? 'badge-gray'} dot />
                         </td>
-                        <td className="text-xs text-gray-400">{formatDate(doc.created_at)}</td>
+                        <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(doc.created_at)}</td>
                         <td className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
@@ -231,11 +231,11 @@ export default function DocumentsPage() {
                         <td>
                           <span className="text-lg">{docTypeIcons[doc.doc_type] ?? '📄'}</span>
                         </td>
-                        <td className="font-semibold text-gray-900 text-sm">{doc.student}</td>
-                        <td className="text-sm text-gray-700">{doc.title}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{doc.student}</td>
+                        <td className="text-sm text-gray-700 dark:text-gray-300">{doc.title}</td>
                         <td>
                           <div className="flex items-center gap-1.5">
-                            <QrCode className="w-3 h-3 text-gray-400" />
+                            <QrCode className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                             <span className="font-mono text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded">
                               {doc.verification_code}
                             </span>
@@ -244,8 +244,8 @@ export default function DocumentsPage() {
                         <td>
                           <Badge label={doc.doc_type_display} className={statusDoc[doc.status] ?? 'badge-gray'} dot />
                         </td>
-                        <td className="text-xs text-gray-400">{formatDate(doc.created_at)}</td>
-                        <td className="text-xs text-gray-400">
+                        <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(doc.created_at)}</td>
+                        <td className="text-xs text-gray-400 dark:text-gray-500">
                           {doc.valid_until ? formatDate(doc.valid_until) : '—'}
                         </td>
                         <td className="text-right">
@@ -282,9 +282,9 @@ export default function DocumentsPage() {
                 ['Taille', `${(selected.file_size / 1024).toFixed(1)} Ko`],
                 ['Type MIME', selected.mime_type],
               ].map(([label, value]) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                  <p className="font-semibold text-gray-800 text-sm">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{value}</p>
                 </div>
               ))}
             </div>
@@ -405,7 +405,7 @@ function GenerateDocForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
       </div>
       <div>
         <label className="label">Type de document *</label>
-        <select className="input bg-white" value={form.doc_type} onChange={e => set('doc_type', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.doc_type} onChange={e => set('doc_type', e.target.value)}>
           {GENERATABLE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
@@ -437,7 +437,7 @@ function GenerateDocForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
         </div>
       )}
 
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<Shield className="w-4 h-4" />}>
           Générer le document

@@ -65,7 +65,7 @@ export default function AttendancePage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Présences & Assiduité</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Feuilles de présence, émargement et suivi des absences</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Feuilles de présence, émargement et suivi des absences</p>
         </div>
         <Button size="sm" icon={<Plus className="w-4 h-4" />}>Nouvelle feuille</Button>
       </div>
@@ -115,17 +115,17 @@ export default function AttendancePage() {
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                           sheet.is_open ? 'bg-emerald-100' : 'bg-gray-100'
                         }`}>
-                          <QrCode className={`w-5 h-5 ${sheet.is_open ? 'text-emerald-600' : 'text-gray-400'}`} />
+                          <QrCode className={`w-5 h-5 ${sheet.is_open ? 'text-emerald-600' : 'text-gray-400 dark:text-gray-500'}`} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-gray-900 text-sm">{sheet.session}</p>
-                            <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                            <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">{sheet.session}</p>
+                            <span className="font-mono text-xs bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-md">
                               {sheet.session_code}
                             </span>
                             {sheet.is_open && <Badge label="Ouverte" className="badge-green" dot />}
                           </div>
-                          <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
+                          <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                             {sheet.opened_at && <span>Ouverte: {formatDate(sheet.opened_at)}</span>}
                             {sheet.closed_at && <span>Fermée: {formatDate(sheet.closed_at)}</span>}
                             {sheet.present_count !== undefined && (
@@ -187,7 +187,7 @@ export default function AttendancePage() {
                   <tbody>
                     {records.results.map((record: { id: string; student: string; status: string; method: string; marked_at: string | null; is_justified: boolean; justification: string }) => (
                       <tr key={record.id}>
-                        <td className="font-semibold text-gray-900 text-sm">{record.student}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{record.student}</td>
                         <td>
                           <Badge label={record.status}
                             className={
@@ -197,11 +197,11 @@ export default function AttendancePage() {
                             } dot />
                         </td>
                         <td>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">
                             {record.method}
                           </span>
                         </td>
-                        <td className="text-xs text-gray-400">
+                        <td className="text-xs text-gray-400 dark:text-gray-500">
                           {record.marked_at ? formatDate(record.marked_at) : '—'}
                         </td>
                         <td>
@@ -237,16 +237,16 @@ export default function AttendancePage() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-gray-900 text-sm">{summary.student_name}</p>
+                            <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{summary.student_name}</p>
                             {alertLevel !== 'none' && (
                               <Badge label={alertLevel} className={alertLevelColor[alertLevel] ?? 'badge-gray'} />
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mb-3">{summary.course_space_title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{summary.course_space_title}</p>
                           <div className="grid grid-cols-4 gap-3 text-center">
-                            <div className="bg-gray-50 rounded-lg p-2">
-                              <p className="text-[10px] text-gray-400">Séances</p>
-                              <p className="text-sm font-bold text-gray-800">{summary.total_sessions}</p>
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                              <p className="text-[10px] text-gray-400 dark:text-gray-500">Séances</p>
+                              <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{summary.total_sessions}</p>
                             </div>
                             <div className="bg-emerald-50 rounded-lg p-2">
                               <p className="text-[10px] text-emerald-600">Présent</p>
@@ -293,12 +293,12 @@ export default function AttendancePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-center">
               {[
-                ['Total', selected.total_count ?? '—', 'text-gray-900'],
+                ['Total', selected.total_count ?? '—', 'text-gray-900 dark:text-gray-50'],
                 ['Présents', selected.present_count ?? '—', 'text-emerald-600'],
                 ['Absents', ((selected.total_count ?? 0) - (selected.present_count ?? 0)), 'text-red-500'],
               ].map(([label, value, color]) => (
-                <div key={label as string} className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-400 mb-1">{label}</p>
+                <div key={label as string} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{label}</p>
                   <p className={`text-2xl font-bold ${color}`}>{value}</p>
                 </div>
               ))}
@@ -307,10 +307,10 @@ export default function AttendancePage() {
               <>
                 <Alert type="warning">Cette feuille est actuellement ouverte pour l'émargement.</Alert>
                 {selected.qr_code && (
-                  <div className="text-center bg-gray-50 rounded-2xl p-5">
-                    <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-3">Code à scanner ou saisir</p>
-                    <img src={selected.qr_code} alt="QR code de la séance" className="w-40 h-40 mx-auto rounded-xl border border-gray-200 bg-white p-2" />
-                    <p className="font-mono text-lg font-bold text-gray-800 tracking-widest mt-3">{selected.session_code}</p>
+                  <div className="text-center bg-gray-50 dark:bg-gray-800 rounded-2xl p-5">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-3">Code à scanner ou saisir</p>
+                    <img src={selected.qr_code} alt="QR code de la séance" className="w-40 h-40 mx-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white p-2" />
+                    <p className="font-mono text-lg font-bold text-gray-800 dark:text-gray-200 tracking-widest mt-3">{selected.session_code}</p>
                   </div>
                 )}
               </>

@@ -63,7 +63,7 @@ export default function AdminUsersPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Gestion des Utilisateurs</h1>
-          <p className="text-gray-400 text-sm mt-0.5">
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">
             {tab === 'users' ? `${data?.count ?? 0} utilisateur(s) enregistré(s)` : `${staffData?.count ?? 0} membre(s) du personnel`}
           </p>
         </div>
@@ -124,8 +124,8 @@ export default function AdminUsersPage() {
                           <Avatar name={user.full_name} size="md"
                             color={['bg-primary-100 text-primary-700', 'bg-emerald-100 text-emerald-700', 'bg-violet-100 text-violet-700'][idx % 3]} />
                           <div>
-                            <p className="font-semibold text-sm text-gray-900">{user.full_name}</p>
-                            <p className="text-xs text-gray-400">{user.email}</p>
+                            <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{user.full_name}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">{user.email}</p>
                           </div>
                         </div>
                       </td>
@@ -149,7 +149,7 @@ export default function AdminUsersPage() {
                           ? <Badge label="Vérifié" className="badge-green" />
                           : <Badge label="Non vérifié" className="badge-yellow" />}
                       </td>
-                      <td className="text-xs text-gray-400">{formatDate(user.created_at)}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(user.created_at)}</td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="sm" icon={<Edit className="w-3.5 h-3.5" />}
@@ -202,15 +202,15 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-3">
                           <Avatar name={s.user.full_name} size="md" color="bg-slate-100 text-slate-700" />
                           <div>
-                            <p className="font-semibold text-sm text-gray-900">{s.user.full_name}</p>
-                            <p className="text-xs text-gray-400">{s.user.email}</p>
+                            <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{s.user.full_name}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">{s.user.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="font-mono text-xs text-gray-500">{s.staff_id}</td>
+                      <td className="font-mono text-xs text-gray-500 dark:text-gray-400">{s.staff_id}</td>
                       <td><Badge label={SERVICE_LABEL[s.service] ?? s.service} className="badge-blue" /></td>
-                      <td className="text-sm text-gray-600">{s.position || '—'}</td>
-                      <td className="text-right text-sm text-gray-500">{s.department_name || '—'}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{s.position || '—'}</td>
+                      <td className="text-right text-sm text-gray-500 dark:text-gray-400">{s.department_name || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -287,7 +287,7 @@ function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
       {error && <Alert type="error">{error}</Alert>}
       <div>
         <label className="label">Compte utilisateur *</label>
-        <select className="input bg-white" value={form.user} onChange={e => set('user', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.user} onChange={e => set('user', e.target.value)}>
           <option value="">— Sélectionner un compte —</option>
           {users?.results?.map((u: User) => (
             <option key={u.id} value={u.id}>{u.full_name} — {u.email}</option>
@@ -296,7 +296,7 @@ function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div>
         <label className="label">Service *</label>
-        <select className="input bg-white" value={form.service} onChange={e => set('service', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.service} onChange={e => set('service', e.target.value)}>
           {Object.entries(SERVICE_LABEL).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
@@ -309,7 +309,7 @@ function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div>
         <label className="label">Département</label>
-        <select className="input bg-white" value={form.department} onChange={e => set('department', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.department} onChange={e => set('department', e.target.value)}>
           <option value="">— Aucun —</option>
           {departments?.results?.map((d: { id: string; name: string }) => (
             <option key={d.id} value={d.id}>{d.name}</option>
@@ -375,7 +375,7 @@ function CreateUserForm({ roles, onSuccess }: { roles: Role[]; onSuccess: () => 
       </div>
       <div>
         <label className="label">Rôles</label>
-        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-xl p-3">
+        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-3">
           {roles.map(role => (
             <label key={role.id} className="flex items-center gap-2 cursor-pointer text-sm">
               <input type="checkbox"
@@ -422,9 +422,9 @@ function AssignRolesForm({ user, allRoles, onSuccess }: { user: User; allRoles: 
       </div>
       <div>
         <label className="label">Rôles assignés</label>
-        <div className="space-y-2 border border-gray-200 rounded-xl p-3">
+        <div className="space-y-2 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
           {allRoles.map(role => (
-            <label key={role.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
+            <label key={role.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:bg-gray-800">
               <input type="checkbox"
                 checked={selectedRoles.includes(role.id)}
                 onChange={e => setSelectedRoles(prev =>
@@ -432,8 +432,8 @@ function AssignRolesForm({ user, allRoles, onSuccess }: { user: User; allRoles: 
                 )}
                 className="w-4 h-4 text-primary-600 rounded" />
               <div>
-                <p className="text-sm font-medium text-gray-800">{role.name}</p>
-                <p className="text-xs text-gray-400">{role.description}</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{role.name}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{role.description}</p>
               </div>
             </label>
           ))}

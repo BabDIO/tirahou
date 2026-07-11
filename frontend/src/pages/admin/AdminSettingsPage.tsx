@@ -105,7 +105,7 @@ export default function AdminSettingsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Paramètres Système</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Configuration globale de la plateforme TIRAHOU</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Configuration globale de la plateforme TIRAHOU</p>
       </div>
 
       <div className="flex gap-5">
@@ -113,7 +113,7 @@ export default function AdminSettingsPage() {
         <div className="w-56 flex-shrink-0 space-y-1">
           {sections.map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setActiveSection(key)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition text-left ${activeSection === key ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition text-left ${activeSection === key ? 'bg-primary-50 text-primary-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800'}`}>
               <Icon className="w-4 h-4" /> {label}
             </button>
           ))}
@@ -127,13 +127,13 @@ export default function AdminSettingsPage() {
             <div className="space-y-4">
               <Card title="Établissements enregistrés">
                 {unis.length === 0 ? (
-                  <p className="text-sm text-gray-400">Aucun établissement configuré.</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">Aucun établissement configuré.</p>
                 ) : unis.map((u: { id: string; name: string; acronym: string; website: string; email: string }) => (
-                  <div key={u.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-2">
+                  <div key={u.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl mb-2">
                     <div>
-                      <p className="font-bold text-gray-900">{u.acronym}</p>
-                      <p className="text-sm text-gray-500">{u.name}</p>
-                      <p className="text-xs text-gray-400">{u.email}</p>
+                      <p className="font-bold text-gray-900 dark:text-gray-50">{u.acronym}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{u.name}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{u.email}</p>
                     </div>
                     {u.website && <a href={u.website} target="_blank" rel="noopener noreferrer" className="text-primary-600 text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> Site web</a>}
                   </div>
@@ -187,15 +187,15 @@ export default function AdminSettingsPage() {
                         <div className="flex items-center gap-3">
                           {y.is_current && <span className="w-2 h-2 bg-emerald-500 rounded-full" />}
                           <div>
-                            <p className="font-bold text-gray-900">{y.label}</p>
-                            <p className="text-xs text-gray-400">{y.start_date} → {y.end_date}</p>
+                            <p className="font-bold text-gray-900 dark:text-gray-50">{y.label}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">{y.start_date} → {y.end_date}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {y.is_current
                             ? <Badge label="Année courante" className="badge-green" />
                             : <button onClick={() => setCurrentYearMut.mutate(y.id)}
-                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition">
+                                className="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium hover:bg-gray-200 transition">
                                 Définir comme courante
                               </button>
                           }
@@ -240,10 +240,10 @@ export default function AdminSettingsPage() {
             <Card title="Rôles système" subtitle="Les 13 rôles prédéfinis de TIRAHOU">
               <div className="space-y-2">
                 {roleList.map((r: { id: string; name: string; description: string }) => (
-                  <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <div>
-                      <p className="font-semibold text-sm text-gray-900">{r.name}</p>
-                      {r.description && <p className="text-xs text-gray-400 mt-0.5">{r.description}</p>}
+                      <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{r.name}</p>
+                      {r.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{r.description}</p>}
                     </div>
                     <Shield className="w-4 h-4 text-gray-300" />
                   </div>
@@ -261,15 +261,15 @@ export default function AdminSettingsPage() {
 
               <Card title="Abonnements actifs" noPadding>
                 {loadWebhooks ? <Spinner /> : !webhooks?.results?.length ? (
-                  <p className="text-sm text-gray-400 p-4">Aucun abonnement configuré.</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 p-4">Aucun abonnement configuré.</p>
                 ) : (
                   <div>
                     {webhooks.results.map((w: { id: string; url: string; event_type_display: string; description: string; is_active: boolean }) => (
                       <div key={w.id} className="flex items-center justify-between px-4 py-3 border-b border-gray-50 last:border-0">
                         <div className="min-w-0">
-                          <p className="font-bold text-gray-900 text-sm">{w.event_type_display}</p>
-                          <p className="text-xs text-gray-500 truncate">{w.url}</p>
-                          {w.description && <p className="text-xs text-gray-400">{w.description}</p>}
+                          <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">{w.event_type_display}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{w.url}</p>
+                          {w.description && <p className="text-xs text-gray-400 dark:text-gray-500">{w.description}</p>}
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge label={w.is_active ? 'Actif' : 'Inactif'} className={w.is_active ? 'badge-green' : 'badge-gray'} dot />
@@ -293,7 +293,7 @@ export default function AdminSettingsPage() {
                   </div>
                   <div>
                     <label className="label">Événement *</label>
-                    <select className="input bg-white" value={webhookForm.event_type}
+                    <select className="input bg-white dark:bg-slate-900" value={webhookForm.event_type}
                       onChange={e => setWebhookForm(f => ({ ...f, event_type: e.target.value }))}>
                       {WEBHOOK_EVENTS.map(ev => <option key={ev.value} value={ev.value}>{ev.label}</option>)}
                     </select>
@@ -320,12 +320,12 @@ export default function AdminSettingsPage() {
                 <Card title="Historique des livraisons" subtitle="20 dernières tentatives">
                   <div className="space-y-2">
                     {webhookDeliveries.results.slice(0, 20).map((d: { id: string; event_type: string; success: boolean; status_code: number | null; created_at: string }) => (
-                      <div key={d.id} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg text-sm">
+                      <div key={d.id} className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
                         <div className="flex items-center gap-2">
                           {d.success ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
-                          <span className="font-medium text-gray-700">{d.event_type}</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{d.event_type}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                        <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                           {d.status_code && <span>HTTP {d.status_code}</span>}
                           <span>{formatDate(d.created_at, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
@@ -350,9 +350,9 @@ export default function AdminSettingsPage() {
                     { label: 'Fuseau horaire', value: 'Africa/Abidjan (GMT+0)' },
                     { label: 'Langue', value: 'Français (fr-FR)' },
                   ].map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <span className="text-sm text-gray-600">{label}</span>
-                      <span className="text-sm font-semibold text-gray-900">{value}</span>
+                    <div key={label} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">{value}</span>
                     </div>
                   ))}
                 </div>

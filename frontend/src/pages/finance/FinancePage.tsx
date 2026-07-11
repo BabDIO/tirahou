@@ -51,7 +51,7 @@ export default function FinancePage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Finance & Paiements</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} facture(s)</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} facture(s)</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" icon={<Gift className="w-4 h-4" />}
@@ -72,14 +72,14 @@ export default function FinancePage() {
           value={formatCurrency((summary?.total ?? 0) - (summary?.paid ?? 0))}
           icon={<AlertCircle className="w-5 h-5" />} color="bg-gradient-to-br from-red-500 to-rose-500" />
         <Card className="flex flex-col justify-center">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Taux de collecte</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Taux de collecte</p>
           <Progress value={paidRate} color={paidRate >= 80 ? 'bg-emerald-500' : paidRate >= 50 ? 'bg-amber-500' : 'bg-red-500'} size="lg" />
           <div className="flex justify-between mt-2">
-            <span className="text-xs text-gray-400">0%</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">0%</span>
             <span className={`text-sm font-bold ${paidRate >= 80 ? 'text-emerald-600' : paidRate >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
               {paidRate}%
             </span>
-            <span className="text-xs text-gray-400">100%</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">100%</span>
           </div>
         </Card>
       </div>
@@ -128,11 +128,11 @@ export default function FinancePage() {
                     return (
                       <tr key={inv.id}>
                         <td>
-                          <span className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md">
+                          <span className="font-mono text-xs bg-gray-100 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-md">
                             {inv.invoice_number}
                           </span>
                         </td>
-                        <td className="font-semibold text-sm text-gray-900">{inv.student_name}</td>
+                        <td className="font-semibold text-sm text-gray-900 dark:text-gray-50">{inv.student_name}</td>
                         <td className="text-sm font-medium">{formatCurrency(inv.total_amount)}</td>
                         <td className="text-sm text-emerald-600 font-medium">{formatCurrency(inv.paid_amount)}</td>
                         <td className="text-sm text-red-500 font-medium">{formatCurrency(inv.remaining_amount)}</td>
@@ -144,11 +144,11 @@ export default function FinancePage() {
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-400 w-8 text-right">{pct}%</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 w-8 text-right">{pct}%</span>
                           </div>
                         </td>
                         <td><Badge label={inv.status_display} className={statusColor(inv.status)} dot /></td>
-                        <td className="text-xs text-gray-400">{formatDate(inv.due_date)}</td>
+                        <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(inv.due_date)}</td>
                         <td className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="sm" icon={<Calendar className="w-3.5 h-3.5" />}
@@ -238,8 +238,8 @@ function InstallmentsPanel({ invoice }: { invoice: Invoice }) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-gray-50 rounded-xl p-3.5 flex items-center justify-between">
-        <span className="text-sm text-gray-600">Reste à payer</span>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5 flex items-center justify-between">
+        <span className="text-sm text-gray-600 dark:text-gray-400">Reste à payer</span>
         <span className="font-bold text-red-500">{formatCurrency(invoice.remaining_amount)}</span>
       </div>
 
@@ -249,14 +249,14 @@ function InstallmentsPanel({ invoice }: { invoice: Invoice }) {
       ) : (
         <div className="space-y-2">
           {installments.map(inst => (
-            <div key={inst.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            <div key={inst.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                  <Clock className="w-4 h-4 text-gray-400" />
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                  <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Échéance #{inst.number}</p>
-                  <p className="text-xs text-gray-400">Due le {formatDate(inst.due_date)} · {formatCurrency(inst.amount)}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Échéance #{inst.number}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Due le {formatDate(inst.due_date)} · {formatCurrency(inst.amount)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -271,7 +271,7 @@ function InstallmentsPanel({ invoice }: { invoice: Invoice }) {
         </div>
       )}
 
-      <div className="pt-4 border-t border-gray-100">
+      <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
         <p className="label mb-2">Ajouter une échéance</p>
         <div className="grid grid-cols-3 gap-2">
           <input type="number" placeholder="N°" className="input" value={form.number}
@@ -302,27 +302,27 @@ function PaymentForm({ invoice, onSubmit, loading }: {
   return (
     <div className="space-y-5">
       {/* Invoice summary */}
-      <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-4 border border-gray-100 space-y-3">
+      <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-500 font-medium">Facture</span>
-          <span className="font-mono text-sm font-bold text-gray-800">{invoice.invoice_number}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Facture</span>
+          <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{invoice.invoice_number}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-500 font-medium">Étudiant</span>
-          <span className="text-sm font-semibold text-gray-800">{invoice.student_name}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Étudiant</span>
+          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{invoice.student_name}</span>
         </div>
         <div className="divider my-0" />
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total</p>
-            <p className="text-sm font-bold text-gray-800">{formatCurrency(invoice.total_amount)}</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Total</p>
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{formatCurrency(invoice.total_amount)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Payé</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Payé</p>
             <p className="text-sm font-bold text-emerald-600">{formatCurrency(invoice.paid_amount)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Reste</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Reste</p>
             <p className="text-sm font-bold text-red-500">{formatCurrency(invoice.remaining_amount)}</p>
           </div>
         </div>
@@ -333,7 +333,7 @@ function PaymentForm({ invoice, onSubmit, loading }: {
         <label className="label">Montant à encaisser (FCFA)</label>
         <input type="number" className="input text-lg font-bold" value={amount}
           onChange={e => setAmount(Number(e.target.value))} max={invoice.remaining_amount} min={0} />
-        <p className="text-xs text-gray-400 mt-1">Maximum : {formatCurrency(invoice.remaining_amount)}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Maximum : {formatCurrency(invoice.remaining_amount)}</p>
       </div>
 
       <div>
@@ -352,7 +352,7 @@ function PaymentForm({ invoice, onSubmit, loading }: {
               className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
                 method === m.value
                   ? 'border-primary-400 bg-primary-50 text-primary-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  : 'border-gray-200 dark:border-gray-700 bg-white text-gray-600 dark:text-gray-400 hover:border-gray-300'
               }`}
             >
               <span>{methodIcons[m.value]}</span> {m.label}
@@ -406,7 +406,7 @@ function DiscountForm({ onSuccess }: { onSuccess: () => void }) {
           ].map(t => (
             <button key={t.value} type="button" onClick={() => setType(t.value)}
               className={`p-2.5 rounded-xl border text-sm font-medium transition-all ${
-                type === t.value ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                type === t.value ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
               }`}>
               {t.label}
             </button>
@@ -480,7 +480,7 @@ function InvoiceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label">Étudiant *</label>
-        <select className={`input bg-white ${errors.student ? 'border-red-400' : ''}`}
+        <select className={`input bg-white dark:bg-slate-900 ${errors.student ? 'border-red-400' : ''}`}
           value={form.student} onChange={e => set('student', e.target.value)}>
           <option value="">— Sélectionner un étudiant —</option>
           {students?.results.map(s => (
@@ -491,7 +491,7 @@ function InvoiceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       </div>
       <div>
         <label className="label">Année académique *</label>
-        <select className={`input bg-white ${errors.academic_year ? 'border-red-400' : ''}`}
+        <select className={`input bg-white dark:bg-slate-900 ${errors.academic_year ? 'border-red-400' : ''}`}
           value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
           <option value="">— Sélectionner —</option>
           {years?.results.map(y => (
@@ -515,7 +515,7 @@ function InvoiceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         <textarea className="input min-h-[60px] resize-none" placeholder="Observations..."
           value={form.notes} onChange={e => set('notes', e.target.value)} />
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<CreditCard className="w-4 h-4" />}>
           Créer la facture

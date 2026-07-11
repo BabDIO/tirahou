@@ -139,7 +139,7 @@ export default function TeacherGradesPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Saisie des Notes</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Saisissez et publiez les notes de vos étudiants</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Saisissez et publiez les notes de vos étudiants</p>
       </div>
 
       {/* Sélection EC + Session */}
@@ -175,9 +175,9 @@ export default function TeacherGradesPage() {
             { label: 'Min/Max', value: `${stats.min ?? '—'} / ${stats.max ?? '—'}` },
             { label: 'Absents', value: stats.absent_count ?? 0 },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-400 mb-1">{label}</p>
-              <p className="font-black text-gray-900">{value}</p>
+            <div key={label} className="bg-white border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{label}</p>
+              <p className="font-black text-gray-900 dark:text-gray-50">{value}</p>
             </div>
           ))}
         </div>
@@ -190,20 +190,20 @@ export default function TeacherGradesPage() {
         ) : (
           <Card noPadding>
             <div className="p-4 flex items-center justify-between">
-              <p className="font-semibold text-sm text-gray-700">{studentList.length} étudiant(s)</p>
+              <p className="font-semibold text-sm text-gray-700 dark:text-gray-300">{studentList.length} étudiant(s)</p>
               <div className="flex gap-2">
                 {/* La validation en masse est réservée aux responsables pédagogiques */}
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-y border-gray-100">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Étudiant</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">CC (40%)</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Examen (60%)</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Note finale</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Absent</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Étudiant</th>
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">CC (40%)</th>
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Examen (60%)</th>
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Note finale</th>
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Absent</th>
                     <th className="px-3 py-3" />
                   </tr>
                 </thead>
@@ -213,24 +213,24 @@ export default function TeacherGradesPage() {
                     const ccVal = parseFloat(entry.cc_grade) || 0
                     const examVal = parseFloat(entry.exam_grade) || 0
                     const finalGrade = entry.is_absent ? 0 : !entry.cc_grade && !entry.exam_grade ? null : Math.min(20, Math.max(0, ccVal * 0.4 + examVal * 0.6))
-                    const gradeColor = finalGrade === null ? 'text-gray-400' : finalGrade >= 10 ? 'text-emerald-600 font-black' : 'text-red-600 font-black'
+                    const gradeColor = finalGrade === null ? 'text-gray-400 dark:text-gray-500' : finalGrade >= 10 ? 'text-emerald-600 font-black' : 'text-red-600 font-black'
                     return (
-                      <tr key={s.id} className={`hover:bg-gray-50 transition ${entry.is_absent ? 'opacity-60' : ''}`}>
+                      <tr key={s.id} className={`hover:bg-gray-50 dark:bg-gray-800 transition ${entry.is_absent ? 'opacity-60' : ''}`}>
                         <td className="px-4 py-3">
-                          <p className="font-semibold text-gray-900">{s.user.first_name} {s.user.last_name}</p>
-                          <p className="text-xs text-gray-400">{s.student_id}</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-50">{s.user.first_name} {s.user.last_name}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id}</p>
                         </td>
                         <td className="px-3 py-3 text-center">
                           <input type="number" min={0} max={20} step={0.25} disabled={entry.is_absent}
                             value={entry.cc_grade}
                             onChange={e => updateEntry(s.id, 'cc_grade', e.target.value)}
-                            className="w-20 text-center border border-gray-200 rounded-lg py-1 text-sm focus:ring-1 focus:ring-primary-400 focus:border-primary-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                            className="w-20 text-center border border-gray-200 dark:border-gray-700 rounded-lg py-1 text-sm focus:ring-1 focus:ring-primary-400 focus:border-primary-400 disabled:bg-gray-50 dark:bg-gray-800 disabled:text-gray-400 dark:text-gray-500" />
                         </td>
                         <td className="px-3 py-3 text-center">
                           <input type="number" min={0} max={20} step={0.25} disabled={entry.is_absent}
                             value={entry.exam_grade}
                             onChange={e => updateEntry(s.id, 'exam_grade', e.target.value)}
-                            className="w-20 text-center border border-gray-200 rounded-lg py-1 text-sm focus:ring-1 focus:ring-primary-400 focus:border-primary-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                            className="w-20 text-center border border-gray-200 dark:border-gray-700 rounded-lg py-1 text-sm focus:ring-1 focus:ring-primary-400 focus:border-primary-400 disabled:bg-gray-50 dark:bg-gray-800 disabled:text-gray-400 dark:text-gray-500" />
                         </td>
                         <td className={`px-3 py-3 text-center text-base ${gradeColor}`}>
                           {finalGrade !== null ? finalGrade.toFixed(2) : '—'}

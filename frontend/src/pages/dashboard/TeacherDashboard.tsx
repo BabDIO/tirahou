@@ -71,20 +71,20 @@ export default function TeacherDashboard() {
         {/* Cours du jour */}
         <Card title="Mes cours aujourd'hui">
           {todaySessions.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-gray-400">
+            <div className="flex flex-col items-center py-8 text-gray-400 dark:text-gray-500">
               <CheckCircle className="w-10 h-10 mb-2 opacity-30" />
               <p className="text-sm">Pas de cours planifié aujourd'hui</p>
             </div>
           ) : (
             <div className="space-y-2">
               {todaySessions.map((s: { id: string; ec_code: string; ec_name: string; start_datetime: string; end_datetime: string; room_name: string; mode_display: string; status: string }) => (
-                <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Clock className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900">{s.ec_name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{s.ec_name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       {new Date(s.start_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       {' → '}
                       {new Date(s.end_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -105,13 +105,13 @@ export default function TeacherDashboard() {
           ) : (
             <div className="space-y-2">
               {courses.results.slice(0, 5).map((cs: { id: string; title: string; ue_code: string; mode_display: string; is_published: boolean }) => (
-                <div key={cs.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div key={cs.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <BookOpen className="w-4 h-4 text-cyan-600" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{cs.title}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{cs.title}</p>
                       <p className="text-xs font-mono text-primary-600">{cs.ue_code}</p>
                     </div>
                   </div>
@@ -136,7 +136,7 @@ export default function TeacherDashboard() {
               {grades?.results?.slice(0, 5).map((g: { id: string; student_name: string; ec_code: string; final_grade: number | null; status: string }) => (
                 <div key={g.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{g.student_name}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{g.student_name}</p>
                     <p className="text-xs font-mono text-primary-600">{g.ec_code}</p>
                   </div>
                   <div className="text-right">
@@ -148,7 +148,7 @@ export default function TeacherDashboard() {
                 </div>
               ))}
               {pendingGrades > 5 && (
-                <p className="text-xs text-gray-400 text-center">+{pendingGrades - 5} autres notes à valider</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center">+{pendingGrades - 5} autres notes à valider</p>
               )}
             </div>
           )}
@@ -161,10 +161,10 @@ export default function TeacherDashboard() {
           ) : (
             <div className="space-y-2">
               {assignments.results.slice(0, 4).map((a: { id: string; title: string; due_date: string; status: string }) => (
-                <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{a.title}</p>
-                    <p className="text-xs text-gray-400">Échéance : {new Date(a.due_date).toLocaleDateString('fr-FR')}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{a.title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Échéance : {new Date(a.due_date).toLocaleDateString('fr-FR')}</p>
                   </div>
                   <Badge label={a.status} className={statusColor(a.status)} dot />
                 </div>

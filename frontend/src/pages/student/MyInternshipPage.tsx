@@ -41,12 +41,12 @@ export default function MyInternshipPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Stages & Mémoires</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Suivi de vos stages, mémoires et soutenances</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Suivi de vos stages, mémoires et soutenances</p>
       </div>
 
       {/* Stages */}
       <div>
-        <h2 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <h2 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
           <Briefcase className="w-5 h-5 text-primary-600" /> Mes Stages
         </h2>
         {!internshipList.length ? (
@@ -67,13 +67,13 @@ export default function MyInternshipPage() {
                       <Building2 className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900">{intership.company_name}</p>
-                      <p className="text-sm text-gray-600 mt-0.5">{intership.subject}</p>
+                      <p className="font-bold text-gray-900 dark:text-gray-50">{intership.company_name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{intership.subject}</p>
                     </div>
                   </div>
                   <Badge label={getInternshipStatus(intership.status).label} className={getInternshipStatus(intership.status).badge} />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-500">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
                     {formatDate(intership.start_date)} → {formatDate(intership.end_date)}
@@ -106,18 +106,18 @@ export default function MyInternshipPage() {
                     <div>
                       {uploadingId === intership.id ? (
                         <div className="flex items-center gap-2">
-                          <input type="file" accept=".pdf,.doc,.docx" className="text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-primary-100 file:text-primary-700 file:text-xs"
+                          <input type="file" accept=".pdf,.doc,.docx" className="text-xs text-gray-500 dark:text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-primary-100 file:text-primary-700 file:text-xs"
                             onChange={e => setReportFile(e.target.files?.[0] ?? null)} />
                           <button onClick={() => { if (reportFile) uploadReportMut.mutate({ id: intership.id, file: reportFile }) }}
                             disabled={!reportFile || uploadReportMut.isPending}
                             className="px-2 py-1 bg-primary-600 text-white rounded-lg text-xs font-medium disabled:opacity-50">
                             {uploadReportMut.isPending ? '...' : 'Déposer'}
                           </button>
-                          <button onClick={() => { setUploadingId(null); setReportFile(null) }} className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">Annuler</button>
+                          <button onClick={() => { setUploadingId(null); setReportFile(null) }} className="px-2 py-1 bg-gray-100 text-gray-600 dark:text-gray-400 rounded-lg text-xs">Annuler</button>
                         </div>
                       ) : (
                         <button onClick={() => setUploadingId(intership.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-100 transition">
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium hover:bg-gray-100 transition">
                           <Upload className="w-3.5 h-3.5" /> Déposer rapport
                         </button>
                       )}
@@ -132,7 +132,7 @@ export default function MyInternshipPage() {
 
       {/* Mémoires & Thèses */}
       <div>
-        <h2 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <h2 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
           <BookMarked className="w-5 h-5 text-emerald-600" /> Mes Mémoires & Thèses
         </h2>
         {!thesisList.length ? (
@@ -149,19 +149,19 @@ export default function MyInternshipPage() {
               <Card key={thesis.id}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    <p className="font-bold text-gray-900">{thesis.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{thesis.type}</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-50">{thesis.title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{thesis.type}</p>
                     {thesis.keywords && (
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {thesis.keywords.split(',').map(k => (
-                          <span key={k} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md">{k.trim()}</span>
+                          <span key={k} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 dark:text-gray-400 text-xs rounded-md">{k.trim()}</span>
                         ))}
                       </div>
                     )}
                   </div>
                   <Badge label={getThesisStatus(thesis.status).label} className={getThesisStatus(thesis.status).badge} />
                 </div>
-                <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
                   {thesis.supervisor_name && <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> Dir. : {thesis.supervisor_name}</span>}
                   {thesis.co_supervisor_name && <span>Co-Dir. : {thesis.co_supervisor_name}</span>}
                   {thesis.plagiarism_score !== null && (

@@ -161,7 +161,7 @@ export default function MarketplaceCourseDetailPage() {
         <Card title="Contenu du cours" subtitle={`${course.lessons.length} leçon(s)`}>
           <div className="space-y-2">
             {course.lessons.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Aucune leçon pour le moment.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Aucune leçon pour le moment.</p>
             )}
             {course.lessons.map((lesson) => {
               const Icon = CONTENT_ICONS[lesson.content_type] ?? FileText
@@ -170,11 +170,11 @@ export default function MarketplaceCourseDetailPage() {
                 <div key={lesson.id} className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
                   <button
                     onClick={() => !lesson.is_locked && setOpenLessonId(isOpen ? null : lesson.id)}
-                    className={cn('w-full flex items-center gap-3 p-3 text-left transition-colors', !lesson.is_locked && 'hover:bg-gray-50 dark:hover:bg-gray-800')}
+                    className={cn('w-full flex items-center gap-3 p-3 text-left transition-colors', !lesson.is_locked && 'hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800')}
                   >
                     <div className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
-                      lesson.is_completed ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                      lesson.is_completed ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300' : 'bg-gray-100 text-gray-500 dark:text-gray-400 dark:bg-gray-700 dark:text-gray-400'
                     )}>
                       {lesson.is_locked ? <Lock className="w-4 h-4" /> : lesson.is_completed ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                     </div>
@@ -227,7 +227,7 @@ export default function MarketplaceCourseDetailPage() {
             </div>
           )}
           {course.reviews.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">Aucun avis pour le moment.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Aucun avis pour le moment.</p>
           ) : (
             course.reviews.map((r) => (
               <div key={r.id} className="p-3 border border-gray-100 dark:border-gray-700 rounded-xl">

@@ -208,7 +208,7 @@ export default function ParentsManagementPage() {
       {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Rechercher par nom, prénom, téléphone, étudiant..."
@@ -273,13 +273,13 @@ export default function ParentsManagementPage() {
               <div className="space-y-2 mb-4">
                 {parent.phone && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                     <span className="text-gray-900 dark:text-gray-100">{parent.phone}</span>
                   </div>
                 )}
                 {parent.email && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                     <span className="text-gray-900 dark:text-gray-100 truncate">{parent.email}</span>
                   </div>
                 )}
@@ -356,7 +356,7 @@ export default function ParentsManagementPage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -402,9 +402,9 @@ export default function ParentsManagementPage() {
                                 setFormData({ ...formData, student: s.id, student_label: `${label} — ${s.student_id}` })
                                 setStudentQuery('')
                               }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                             >
-                              {label} <span className="text-gray-400 text-xs">— {s.student_id}</span>
+                              {label} <span className="text-gray-400 dark:text-gray-500 text-xs">— {s.student_id}</span>
                             </button>
                           )
                         })}

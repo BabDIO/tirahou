@@ -86,7 +86,7 @@ export default function MarketplacePage() {
         <Spinner text="Chargement du catalogue..." />
       ) : !courses || courses.length === 0 ? (
         <Card>
-          <p className="text-sm text-gray-400 text-center py-12">Aucun cours disponible pour le moment.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-12">Aucun cours disponible pour le moment.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

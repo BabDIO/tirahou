@@ -38,12 +38,12 @@ export default function MyStudentsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Mes Étudiants</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Suivi de l'engagement et du risque de décrochage</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Suivi de l'engagement et du risque de décrochage</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
           <input className="input pl-9" placeholder="Rechercher un étudiant..." value={search}
             onChange={e => setSearch(e.target.value)} />
         </div>
@@ -71,8 +71,8 @@ export default function MyStudentsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-bold text-gray-900">{s.user.first_name} {s.user.last_name}</p>
-                        <p className="text-xs text-gray-400">{s.student_id} · {s.user.email}</p>
+                        <p className="font-bold text-gray-900 dark:text-gray-50">{s.user.first_name} {s.user.last_name}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id} · {s.user.email}</p>
                       </div>
                       {score && (
                         <Badge label={score.dropout_risk} className={riskColor(score.dropout_risk)} />
@@ -82,7 +82,7 @@ export default function MyStudentsPage() {
                       <div className="mt-2 flex items-center gap-4">
                         <div className="flex-1">
                           <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-500">Engagement</span>
+                            <span className="text-gray-500 dark:text-gray-400">Engagement</span>
                             <span className="font-semibold">{Math.round(score.engagement_score)}/100</span>
                           </div>
                           <Progress value={score.engagement_score}
@@ -91,7 +91,7 @@ export default function MyStudentsPage() {
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-500">Complétion</span>
+                            <span className="text-gray-500 dark:text-gray-400">Complétion</span>
                             <span className="font-semibold">{Math.round(score.completion_rate)}%</span>
                           </div>
                           <Progress value={score.completion_rate} color="bg-primary-500" size="sm" />

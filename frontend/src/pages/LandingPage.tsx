@@ -62,7 +62,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white font-sans overflow-x-hidden">
 
       {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -70,15 +70,15 @@ export default function LandingPage() {
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="font-black text-gray-900 text-lg tracking-tight">TIRAHOU</span>
-              <span className="hidden sm:inline text-gray-400 text-xs ml-2">Plateforme Universitaire</span>
+              <span className="font-black text-gray-900 dark:text-gray-50 text-lg tracking-tight">TIRAHOU</span>
+              <span className="hidden sm:inline text-gray-400 dark:text-gray-500 text-xs ml-2">Plateforme Universitaire</span>
             </div>
           </div>
           {/* Links */}
           <div className="hidden md:flex items-center gap-7">
             {['Fonctionnalités', 'Modules', 'Architecture'].map(l => (
               <a key={l} href={`#${l.toLowerCase()}`}
-                className="text-sm text-gray-500 hover:text-gray-900 font-medium transition-colors">
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-50 font-medium transition-colors">
                 {l}
               </a>
             ))}
@@ -86,7 +86,7 @@ export default function LandingPage() {
           {/* CTA */}
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/login')}
-              className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 hidden sm:block">
+              className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-gray-50 transition-colors px-3 py-2 hidden sm:block">
               Connexion
             </button>
             <button onClick={() => navigate('/login')}
@@ -130,7 +130,7 @@ export default function LandingPage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <button onClick={() => navigate('/login')}
-                className="flex items-center gap-2.5 bg-white text-gray-900 font-bold px-8 py-4 rounded-2xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/10 active:scale-95 text-sm w-full sm:w-auto justify-center">
+                className="flex items-center gap-2.5 bg-white text-gray-900 dark:text-gray-50 font-bold px-8 py-4 rounded-2xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/10 active:scale-95 text-sm w-full sm:w-auto justify-center">
                 <Zap className="w-4 h-4 text-blue-600" />
                 Accéder à TIRAHOU
                 <ArrowRight className="w-4 h-4" />
@@ -165,17 +165,17 @@ export default function LandingPage() {
       {/* ── Modules rapides ── */}
       <section id="modules" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">
+          <p className="text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-8">
             19 modules intégrés — couverture 100% du cycle de vie étudiant
           </p>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {MODULES_GRID.map(({ icon: Icon, label, color }) => (
               <div key={label}
-                className="flex flex-col items-center gap-2.5 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 hover:bg-white hover:shadow-md transition-all cursor-default group">
+                className="flex flex-col items-center gap-2.5 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:border-gray-700 hover:bg-white hover:shadow-md transition-all cursor-default group">
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-200">
                   <Icon className={`w-5 h-5 ${color}`} />
                 </div>
-                <span className="text-xs font-semibold text-gray-600 text-center leading-tight">{label}</span>
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 text-center leading-tight">{label}</span>
               </div>
             ))}
           </div>
@@ -183,14 +183,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ── */}
-      <section id="fonctionnalités" className="py-24 bg-gray-50">
+      <section id="fonctionnalités" className="py-24 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Fonctionnalités</span>
-            <h2 className="text-4xl font-black text-gray-900 mt-3 mb-4 tracking-tight">
+            <h2 className="text-4xl font-black text-gray-900 dark:text-gray-50 mt-3 mb-4 tracking-tight">
               Tout ce dont votre université a besoin
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
               TIRAHOU réunit en une seule plateforme tout ce dont votre université a besoin —
               de l'inscription à la diplomation, du présentiel au distanciel.
             </p>
@@ -198,12 +198,12 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {FEATURES.map(({ icon: Icon, title, desc, bg, iconColor }) => (
               <div key={title}
-                className="bg-white p-6 rounded-2xl border border-gray-100 hover:border-blue-100 hover:shadow-xl transition-all group cursor-default">
+                className="bg-white p-6 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-blue-100 hover:shadow-xl transition-all group cursor-default">
                 <div className={`w-12 h-12 ${bg} rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200`}>
                   <Icon className={`w-6 h-6 ${iconColor}`} />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2 text-sm">{title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+                <h3 className="font-bold text-gray-900 dark:text-gray-50 mb-2 text-sm">{title}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -216,10 +216,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Gestion des accès</span>
-              <h2 className="text-4xl font-black text-gray-900 mt-3 mb-4 tracking-tight">
+              <h2 className="text-4xl font-black text-gray-900 dark:text-gray-50 mt-3 mb-4 tracking-tight">
                 Un espace dédié<br />pour chaque acteur
               </h2>
-              <p className="text-gray-500 mb-8 leading-relaxed">
+              <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
                 13 rôles distincts avec permissions granulaires. Chaque utilisateur dispose de son propre
                 dashboard, navigation et fonctionnalités adaptées à son rôle.
               </p>
@@ -234,7 +234,7 @@ export default function LandingPage() {
                     <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                     </div>
-                    <span className="text-sm text-gray-700 font-medium">{item}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{item}</span>
                   </div>
                 ))}
               </div>
@@ -326,13 +326,13 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-4 py-1.5 text-xs font-bold mb-6 border border-blue-200">
             <Star className="w-3.5 h-3.5" /> Projet de soutenance — Master Informatique · 2024-2025
           </div>
-          <h2 className="text-5xl font-black text-gray-900 mb-5 tracking-tight">
+          <h2 className="text-5xl font-black text-gray-900 dark:text-gray-50 mb-5 tracking-tight">
             Explorez la plateforme<br />
             <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
               TIRAHOU dès maintenant
             </span>
           </h2>
-          <p className="text-gray-500 mb-10 text-lg max-w-xl mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 mb-10 text-lg max-w-xl mx-auto">
             Connectez-vous avec l'un des comptes de démonstration et découvrez
             l'expérience complète selon votre rôle.
           </p>
@@ -344,7 +344,7 @@ export default function LandingPage() {
               <ArrowRight className="w-5 h-5" />
             </button>
             <button onClick={() => window.open('http://localhost:8000/api/docs/', '_blank')}
-              className="flex items-center gap-2 border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-bold px-8 py-4 rounded-2xl transition-all text-base w-full sm:w-auto justify-center">
+              className="flex items-center gap-2 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 hover:bg-gray-50 dark:bg-gray-800 font-bold px-8 py-4 rounded-2xl transition-all text-base w-full sm:w-auto justify-center">
               <Globe className="w-4 h-4" /> API Swagger
             </button>
           </div>

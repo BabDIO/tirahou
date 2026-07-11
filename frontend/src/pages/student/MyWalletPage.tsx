@@ -93,7 +93,7 @@ export default function MyWalletPage() {
         <Card title="Historique des transactions" subtitle={`${transactions.length} transaction(s)`}>
           <div className="space-y-2">
             {transactions.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-8">Aucune transaction pour le moment.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Aucune transaction pour le moment.</p>
             )}
             {transactions.map((tx) => {
               const isCredit = tx.type === 'credit' || tx.type === 'reward'
@@ -125,7 +125,7 @@ export default function MyWalletPage() {
           {loadingBadges ? (
             <Spinner text="Chargement des badges..." />
           ) : !badges || badges.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-gray-400">
+            <div className="flex flex-col items-center py-8 text-gray-400 dark:text-gray-500">
               <Award className="w-10 h-10 mb-2 opacity-30" />
               <p className="text-sm">Aucun badge obtenu pour le moment.</p>
             </div>

@@ -46,7 +46,7 @@ export default function BibliothecairePage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Gestion de la Bibliothèque</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Administration du fonds documentaire numérique</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Administration du fonds documentaire numérique</p>
         </div>
         <Button icon={<Upload className="w-4 h-4" />} size="sm" onClick={() => setUploadOpen(true)}>
           Ajouter un document
@@ -69,9 +69,9 @@ export default function BibliothecairePage() {
         <Card title="Répartition par domaine" subtitle="Top 10 domaines">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {stats.by_domain.map((d: { domain: string; count: number }) => (
-              <div key={d.domain} className="bg-gray-50 rounded-xl p-3 text-center">
-                <p className="text-lg font-bold text-gray-900">{d.count}</p>
-                <p className="text-xs text-gray-500 truncate">{d.domain || 'Non classé'}</p>
+              <div key={d.domain} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-50">{d.count}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{d.domain || 'Non classé'}</p>
               </div>
             ))}
           </div>
@@ -111,9 +111,9 @@ export default function BibliothecairePage() {
                   {data?.results?.map((doc: LibraryDocument) => (
                     <tr key={doc.id}>
                       <td className="font-semibold text-sm max-w-xs truncate">{doc.title}</td>
-                      <td className="text-sm text-gray-600">{doc.author}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{doc.author}</td>
                       <td><Badge label={doc.type_display} className={typeColor[doc.type] ?? 'badge-gray'} /></td>
-                      <td className="text-sm text-gray-600">{doc.domain || '—'}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{doc.domain || '—'}</td>
                       <td className="text-sm">{doc.year}</td>
                       <td className="text-sm font-medium">{doc.download_count}</td>
                       <td>
@@ -215,7 +215,7 @@ function LibraryDocForm({ doc, onSuccess }: { doc?: LibraryDocument; onSuccess: 
         </div>
         <div>
           <label className="label">Type</label>
-          <select className="input bg-white" value={form.type} onChange={e => set('type', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
             {['livre','memoire','these','article','guide','rapport'].map(t => (
               <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
             ))}
@@ -227,7 +227,7 @@ function LibraryDocForm({ doc, onSuccess }: { doc?: LibraryDocument; onSuccess: 
         </div>
         <div>
           <label className="label">Accès</label>
-          <select className="input bg-white" value={form.access_level} onChange={e => set('access_level', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.access_level} onChange={e => set('access_level', e.target.value)}>
             <option value="public">Public</option>
             <option value="authenticated">Authentifié</option>
             <option value="restricted">Restreint</option>

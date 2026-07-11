@@ -84,7 +84,7 @@ export default function TeacherCoursesPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Mes Espaces de Cours</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Gérez vos cours, ressources et suivez la progression des étudiants</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gérez vos cours, ressources et suivez la progression des étudiants</p>
       </div>
 
       {isLoading ? <Spinner /> : !courses.length ? (
@@ -103,8 +103,8 @@ export default function TeacherCoursesPage() {
                       <BookOpen className="w-4 h-4 text-primary-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-gray-900">{c.title}</p>
-                      <p className="text-xs text-gray-400">{c.ue_code}</p>
+                      <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{c.title}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{c.ue_code}</p>
                     </div>
                   </div>
                   {!c.is_published && (
@@ -124,19 +124,19 @@ export default function TeacherCoursesPage() {
             <div className="lg:col-span-2 space-y-4">
               {/* Stats progression */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                <div className="bg-white border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center">
                   <p className="text-2xl font-black text-primary-600">{progressList.length}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Étudiants actifs</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Étudiants actifs</p>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                <div className="bg-white border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center">
                   <p className="text-2xl font-black text-emerald-600">{avgCompletion}%</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Complétion moy.</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Complétion moy.</p>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                <div className="bg-white border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center">
                   <p className="text-2xl font-black text-amber-600">
                     {progressList.filter((p: { completion_rate: number }) => p.completion_rate < 30).length}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">Peu avancés</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Peu avancés</p>
                 </div>
               </div>
 
@@ -158,12 +158,12 @@ export default function TeacherCoursesPage() {
                   <Card key={mod.id} noPadding>
                     <div className="p-3">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <p className="font-semibold text-sm text-gray-900 flex items-center gap-2">
+                        <p className="font-semibold text-sm text-gray-900 dark:text-gray-50 flex items-center gap-2">
                           <span className="w-6 h-6 rounded bg-primary-100 text-primary-700 text-xs font-black flex items-center justify-center">{mod.order}</span>
                           {mod.title}
-                          <span className="text-xs text-gray-400 font-normal">{mod.resources?.length ?? 0} ressource(s)</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">{mod.resources?.length ?? 0} ressource(s)</span>
                         </p>
-                        <select className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
+                        <select className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white"
                           value={mod.prerequisite_module ?? ''}
                           onChange={e => setPrerequisiteMut.mutate({ id: mod.id, prerequisite_module: e.target.value || null })}>
                           <option value="">Aucun prérequis</option>
@@ -173,8 +173,8 @@ export default function TeacherCoursesPage() {
                         </select>
                       </div>
                       {mod.resources?.map(r => (
-                        <div key={r.id} className="ml-8 mt-1.5 flex items-center gap-2 text-xs text-gray-600">
-                          <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <div key={r.id} className="ml-8 mt-1.5 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                          <FileText className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                           <span>{r.title}</span>
                           <Badge label={r.type} className="badge-gray" />
                           {r.version > 1 && <Badge label={`v${r.version}`} className="badge-blue" />}
@@ -199,12 +199,12 @@ export default function TeacherCoursesPage() {
                     {progressList.slice(0, 10).map((p: { student_name?: string; completion_rate: number }) => (
                       <div key={Math.random()} className="flex items-center gap-3">
                         <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <Users className="w-3.5 h-3.5 text-gray-500" />
+                          <Users className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-700 font-medium truncate">{p.student_name ?? 'Étudiant'}</span>
-                            <span className="text-gray-500 flex-shrink-0">{Math.round(p.completion_rate)}%</span>
+                            <span className="text-gray-700 dark:text-gray-300 font-medium truncate">{p.student_name ?? 'Étudiant'}</span>
+                            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">{Math.round(p.completion_rate)}%</span>
                           </div>
                           <Progress value={p.completion_rate} size="sm"
                             color={p.completion_rate >= 75 ? 'bg-emerald-500' : p.completion_rate >= 40 ? 'bg-amber-500' : 'bg-red-500'} />
@@ -216,7 +216,7 @@ export default function TeacherCoursesPage() {
               )}
             </div>
           ) : (
-            <div className="lg:col-span-2 flex items-center justify-center text-gray-400 text-sm">
+            <div className="lg:col-span-2 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
               ← Sélectionnez un cours pour le gérer
             </div>
           )}
@@ -265,7 +265,7 @@ export default function TeacherCoursesPage() {
             Permettre le téléchargement
           </label>
           <div className="flex gap-3 pt-2">
-            <button onClick={() => setShowUpload(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+            <button onClick={() => setShowUpload(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
             <button onClick={handleUpload}
               disabled={!resourceForm.title || !resourceForm.module || uploadResourceMut.isPending}
               className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50">

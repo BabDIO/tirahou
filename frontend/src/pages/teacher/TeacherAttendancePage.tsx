@@ -65,7 +65,7 @@ export default function TeacherAttendancePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Gestion des Présences</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Créez des feuilles, gérez les pointages QR code</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Créez des feuilles, gérez les pointages QR code</p>
         </div>
         <button onClick={() => setShowCreateSheet(true)}
           className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 text-sm font-semibold transition">
@@ -76,7 +76,7 @@ export default function TeacherAttendancePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Liste des feuilles */}
         <div className="space-y-2">
-          <h3 className="text-sm font-bold text-gray-700">Feuilles de présence</h3>
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Feuilles de présence</h3>
           {isLoading ? <Spinner /> : !sheetList.length ? (
             <Empty icon={<UserCheck className="w-6 h-6" />} message="Aucune feuille" description="Créez une feuille pour une séance." />
           ) : sheetList.map((sheet: { id: string; session_code: string; is_open: boolean; created_at: string; session?: { ec_code?: string; start_datetime?: string } }) => (
@@ -84,8 +84,8 @@ export default function TeacherAttendancePage() {
               className={`cursor-pointer ${selectedSheet === sheet.id ? 'ring-2 ring-primary-500' : ''}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">{sheet.session?.ec_code ?? 'Séance'}</p>
-                  <p className="text-xs text-gray-400">{sheet.session?.start_datetime ? formatDate(sheet.session.start_datetime) : formatDate(sheet.created_at)}</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{sheet.session?.ec_code ?? 'Séance'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{sheet.session?.start_datetime ? formatDate(sheet.session.start_datetime) : formatDate(sheet.created_at)}</p>
                   <p className="font-mono text-xs text-primary-600 mt-0.5">Code : {sheet.session_code}</p>
                 </div>
                 <Badge label={sheet.is_open ? 'Ouverte' : 'Fermée'} className={sheet.is_open ? 'badge-green' : 'badge-gray'} />
@@ -130,9 +130,9 @@ export default function TeacherAttendancePage() {
                   <p className="text-2xl font-black text-red-700">{absentCount}</p>
                   <p className="text-xs text-red-600">Absents</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
-                  <p className="text-2xl font-black text-gray-700">{recordList.length}</p>
-                  <p className="text-xs text-gray-500">Total</p>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center border border-gray-100 dark:border-gray-700">
+                  <p className="text-2xl font-black text-gray-700 dark:text-gray-300">{recordList.length}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
                 </div>
               </div>
             )}
@@ -147,7 +147,7 @@ export default function TeacherAttendancePage() {
             ) : (
               <div className="space-y-1 max-h-96 overflow-y-auto">
                 {recordList.map((r: { id: string; student_name?: string; status: string; method: string; marked_at: string | null; minutes_late: number }) => (
-                  <div key={r.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:bg-gray-800 transition">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                         r.status === 'present' ? 'bg-emerald-100' : r.status === 'absent' ? 'bg-red-100' : 'bg-amber-100'
@@ -157,8 +157,8 @@ export default function TeacherAttendancePage() {
                           <Clock className="w-4 h-4 text-amber-600" />}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{r.student_name ?? 'Étudiant'}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{r.student_name ?? 'Étudiant'}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
                           {r.method} {r.marked_at && `· ${new Date(r.marked_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
                           {r.minutes_late > 0 && ` · ${r.minutes_late} min retard`}
                         </p>
@@ -167,7 +167,7 @@ export default function TeacherAttendancePage() {
                     <div className="flex items-center gap-1.5">
                       {['present', 'absent', 'retard', 'excuse'].map(s => (
                         <button key={s} onClick={() => updateRecordMut.mutate({ id: r.id, status: s })}
-                          className={`px-2 py-1 rounded-lg text-xs font-medium transition ${r.status === s ? statusColor(s) + ' opacity-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 opacity-60'}`}>
+                          className={`px-2 py-1 rounded-lg text-xs font-medium transition ${r.status === s ? statusColor(s) + ' opacity-100' : 'bg-gray-100 text-gray-500 dark:text-gray-400 hover:bg-gray-200 opacity-60'}`}>
                           {s === 'present' ? '✓' : s === 'absent' ? '✗' : s === 'retard' ? '⏱' : 'E'}
                         </button>
                       ))}
@@ -178,7 +178,7 @@ export default function TeacherAttendancePage() {
             )}
           </div>
         ) : (
-          <div className="lg:col-span-2 flex items-center justify-center text-gray-400 text-sm">
+          <div className="lg:col-span-2 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
             ← Sélectionnez une feuille pour gérer les présences
           </div>
         )}
@@ -199,7 +199,7 @@ export default function TeacherAttendancePage() {
             </select>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setShowCreateSheet(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+            <button onClick={() => setShowCreateSheet(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
             <button onClick={() => createSheetMut.mutate({ session: sessionId })}
               disabled={!sessionId || createSheetMut.isPending}
               className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">

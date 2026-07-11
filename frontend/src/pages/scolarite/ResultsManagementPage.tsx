@@ -66,8 +66,8 @@ export default function ResultsManagementPage() {
       sortable: true,
       render: (_, row) => (
         <div>
-          <p className="font-medium text-gray-900">{row.student_name}</p>
-          <p className="text-xs text-gray-400">{row.student_id}</p>
+          <p className="font-medium text-gray-900 dark:text-gray-50">{row.student_name}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{row.student_id}</p>
         </div>
       )
     },
@@ -121,15 +121,15 @@ export default function ResultsManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestion des résultats</h1>
-          <p className="text-sm text-gray-500 mt-1">Calcul et publication des résultats semestriels</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Gestion des résultats</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Calcul et publication des résultats semestriels</p>
         </div>
       </div>
 
       <Card>
         <div className="flex items-center gap-4 mb-6">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Session d'examen</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Session d'examen</label>
             <select
               className="input"
               value={selectedSession}

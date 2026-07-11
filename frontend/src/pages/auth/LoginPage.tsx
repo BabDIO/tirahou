@@ -204,15 +204,15 @@ export default function LoginPage() {
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-black text-gray-900 text-xl">TIRAHOU</p>
-              <p className="text-gray-400 text-xs">Plateforme Universitaire</p>
+              <p className="font-black text-gray-900 dark:text-gray-50 text-xl">TIRAHOU</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs">Plateforme Universitaire</p>
             </div>
           </div>
 
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Connexion</h2>
-            <p className="text-gray-500 text-sm mt-1.5">Accédez à votre espace institutionnel TIRAHOU</p>
+            <h2 className="text-3xl font-black text-gray-900 dark:text-gray-50 tracking-tight">Connexion</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1.5">Accédez à votre espace institutionnel TIRAHOU</p>
           </div>
 
           {/* Error */}
@@ -226,15 +226,15 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Email</label>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider">Email</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
                 <input
                   type="email"
                   placeholder="prenom.nom@tirahou.edu"
                   autoComplete="email"
-                  className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border bg-white text-sm text-gray-900 placeholder:text-gray-300 outline-none transition-all shadow-sm
-                    ${errors.email ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'}`}
+                  className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border bg-white text-sm text-gray-900 dark:text-gray-50 placeholder:text-gray-300 outline-none transition-all shadow-sm
+                    ${errors.email ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 dark:border-gray-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'}`}
                   {...register('email')}
                 />
               </div>
@@ -243,20 +243,20 @@ export default function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Mot de passe</label>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Mot de passe</label>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-11 pr-12 py-3.5 rounded-2xl border bg-white text-sm text-gray-900 placeholder:text-gray-300 outline-none transition-all shadow-sm
-                    ${errors.password ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'}`}
+                  className={`w-full pl-11 pr-12 py-3.5 rounded-2xl border bg-white text-sm text-gray-900 dark:text-gray-50 placeholder:text-gray-300 outline-none transition-all shadow-sm
+                    ${errors.password ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 dark:border-gray-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'}`}
                   {...register('password')}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -265,17 +265,17 @@ export default function LoginPage() {
 
             {mfaRequired && (
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Code d'authentification</label>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider">Code d'authentification</label>
                 <div className="relative">
-                  <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
                   <input
                     type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus
                     placeholder="123456" maxLength={6}
                     value={mfaCode} onChange={e => setMfaCode(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm text-gray-900 tracking-[0.3em] font-semibold placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-normal outline-none transition-all shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white text-sm text-gray-900 dark:text-gray-50 tracking-[0.3em] font-semibold placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-normal outline-none transition-all shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-gray-400">Ouvrez votre application d'authentification (Google Authenticator, Authy...)</p>
+                <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Ouvrez votre application d'authentification (Google Authenticator, Authy...)</p>
               </div>
             )}
 
@@ -301,16 +301,16 @@ export default function LoginPage() {
             </button>
 
             {showDemo && (
-              <div className="mt-2 p-3 bg-white border border-gray-100 rounded-2xl shadow-xl space-y-1 max-h-64 overflow-y-auto">
+              <div className="mt-2 p-3 bg-white border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl space-y-1 max-h-64 overflow-y-auto">
                 {DEMO_ACCOUNTS.map(({ role, email, password, color }) => (
                   <button key={email} onClick={() => fillDemo(email, password)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:bg-gray-800 transition-colors text-left group">
                     <div className={`w-7 h-7 ${color} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm`}>
                       <span className="text-white text-[10px] font-black">{role[0]}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-gray-800">{role}</p>
-                      <p className="text-[10px] text-gray-400 truncate">{email}</p>
+                      <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{role}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{email}</p>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
                   </button>
@@ -319,7 +319,7 @@ export default function LoginPage() {
             )}
           </div>
 
-          <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 text-xs">
+          <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 dark:text-gray-500 text-xs">
             <Lock className="w-3 h-3" />
             <span>Connexion sécurisée par JWT · HTTPS</span>
           </div>

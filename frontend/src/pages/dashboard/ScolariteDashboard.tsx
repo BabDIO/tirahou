@@ -194,10 +194,10 @@ export default function ScolariteDashboard() {
         <Card title="Documents à vérifier" subtitle="File de traitement">
           <div className="space-y-3">
             {data.pending_docs.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Aucun document en attente de vérification.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Aucun document en attente de vérification.</p>
             )}
             {data.pending_docs.map((doc: PendingDoc, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors">
+              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-xl transition-colors">
                 <div className={cn(
                   'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5',
                   doc.priority === 'haute' ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300' :

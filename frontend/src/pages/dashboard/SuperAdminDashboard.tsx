@@ -130,7 +130,7 @@ export default function SuperAdminDashboard() {
         <Card title="Programmes académiques" subtitle={`${systemStats.academic.programs} programmes actifs`}>
           <div className="space-y-3">
             {!systemStats.programs?.length ? (
-              <p className="text-sm text-gray-400 py-4 text-center">Aucun programme actif pour l'instant.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucun programme actif pour l'instant.</p>
             ) : systemStats.programs.map((program: ProgramStatus) => (
               <div key={program.name} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <div>
@@ -230,15 +230,15 @@ export default function SuperAdminDashboard() {
         <Card title="Activité récente" subtitle="Journal d'audit">
           <div className="space-y-3">
             {!systemStats.recent_activities?.length ? (
-              <p className="text-sm text-gray-400 py-4 text-center">Aucune activité récente.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucune activité récente.</p>
             ) : systemStats.recent_activities.map((activity: SystemActivity, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
                   activity.type === 'success' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300' :
                   activity.type === 'finance' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' :
                   activity.type === 'academic' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300' :
-                  'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                  'bg-gray-100 text-gray-600 dark:text-gray-400 dark:bg-gray-800 dark:text-gray-400'
                 )}>
                   {activity.type === 'success' ? <UserCheck className="w-4 h-4" /> :
                    activity.type === 'finance' ? <CreditCard className="w-4 h-4" /> :
@@ -277,7 +277,7 @@ export default function SuperAdminDashboard() {
             </button>
             <button 
               onClick={() => navigate('/admin/settings')}
-              className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 text-left hover:bg-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 dark:border-gray-700/30 dark:hover:bg-gray-800/30 transition-colors"
+              className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-left hover:bg-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 dark:border-gray-700/30 dark:hover:bg-gray-800/30 transition-colors"
             >
               <Building2 className="w-5 h-5 text-gray-600 dark:text-gray-400 mb-2" />
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">Paramètres système</p>
@@ -305,22 +305,22 @@ export default function SuperAdminDashboard() {
 
       {/* ── Footer Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Programmes actifs</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Programmes actifs</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.academic.programs}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Utilisateurs actifs</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Utilisateurs actifs</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">
             {((systemStats.students?.total || 0) + (systemStats.teachers?.total || 0)).toLocaleString()}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Documents générés</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Documents générés</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.documents_generated.toLocaleString()}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Taux de collecte</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Taux de collecte</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{systemStats.finance.collection_rate}%</p>
         </div>
       </div>

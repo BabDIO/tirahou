@@ -192,7 +192,7 @@ export default function BibliothecaireDashboard() {
         <Card title="Emprunts récents" subtitle="Dernières 72 heures">
           <div className="space-y-3">
             {data.recent_loans.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Aucun emprunt récent.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Aucun emprunt récent.</p>
             )}
             {data.recent_loans.map((loan: LoanEntry, i: number) => (
               <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">

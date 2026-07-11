@@ -67,7 +67,7 @@ export default function StudentsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Étudiants</h1>
-          <p className="text-gray-400 text-sm mt-0.5">
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">
             {total} étudiant{total > 1 ? 's' : ''} enregistré{total > 1 ? 's' : ''}
           </p>
         </div>
@@ -165,17 +165,17 @@ export default function StudentsPage() {
                             color={avatarColors[idx % avatarColors.length]}
                           />
                           <div>
-                            <p className="font-semibold text-gray-900 text-sm">{student.user.full_name}</p>
-                            <p className="text-xs text-gray-400">{student.user.email}</p>
+                            <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{student.user.full_name}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">{student.user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md">
+                        <span className="font-mono text-xs bg-gray-100 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-md">
                           {student.student_id}
                         </span>
                       </td>
-                      <td className="text-sm text-gray-600 max-w-[160px] truncate">{student.program_name ?? '—'}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400 max-w-[160px] truncate">{student.program_name ?? '—'}</td>
                       <td>
                         <span className="text-xs font-semibold bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full">
                           L{student.current_level}
@@ -184,7 +184,7 @@ export default function StudentsPage() {
                       <td>
                         <Badge label={student.status_display} className={statusColor(student.status)} dot />
                       </td>
-                      <td className="text-xs text-gray-400">{formatDate(student.user.created_at)}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(student.user.created_at)}</td>
                       <td className="text-right">
                         <Button
                           variant="ghost" size="sm"
@@ -243,11 +243,11 @@ function StudentDetail({ student }: { student: Student }) {
       <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-primary-50 to-violet-50 rounded-2xl border border-primary-100">
         <Avatar name={student.user.full_name} src={student.photo} size="xl" color="bg-primary-100 text-primary-700" />
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-gray-900">{student.user.full_name}</h3>
-          <p className="text-sm text-gray-500">{student.user.email}</p>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-50">{student.user.full_name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{student.user.email}</p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <Badge label={student.status_display} className={statusColor(student.status)} dot />
-            <span className="text-xs text-gray-400 font-mono">#{student.student_id}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">#{student.student_id}</span>
             <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-semibold">
               Licence {student.current_level}
             </span>
@@ -278,9 +278,9 @@ function StudentDetail({ student }: { student: Student }) {
             ['Programme', student.program_name ?? '—'],
             ['Téléphone', student.user.phone || '—'],
           ].map(([label, value]) => (
-            <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-              <p className="font-semibold text-gray-800">{value}</p>
+            <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+              <p className="font-semibold text-gray-800 dark:text-gray-200">{value}</p>
             </div>
           ))}
         </div>
@@ -293,10 +293,10 @@ function StudentDetail({ student }: { student: Student }) {
             id: string; enrollment_number: string; program_name: string;
             academic_year: string; status_display: string; status: string
           }) => (
-            <div key={e.id} className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+            <div key={e.id} className="flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
               <div>
-                <p className="font-semibold text-sm text-gray-900">{e.program_name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{e.enrollment_number} · {e.academic_year}</p>
+                <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{e.program_name}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{e.enrollment_number} · {e.academic_year}</p>
               </div>
               <Badge label={e.status_display} className={statusColor(e.status)} />
             </div>
@@ -313,7 +313,7 @@ function StudentDetail({ student }: { student: Student }) {
             Array.isArray(grades) && grades.length > 0 ? grades.slice(0, 10).map((g: {
               id: string; ec_code: string; final_grade: number | null; status: string
             }) => (
-              <div key={g.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+              <div key={g.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 <span className="font-mono text-sm font-semibold text-primary-600">{g.ec_code}</span>
                 <div className="flex items-center gap-3">
                   <span className={`font-bold text-sm ${(g.final_grade ?? 0) >= 10 ? 'text-emerald-600' : 'text-red-500'}`}>

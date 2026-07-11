@@ -53,7 +53,7 @@ export default function MyCoursesPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Mes Cours</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Accédez à vos espaces de cours et ressources pédagogiques</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Accédez à vos espaces de cours et ressources pédagogiques</p>
       </div>
 
       {/* Stats rapides */}
@@ -75,7 +75,7 @@ export default function MyCoursesPage() {
       {/* Filtres */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             className="input pl-9 w-full" placeholder="Rechercher un cours, un code UE..." />
         </div>
@@ -109,15 +109,15 @@ export default function MyCoursesPage() {
                   <Badge label={c.mode_display ?? c.mode} className={modeColor[c.mode] ?? 'badge-gray'} />
                 </div>
 
-                <h3 className="font-bold text-gray-900 mb-1">{c.title}</h3>
-                <p className="text-xs text-gray-400 mb-3">{c.ue_code} — {c.ue_name}</p>
+                <h3 className="font-bold text-gray-900 dark:text-gray-50 mb-1">{c.title}</h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{c.ue_code} — {c.ue_name}</p>
 
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
                     {timeH > 0 ? `${timeH}h${timeM > 0 ? timeM + 'min' : ''}` : timeM > 0 ? `${timeM} min` : '—'}
                   </span>
-                  <span className="font-semibold text-gray-700">{Math.round(completion)}% complété</span>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">{Math.round(completion)}% complété</span>
                 </div>
 
                 <Progress value={completion}
@@ -125,7 +125,7 @@ export default function MyCoursesPage() {
                   size="sm" />
 
                 {prog?.last_access && (
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                     Dernière activité : {new Date(prog.last_access).toLocaleDateString('fr-FR')}
                   </p>
                 )}

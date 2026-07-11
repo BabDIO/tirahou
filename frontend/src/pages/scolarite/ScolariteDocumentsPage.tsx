@@ -40,7 +40,7 @@ export default function ScolariteDocumentsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Vérification des Documents</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Validation des pièces justificatives des étudiants</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Validation des pièces justificatives des étudiants</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -82,15 +82,15 @@ export default function ScolariteDocumentsPage() {
                     <tr key={doc.id}>
                       <td>
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                           <span className="font-medium text-sm truncate max-w-xs">{doc.title}</span>
                         </div>
                       </td>
-                      <td className="text-sm text-gray-600">{doc.student}</td>
-                      <td className="text-xs text-gray-400">
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{doc.student}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">
                         {doc.file_size > 0 ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB` : '—'}
                       </td>
-                      <td className="text-xs text-gray-400">{formatDate(doc.created_at)}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(doc.created_at)}</td>
                       <td><Badge label={doc.status} className={statusColor[doc.status] ?? 'badge-gray'} dot /></td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">

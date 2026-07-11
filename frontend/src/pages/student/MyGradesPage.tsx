@@ -173,34 +173,34 @@ export default function MyGradesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 uppercase text-xs">
                     EC
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 uppercase text-xs">
                     CC (40%)
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 uppercase text-xs">
                     Examen (60%)
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 uppercase text-xs">
                     Note finale
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 uppercase text-xs">
                     Statut
                   </th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600 uppercase text-xs">
+                  <th className="text-right px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 uppercase text-xs">
                     Action
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {validGrades.map((grade: Grade) => (
-                  <tr key={grade.id} className="hover:bg-gray-50 transition">
+                  <tr key={grade.id} className="hover:bg-gray-50 dark:bg-gray-800 transition">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{grade.ec_name}</p>
-                      <p className="text-xs text-gray-400">{grade.ec_code}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-50">{grade.ec_name}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{grade.ec_code}</p>
                     </td>
                     <td className="text-center px-4 py-3">
                       {grade.cc_grade?.toFixed(2) || '—'}
@@ -261,8 +261,8 @@ function ContestForm({ grade, loading, onSubmit, onCancel }: {
   const [reason, setReason] = useState('')
   return (
     <div className="space-y-4">
-      <div className="bg-gray-50 rounded-xl p-3.5 flex items-center justify-between">
-        <span className="text-sm text-gray-600">Note finale</span>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5 flex items-center justify-between">
+        <span className="text-sm text-gray-600 dark:text-gray-400">Note finale</span>
         <span className={`font-bold ${(grade.final_grade || 0) >= 10 ? 'text-emerald-600' : 'text-red-600'}`}>
           {grade.final_grade?.toFixed(2) ?? '—'}/20
         </span>
@@ -273,7 +273,7 @@ function ContestForm({ grade, loading, onSubmit, onCancel }: {
           onChange={e => setReason(e.target.value)}
           placeholder="Expliquez pourquoi vous contestez cette note (erreur de saisie, contre-vérification demandée...)" />
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" variant="danger" loading={loading} disabled={!reason.trim()}
           onClick={() => onSubmit(reason)}>

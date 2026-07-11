@@ -73,7 +73,7 @@ export default function EnrollmentPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Inscriptions</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Gestion des inscriptions administratives et pédagogiques</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gestion des inscriptions administratives et pédagogiques</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
           Nouvelle inscription
@@ -148,8 +148,8 @@ export default function EnrollmentPage() {
                             {enrollment.enrollment_number}
                           </span>
                         </td>
-                        <td className="font-semibold text-gray-900 text-sm">{enrollment.student_name}</td>
-                        <td className="text-sm text-gray-600 max-w-[160px] truncate">{enrollment.program_name}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{enrollment.student_name}</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400 max-w-[160px] truncate">{enrollment.program_name}</td>
                         <td>
                           <Badge label={enrollment.type} className={typeColors[enrollment.type] ?? 'badge-gray'} />
                         </td>
@@ -217,9 +217,9 @@ export default function EnrollmentPage() {
                   <tbody>
                     {pedaData.results.map((pe: PedaEnrollment) => (
                       <tr key={pe.id}>
-                        <td className="font-semibold text-gray-900 text-sm">{pe.student_name}</td>
-                        <td className="text-sm text-gray-600">{pe.semester_label}</td>
-                        <td className="text-sm text-gray-500">{pe.group_name ?? '—'}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{pe.student_name}</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400">{pe.semester_label}</td>
+                        <td className="text-sm text-gray-500 dark:text-gray-400">{pe.group_name ?? '—'}</td>
                         <td>
                           <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">
                             {pe.ue_count ?? '—'} UE
@@ -229,7 +229,7 @@ export default function EnrollmentPage() {
                           <Badge label={pe.status_display}
                             className={statusColors[pe.status] ?? 'badge-gray'} dot />
                         </td>
-                        <td className="text-xs text-gray-400">{pe.confirmed_at ? formatDate(pe.confirmed_at) : '—'}</td>
+                        <td className="text-xs text-gray-400 dark:text-gray-500">{pe.confirmed_at ? formatDate(pe.confirmed_at) : '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -266,7 +266,7 @@ function EnrollmentDetail({ enrollment, onValidate }: { enrollment: AdminEnrollm
           <ClipboardCheck className="w-6 h-6 text-primary-600" />
         </div>
         <div>
-          <p className="font-bold text-gray-900">{enrollment.student_name}</p>
+          <p className="font-bold text-gray-900 dark:text-gray-50">{enrollment.student_name}</p>
           <p className="text-xs font-mono text-primary-600">{enrollment.enrollment_number}</p>
           <div className="flex gap-2 mt-1.5">
             <Badge label={enrollment.status_display}
@@ -283,15 +283,15 @@ function EnrollmentDetail({ enrollment, onValidate }: { enrollment: AdminEnrollm
           ['Paiement', enrollment.payment_validated ? '✅ Validé' : '⏳ En attente'],
           ['Notes', enrollment.notes || '—'],
         ].map(([label, value]) => (
-          <div key={label} className="bg-gray-50 rounded-xl p-3.5 col-span-2 sm:col-span-1 last:col-span-2">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-            <p className="font-semibold text-gray-800">{value}</p>
+          <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5 col-span-2 sm:col-span-1 last:col-span-2">
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+            <p className="font-semibold text-gray-800 dark:text-gray-200">{value}</p>
           </div>
         ))}
       </div>
 
       {enrollment.status === 'en_attente' && (
-        <div className="flex gap-3 pt-2 border-t border-gray-100">
+        <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
           <Button variant="danger" className="flex-1">Rejeter</Button>
           <Button className="flex-1" icon={<CheckCircle className="w-4 h-4" />} onClick={onValidate}>
             Valider l'inscription
@@ -338,7 +338,7 @@ function EnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label">Étudiant *</label>
-        <select className={`input bg-white ${errors.student ? 'border-red-400' : ''}`}
+        <select className={`input bg-white dark:bg-slate-900 ${errors.student ? 'border-red-400' : ''}`}
           value={form.student} onChange={e => set('student', e.target.value)}>
           <option value="">— Sélectionner un étudiant —</option>
           {students?.results?.map((s: { id: string; student_id: string; user: { full_name: string } }) => (
@@ -350,7 +350,7 @@ function EnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; 
 
       <div>
         <label className="label">Programme *</label>
-        <select className={`input bg-white ${errors.program ? 'border-red-400' : ''}`}
+        <select className={`input bg-white dark:bg-slate-900 ${errors.program ? 'border-red-400' : ''}`}
           value={form.program} onChange={e => set('program', e.target.value)}>
           <option value="">— Sélectionner un programme —</option>
           {programs?.results?.map((p: { id: string; code: string; name: string }) => (
@@ -363,7 +363,7 @@ function EnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Année académique *</label>
-          <select className={`input bg-white ${errors.academic_year ? 'border-red-400' : ''}`}
+          <select className={`input bg-white dark:bg-slate-900 ${errors.academic_year ? 'border-red-400' : ''}`}
             value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
             <option value="">— Sélectionner —</option>
             {years?.results?.map((y: { id: string; label: string; is_current: boolean }) => (
@@ -375,7 +375,7 @@ function EnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; 
 
         <div>
           <label className="label">Type d'inscription</label>
-          <select className="input bg-white" value={form.type} onChange={e => set('type', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
             <option value="premiere_inscription">Première inscription</option>
             <option value="reinscription">Réinscription</option>
             <option value="transfert">Transfert</option>
@@ -389,7 +389,7 @@ function EnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; 
           value={form.notes} onChange={e => set('notes', e.target.value)} />
       </div>
 
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<ClipboardCheck className="w-4 h-4" />}>
           Créer l'inscription

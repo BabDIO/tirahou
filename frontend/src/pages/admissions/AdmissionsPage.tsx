@@ -36,7 +36,7 @@ export default function AdmissionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Admissions & Candidatures</h1>
-          <p className="text-gray-500 text-sm mt-1">{data?.count ?? 0} candidature(s)</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{data?.count ?? 0} candidature(s)</p>
         </div>
         <Button icon={<Megaphone className="w-4 h-4" />} onClick={() => setPublishOpen(true)}>
           Publier les résultats
@@ -84,7 +84,7 @@ export default function AdmissionsPage() {
                       <td className="font-mono text-sm font-semibold text-primary-600">{app.application_number}</td>
                       <td className="font-medium">{app.applicant_name}</td>
                       <td className="text-sm">{app.program_name}</td>
-                      <td className="text-sm text-gray-500">{formatDate(app.submitted_at)}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400">{formatDate(app.submitted_at)}</td>
                       <td className="text-sm">{app.score ?? '—'}</td>
                       <td><Badge label={app.status_display} className={statusColor(app.status)} /></td>
                       <td className="text-right">
@@ -118,13 +118,13 @@ export default function AdmissionsPage() {
                 ['Score', selected.score?.toString() ?? '—'],
                 ['Rang', selected.rank?.toString() ?? '—'],
               ].map(([label, value]) => (
-                <div key={label} className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs mb-0.5">{label}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mb-0.5">{label}</p>
                   <p className="font-medium">{value}</p>
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <span className="text-sm font-medium">Statut actuel</span>
               <Badge label={selected.status_display} className={statusColor(selected.status)} />
             </div>

@@ -43,7 +43,7 @@ export default function AcademicPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Structure Académique</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Université, facultés, départements et règlements LMD</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Université, facultés, départements et règlements LMD</p>
         </div>
         <div className="flex gap-2">
           {tab === 'years' && <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateYearOpen(true)}>Nouvelle année</Button>}
@@ -84,20 +84,20 @@ export default function AcademicPage() {
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                       year.is_current ? 'bg-emerald-100' : 'bg-gray-100'
                     }`}>
-                      <Calendar className={`w-5 h-5 ${year.is_current ? 'text-emerald-600' : 'text-gray-400'}`} />
+                      <Calendar className={`w-5 h-5 ${year.is_current ? 'text-emerald-600' : 'text-gray-400 dark:text-gray-500'}`} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-gray-900">{year.label}</p>
+                        <p className="font-bold text-gray-900 dark:text-gray-50">{year.label}</p>
                         {year.is_current && <Badge label="En cours" className="badge-green" dot />}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         {formatDate(year.start_date)} → {formatDate(year.end_date)}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="hidden sm:grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-400">
+                    <div className="hidden sm:grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
                       {year.candidature_start && (
                         <span>Candidatures: {formatDate(year.candidature_start)}</span>
                       )}
@@ -116,7 +116,7 @@ export default function AcademicPage() {
                 </div>
               ))}
               {!years?.results.length && (
-                <div className="px-5 py-12 text-center text-gray-400 text-sm">Aucune année académique</div>
+                <div className="px-5 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Aucune année académique</div>
               )}
             </div>
           )}
@@ -133,17 +133,17 @@ export default function AcademicPage() {
                   <Building2 className="w-5 h-5 text-primary-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">{fac.name}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">{fac.name}</p>
                   <p className="text-xs text-primary-600 font-mono mt-0.5">{fac.acronym}</p>
-                  <p className="text-xs text-gray-400 mt-1">{fac.university_name}</p>
-                  {fac.email && <p className="text-xs text-gray-400">{fac.email}</p>}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{fac.university_name}</p>
+                  {fac.email && <p className="text-xs text-gray-400 dark:text-gray-500">{fac.email}</p>}
                 </div>
                 <Button variant="ghost" size="xs" icon={<Edit className="w-3 h-3" />} />
               </div>
             </Card>
           ))}
           {!faculties?.results.length && (
-            <div className="col-span-3 py-12 text-center text-gray-400 text-sm">Aucune faculté</div>
+            <div className="col-span-3 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Aucune faculté</div>
           )}
         </div>
       )}
@@ -158,16 +158,16 @@ export default function AcademicPage() {
                   <BookMarked className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">{dept.name}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">{dept.name}</p>
                   <p className="text-xs font-mono text-emerald-600 mt-0.5">{dept.acronym}</p>
-                  <p className="text-xs text-gray-400 mt-1">{dept.faculty_name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{dept.faculty_name}</p>
                 </div>
                 <Button variant="ghost" size="xs" icon={<Edit className="w-3 h-3" />} />
               </div>
             </Card>
           ))}
           {!departments?.results.length && (
-            <div className="col-span-2 py-12 text-center text-gray-400 text-sm">Aucun département</div>
+            <div className="col-span-2 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Aucun département</div>
           )}
         </div>
       )}
@@ -186,7 +186,7 @@ export default function AcademicPage() {
                     <Settings className="w-5 h-5 text-violet-600" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{reg.name}</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-50">{reg.name}</p>
                     <p className="text-xs text-violet-600 font-semibold mt-0.5 uppercase tracking-wide">{reg.cycle}</p>
                   </div>
                 </div>
@@ -197,9 +197,9 @@ export default function AcademicPage() {
                     ['Note passage', `${reg.passing_grade}/20`],
                     ['Durée max', `${reg.max_years_allowed} ans`],
                   ].map(([label, value]) => (
-                    <div key={label} className="bg-gray-50 rounded-lg p-2">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
-                      <p className="text-sm font-bold text-gray-800">{value}</p>
+                    <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">{label}</p>
+                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{value}</p>
                     </div>
                   ))}
                 </div>
@@ -296,7 +296,7 @@ function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" checked={form.is_current} onChange={e => set('is_current', e.target.checked)}
           className="w-4 h-4 text-primary-600 rounded" />
-        <span className="text-sm text-gray-700 font-medium">Définir comme année courante</span>
+        <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Définir comme année courante</span>
       </label>
       <Button className="w-full" onClick={handleSubmit} loading={loading} icon={<Plus className="w-4 h-4" />}>
         Créer l'année académique
@@ -366,7 +366,7 @@ function CreateDeptForm({ onSuccess }: { onSuccess: () => void }) {
       {error && <Alert type="error">{error}</Alert>}
       <div>
         <label className="label">Faculté de rattachement</label>
-        <select className="input bg-white" value={form.faculty} onChange={e => set('faculty', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.faculty} onChange={e => set('faculty', e.target.value)}>
           <option value="">— Sélectionner —</option>
           {faculties?.results?.map((f: Faculty) => (
             <option key={f.id} value={f.id}>{f.name}</option>

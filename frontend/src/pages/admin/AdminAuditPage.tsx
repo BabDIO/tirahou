@@ -25,7 +25,7 @@ export default function AdminAuditPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Journal d'Audit</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Traçabilité de toutes les actions sensibles du système</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Traçabilité de toutes les actions sensibles du système</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -71,10 +71,10 @@ export default function AdminAuditPage() {
                     <tr key={log.id}>
                       <td className="font-semibold text-sm">{log.user_name}</td>
                       <td><Badge label={log.action} className={actionColor[log.action] ?? 'badge-gray'} /></td>
-                      <td className="text-sm text-gray-600">{log.module}</td>
-                      <td className="text-sm text-gray-500 max-w-xs truncate">{log.description || '—'}</td>
-                      <td className="font-mono text-xs text-gray-400">{log.ip_address ?? '—'}</td>
-                      <td className="text-xs text-gray-400">{formatDate(log.timestamp)}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{log.module}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{log.description || '—'}</td>
+                      <td className="font-mono text-xs text-gray-400 dark:text-gray-500">{log.ip_address ?? '—'}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(log.timestamp)}</td>
                     </tr>
                   ))}
                 </tbody>

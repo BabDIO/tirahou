@@ -33,12 +33,12 @@ export default function SessionExpiredPage() {
           </div>
 
           {/* Titre */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3">
             Session expirée
           </h1>
 
           {/* Description */}
-          <p className="text-gray-600 mb-6 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
             Votre session a expiré pour des raisons de sécurité. Veuillez vous reconnecter pour continuer.
           </p>
 
@@ -78,14 +78,14 @@ export default function SessionExpiredPage() {
           </Button>
 
           {/* Note de sécurité */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
+          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-start gap-3 text-left">
               <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-gray-900 mb-1">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
                   Protection de votre compte
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Cette mesure de sécurité protège vos données personnelles et académiques contre tout accès non autorisé.
                 </p>
               </div>
@@ -95,10 +95,10 @@ export default function SessionExpiredPage() {
 
         {/* Conseils de sécurité */}
         <div className="mt-6 bg-white/50 backdrop-blur-sm rounded-xl p-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-3">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-3">
             🔐 Conseils de sécurité
           </h3>
-          <ul className="space-y-2 text-sm text-gray-600">
+          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-start gap-2">
               <span className="text-green-600 font-bold">✓</span>
               <span>Ne partagez jamais votre mot de passe</span>
@@ -120,7 +120,7 @@ export default function SessionExpiredPage() {
 
         {/* Footer */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Besoin d'aide ?{' '}
             <a 
               href="mailto:support@votre-universite.edu"

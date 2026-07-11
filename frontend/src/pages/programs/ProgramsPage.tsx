@@ -71,7 +71,7 @@ export default function ProgramsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Programmes & Maquettes LMD</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} programme(s) enregistré(s)</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} programme(s) enregistré(s)</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>Nouveau programme</Button>
       </div>
@@ -138,18 +138,18 @@ export default function ProgramsPage() {
                           </span>
                         </td>
                         <td>
-                          <p className="font-semibold text-gray-900 text-sm">{prog.name}</p>
-                          <p className="text-xs text-gray-400">{prog.department_name}</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{prog.name}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{prog.department_name}</p>
                         </td>
                         <td><Badge label={prog.type_display} className={typeColor[prog.type] ?? 'badge-gray'} /></td>
                         <td>
-                          <span className="flex items-center gap-1 text-xs text-gray-600">
+                          <span className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                             {modeIcon[prog.mode]} {prog.mode_display}
                           </span>
                         </td>
-                        <td className="text-sm text-gray-600">{prog.duration_semesters} sem.</td>
-                        <td className="text-sm text-gray-600">{prog.capacity} pl.</td>
-                        <td className="text-sm font-medium text-gray-800">{formatCurrency(prog.fees)}</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400">{prog.duration_semesters} sem.</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400">{prog.capacity} pl.</td>
+                        <td className="text-sm font-medium text-gray-800 dark:text-gray-200">{formatCurrency(prog.fees)}</td>
                         <td><Badge label={prog.status} className={statusColor(prog.status)} dot /></td>
                         <td className="text-right">
                           <div className="flex justify-end gap-1">
@@ -187,19 +187,19 @@ export default function ProgramsPage() {
                     <Badge label={prog.status} className={statusColor(prog.status)} dot />
                   </div>
                 </div>
-                <h3 className="font-bold text-gray-900 text-sm mb-0.5">{prog.name}</h3>
+                <h3 className="font-bold text-gray-900 dark:text-gray-50 text-sm mb-0.5">{prog.name}</h3>
                 <p className="text-xs font-mono text-primary-600 mb-3">{prog.code}</p>
                 <div className="grid grid-cols-3 gap-2 text-center mb-4">
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-[10px] text-gray-400">Durée</p>
-                    <p className="text-xs font-bold text-gray-700">{prog.duration_semesters}S</p>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">Durée</p>
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{prog.duration_semesters}S</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-[10px] text-gray-400">Places</p>
-                    <p className="text-xs font-bold text-gray-700">{prog.capacity}</p>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">Places</p>
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{prog.capacity}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-[10px] text-gray-400">Mode</p>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">Mode</p>
                     <p className="text-xs">{modeIcon[prog.mode]}</p>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export default function ProgramsPage() {
                 <BookMarked className="w-6 h-6 text-primary-600" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">{selected.name}</h3>
+                <h3 className="font-bold text-gray-900 dark:text-gray-50">{selected.name}</h3>
                 <p className="text-xs font-mono text-primary-600">{selected.code}</p>
                 <div className="flex gap-2 mt-1.5">
                   <Badge label={selected.type_display} className={typeColor[selected.type] ?? 'badge-gray'} />
@@ -242,9 +242,9 @@ export default function ProgramsPage() {
                 ['Département', selected.department_name],
                 ['Candidature', selected.candidature_open ? '✅ Ouverte' : '🔒 Fermée'],
               ].map(([label, value]) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                  <p className="font-semibold text-gray-800 text-sm">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{value}</p>
                 </div>
               ))}
             </div>
@@ -326,7 +326,7 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
       {maquette.length === 0 && <Alert type="info">Aucune maquette définie pour ce programme — ajoutez un premier semestre.</Alert>}
 
       {maquette.map(sem => (
-        <div key={sem.id} className="border border-gray-100 rounded-2xl overflow-hidden">
+        <div key={sem.id} className="border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-primary-50 to-violet-50 px-5 py-3 flex justify-between items-center border-b border-primary-100">
             <h4 className="font-bold text-primary-800 text-sm">{sem.label}</h4>
             <div className="flex items-center gap-2">
@@ -340,25 +340,25 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded">{ue.code}</span>
-                    <span className="font-semibold text-gray-900 text-sm">{ue.name}</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{ue.name}</span>
                   </div>
-                  <div className="flex gap-2 text-xs text-gray-400 flex-shrink-0">
+                  <div className="flex gap-2 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
                     <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium">{ue.credits} cr.</span>
-                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">Coef. {ue.coefficient}</span>
+                    <span className="bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">Coef. {ue.coefficient}</span>
                   </div>
                 </div>
                 {ue.ecs?.length > 0 && (
                   <div className="ml-4 space-y-1 mb-2">
                     {ue.ecs.map(ec => (
-                      <div key={ec.id} className="flex justify-between items-center text-xs bg-gray-50 rounded-lg px-3 py-2 gap-3">
+                      <div key={ec.id} className="flex justify-between items-center text-xs bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 gap-3">
                         <span className="min-w-0">
-                          <span className="font-mono font-semibold text-gray-700">{ec.code}</span>
-                          <span className="text-gray-500 ml-2">{ec.name}</span>
-                          <span className="block text-gray-400 mt-0.5">
+                          <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">{ec.code}</span>
+                          <span className="text-gray-500 dark:text-gray-400 ml-2">{ec.name}</span>
+                          <span className="block text-gray-400 dark:text-gray-500 mt-0.5">
                             {ec.teacher_names?.length ? `👤 ${ec.teacher_names.join(', ')}` : 'Aucun enseignant affecté'}
                           </span>
                         </span>
-                        <span className="text-gray-400 flex-shrink-0 flex items-center gap-2">
+                        <span className="text-gray-400 dark:text-gray-500 flex-shrink-0 flex items-center gap-2">
                           {ec.activity_type_display} · <span className="font-medium">{ec.volume_hours}h</span>
                           <button onClick={() => setAssigningEc(ec)} className="text-primary-600 hover:text-primary-700" title="Affecter un enseignant">
                             <UserCog className="w-3.5 h-3.5" />
@@ -369,13 +369,13 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
                   </div>
                 )}
                 {addingEcFor === ue.id ? (
-                  <div className="ml-4 bg-gray-50 rounded-xl p-3 space-y-2">
+                  <div className="ml-4 bg-gray-50 dark:bg-gray-800 rounded-xl p-3 space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                       <input className="input" placeholder="Code (ex: EC1)" value={ecForm.code} onChange={e => setEcForm(f => ({ ...f, code: e.target.value }))} />
                       <input className="input" placeholder="Intitulé" value={ecForm.name} onChange={e => setEcForm(f => ({ ...f, name: e.target.value }))} />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <select className="input bg-white" value={ecForm.activity_type} onChange={e => setEcForm(f => ({ ...f, activity_type: e.target.value }))}>
+                      <select className="input bg-white dark:bg-slate-900" value={ecForm.activity_type} onChange={e => setEcForm(f => ({ ...f, activity_type: e.target.value }))}>
                         <option value="cm">CM</option><option value="td">TD</option><option value="tp">TP</option>
                         <option value="projet">Projet</option><option value="stage">Stage</option>
                         <option value="seminaire">Séminaire</option><option value="classe_virtuelle">Classe virtuelle</option>
@@ -402,7 +402,7 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
             {/* Ajout UE */}
             <div className="px-5 py-3">
               {addingUeFor === sem.id ? (
-                <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <input className="input" placeholder="Code (ex: UE1)" value={ueForm.code} onChange={e => setUeForm(f => ({ ...f, code: e.target.value }))} />
                     <input className="input" placeholder="Intitulé" value={ueForm.name} onChange={e => setUeForm(f => ({ ...f, name: e.target.value }))} />
@@ -429,7 +429,7 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
       ))}
 
       {/* Ajout Semestre */}
-      <div className="border border-dashed border-gray-200 rounded-2xl p-4">
+      <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-4">
         {addingSemester ? (
           <div className="space-y-2">
             <div className="grid grid-cols-3 gap-2">
@@ -483,9 +483,9 @@ function TeacherAssignForm({ ec, onDone }: { ec: MaquetteEC; onDone: () => void 
   return (
     <div className="space-y-4">
       {isLoading ? <Spinner /> : (
-        <div className="max-h-64 overflow-y-auto space-y-1 border border-gray-200 rounded-xl p-2">
+        <div className="max-h-64 overflow-y-auto space-y-1 border border-gray-200 dark:border-gray-700 rounded-xl p-2">
           {teachers?.results?.map(t => (
-            <label key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm">
+            <label key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:bg-gray-800 cursor-pointer text-sm">
               <input type="checkbox" checked={selected.includes(t.user.id)}
                 onChange={e => setSelected(prev => e.target.checked ? [...prev, t.user.id] : prev.filter(id => id !== t.user.id))} />
               {t.user.full_name}

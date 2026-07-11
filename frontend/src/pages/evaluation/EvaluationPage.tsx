@@ -222,7 +222,7 @@ export default function EvaluationPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Évaluations & Notes</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Sessions d'examens, saisie des notes et publication des résultats</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Sessions d'examens, saisie des notes et publication des résultats</p>
         </div>
         <div className="flex gap-2">
           {tab === 'notes' && (
@@ -295,16 +295,16 @@ export default function EvaluationPage() {
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                       session.is_open ? 'bg-emerald-100' : 'bg-gray-100'
                     }`}>
-                      <BookOpen className={`w-5 h-5 ${session.is_open ? 'text-emerald-600' : 'text-gray-400'}`} />
+                      <BookOpen className={`w-5 h-5 ${session.is_open ? 'text-emerald-600' : 'text-gray-400 dark:text-gray-500'}`} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-gray-900 text-sm">{session.semester}</p>
+                        <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">{session.semester}</p>
                         <Badge label={session.session_type_display}
                           className={session.session_type === 'session1' ? 'badge-blue' : 'badge-orange'} />
                         {session.is_open && <Badge label="Ouverte" className="badge-green" dot />}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         {session.start_date ? formatDate(session.start_date) : '—'}
                         {session.end_date ? ` → ${formatDate(session.end_date)}` : ''}
                       </p>
@@ -370,21 +370,21 @@ export default function EvaluationPage() {
                     <tbody>
                       {grades.results.map((grade: Grade) => (
                         <tr key={grade.id}>
-                          <td className="font-semibold text-gray-900 text-sm">{grade.student_name}</td>
+                          <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{grade.student_name}</td>
                           <td>
                             <span className="font-mono text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-md">
                               {grade.ec_code}
                             </span>
                           </td>
-                          <td className="text-sm text-gray-600">
+                          <td className="text-sm text-gray-600 dark:text-gray-400">
                             {grade.cc_grade != null ? `${Number(grade.cc_grade).toFixed(2)}/20` : '—'}
                           </td>
-                          <td className="text-sm text-gray-600">
+                          <td className="text-sm text-gray-600 dark:text-gray-400">
                             {grade.exam_grade != null ? `${Number(grade.exam_grade).toFixed(2)}/20` : '—'}
                           </td>
                           <td>
                             <span className={`font-bold text-sm ${
-                              grade.final_grade == null ? 'text-gray-400' :
+                              grade.final_grade == null ? 'text-gray-400 dark:text-gray-500' :
                               Number(grade.final_grade) >= 10 ? 'text-emerald-600' : 'text-red-500'
                             }`}>
                               {grade.final_grade != null ? `${Number(grade.final_grade).toFixed(2)}/20` : '—'}
@@ -450,24 +450,24 @@ export default function EvaluationPage() {
                   <tbody>
                     {results.results.map((result: SemesterResult) => (
                       <tr key={result.id}>
-                        <td className="font-semibold text-gray-900 text-sm">{result.student}</td>
-                        <td className="text-sm text-gray-600">{result.semester_label}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{result.student}</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400">{result.semester_label}</td>
                         <td>
                           <span className={`font-bold text-sm ${
-                            result.average == null ? 'text-gray-400' :
+                            result.average == null ? 'text-gray-400 dark:text-gray-500' :
                             Number(result.average) >= 10 ? 'text-emerald-600' : 'text-red-500'
                           }`}>
                             {result.average != null ? `${Number(result.average).toFixed(2)}/20` : '—'}
                           </span>
                         </td>
-                        <td className="text-sm text-gray-600">{result.credits_obtained}/{result.semester}</td>
+                        <td className="text-sm text-gray-600 dark:text-gray-400">{result.credits_obtained}/{result.semester}</td>
                         <td>
                           {result.decision && (
                             <Badge label={result.decision_display}
                               className={result.decision === 'admis' ? 'badge-green' : 'badge-red'} />
                           )}
                         </td>
-                        <td className="text-sm text-gray-500">
+                        <td className="text-sm text-gray-500 dark:text-gray-400">
                           {result.rank ? `#${result.rank}` : '—'}
                         </td>
                         <td>
@@ -508,8 +508,8 @@ export default function EvaluationPage() {
                         <AlertTriangle className="w-4 h-4 text-red-500" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 text-sm">{contest.student}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{contest.reason}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{contest.student}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{contest.reason}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -547,13 +547,13 @@ export default function EvaluationPage() {
                       <Gavel className="w-4 h-4 text-violet-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{jury.exam_session_label}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{jury.exam_session_label}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         Président : {jury.president_name ?? '—'}
                         {jury.member_names?.length > 0 && <> · Membres : {jury.member_names.join(', ')}</>}
                       </p>
                       {jury.deliberation_date && (
-                        <p className="text-xs text-gray-400 mt-0.5">Délibération le {formatDate(jury.deliberation_date)}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Délibération le {formatDate(jury.deliberation_date)}</p>
                       )}
                     </div>
                   </div>
@@ -587,13 +587,13 @@ export default function EvaluationPage() {
                       <MapPin className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{ra.ec_name} <span className="text-gray-400 font-normal">({ra.ec_code})</span></p>
-                      <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-3 flex-wrap">
+                      <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{ra.ec_name} <span className="text-gray-400 dark:text-gray-500 font-normal">({ra.ec_code})</span></p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-3 flex-wrap">
                         <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {ra.room_name ?? 'Salle non définie'}</span>
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDate(ra.start_datetime, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </p>
                       {ra.invigilator_names?.length > 0 && (
-                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
                           <Users className="w-3 h-3" /> {ra.invigilator_names.join(', ')}
                         </p>
                       )}
@@ -622,9 +622,9 @@ export default function EvaluationPage() {
                 ['Note finale', selectedGrade.final_grade != null ? `${Number(selectedGrade.final_grade).toFixed(2)}/20` : '—'],
                 ['Statut', selectedGrade.status],
               ].map(([label, value]) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                  <p className="font-semibold text-gray-800">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{value}</p>
                 </div>
               ))}
             </div>
@@ -687,9 +687,9 @@ function ContestResponseForm({ type, reason, loading, onSubmit, onCancel }: {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-50 rounded-xl p-3.5">
-        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Motif de l'étudiant</p>
-        <p className="text-sm text-gray-700">{reason}</p>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+        <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">Motif de l'étudiant</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">{reason}</p>
       </div>
       {type === 'accept' && (
         <div>
@@ -704,7 +704,7 @@ function ContestResponseForm({ type, reason, loading, onSubmit, onCancel }: {
           onChange={e => setResponse(e.target.value)}
           placeholder={type === 'accept' ? 'Ex: Erreur de saisie corrigée après vérification de la copie.' : 'Ex: Note vérifiée et confirmée conforme au barème.'} />
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" variant={type === 'accept' ? 'success' : 'danger'} loading={loading}
           disabled={!response.trim()}
@@ -744,7 +744,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       </div>
       <div>
         <label className="label">Année académique</label>
-        <select className="input bg-white" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
           <option value="">— Sélectionner —</option>
           {years?.results?.map((y: { id: string; label: string }) => (
             <option key={y.id} value={y.id}>{y.label}</option>
@@ -753,7 +753,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       </div>
       <div>
         <label className="label">Type de session</label>
-        <select className="input bg-white" value={form.session_type} onChange={e => set('session_type', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.session_type} onChange={e => set('session_type', e.target.value)}>
           <option value="session1">Session 1 (Normale)</option>
           <option value="session2">Session 2 (Rattrapage)</option>
         </select>
@@ -768,7 +768,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           <input type="date" className="input" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
         </div>
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading}>Créer la session</Button>
       </div>
@@ -809,7 +809,7 @@ function CreateJuryForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label">Session d'examen *</label>
-        <select className="input bg-white" value={form.exam_session} onChange={e => setForm(f => ({ ...f, exam_session: e.target.value }))}>
+        <select className="input bg-white dark:bg-slate-900" value={form.exam_session} onChange={e => setForm(f => ({ ...f, exam_session: e.target.value }))}>
           <option value="">— Sélectionner —</option>
           {sessions?.results?.map((s: ExamSession) => (
             <option key={s.id} value={s.id}>{s.semester} — {s.session_type_display}</option>
@@ -818,7 +818,7 @@ function CreateJuryForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
       </div>
       <div>
         <label className="label">Président *</label>
-        <select className="input bg-white" value={form.president} onChange={e => setForm(f => ({ ...f, president: e.target.value }))}>
+        <select className="input bg-white dark:bg-slate-900" value={form.president} onChange={e => setForm(f => ({ ...f, president: e.target.value }))}>
           <option value="">— Sélectionner —</option>
           {users?.results?.map((u: { id: string; full_name: string }) => (
             <option key={u.id} value={u.id}>{u.full_name}</option>
@@ -827,9 +827,9 @@ function CreateJuryForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
       </div>
       <div>
         <label className="label">Membres</label>
-        <div className="max-h-36 overflow-y-auto border border-gray-200 rounded-xl p-2 space-y-1">
+        <div className="max-h-36 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-2 space-y-1">
           {users?.results?.map((u: { id: string; full_name: string }) => (
-            <label key={u.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <label key={u.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:bg-gray-800 cursor-pointer">
               <input type="checkbox" checked={form.members.includes(u.id)}
                 onChange={e => setForm(f => ({ ...f, members: e.target.checked ? [...f.members, u.id] : f.members.filter(id => id !== u.id) }))} />
               {u.full_name}
@@ -841,7 +841,7 @@ function CreateJuryForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
         <label className="label">Date de délibération</label>
         <input type="datetime-local" className="input" value={form.deliberation_date} onChange={e => setForm(f => ({ ...f, deliberation_date: e.target.value }))} />
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading}>Créer le jury</Button>
       </div>
@@ -893,7 +893,7 @@ function CreateAssignmentForm({ onSuccess, onCancel }: { onSuccess: () => void; 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label">Session d'examen *</label>
-        <select className="input bg-white" value={form.exam_session} onChange={e => setForm(f => ({ ...f, exam_session: e.target.value }))}>
+        <select className="input bg-white dark:bg-slate-900" value={form.exam_session} onChange={e => setForm(f => ({ ...f, exam_session: e.target.value }))}>
           <option value="">— Sélectionner —</option>
           {sessions?.results?.map((s: ExamSession) => (
             <option key={s.id} value={s.id}>{s.semester} — {s.session_type_display}</option>
@@ -902,7 +902,7 @@ function CreateAssignmentForm({ onSuccess, onCancel }: { onSuccess: () => void; 
       </div>
       <div>
         <label className="label">EC à examiner *</label>
-        <select className="input bg-white" value={form.ec} onChange={e => setForm(f => ({ ...f, ec: e.target.value }))}>
+        <select className="input bg-white dark:bg-slate-900" value={form.ec} onChange={e => setForm(f => ({ ...f, ec: e.target.value }))}>
           <option value="">— Sélectionner —</option>
           {ecs?.results?.map((ec: { id: string; code: string; name: string }) => (
             <option key={ec.id} value={ec.id}>{ec.code} — {ec.name}</option>
@@ -911,7 +911,7 @@ function CreateAssignmentForm({ onSuccess, onCancel }: { onSuccess: () => void; 
       </div>
       <div>
         <label className="label">Salle</label>
-        <select className="input bg-white" value={form.room} onChange={e => setForm(f => ({ ...f, room: e.target.value }))}>
+        <select className="input bg-white dark:bg-slate-900" value={form.room} onChange={e => setForm(f => ({ ...f, room: e.target.value }))}>
           <option value="">— Non définie —</option>
           {rooms?.results?.map((r: { id: string; name: string; code: string }) => (
             <option key={r.id} value={r.id}>{r.name} ({r.code})</option>
@@ -930,9 +930,9 @@ function CreateAssignmentForm({ onSuccess, onCancel }: { onSuccess: () => void; 
       </div>
       <div>
         <label className="label">Surveillants</label>
-        <div className="max-h-36 overflow-y-auto border border-gray-200 rounded-xl p-2 space-y-1">
+        <div className="max-h-36 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-2 space-y-1">
           {teachers?.results?.map((t: { id: string; user: { id: string; full_name: string } }) => (
-            <label key={t.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <label key={t.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:bg-gray-800 cursor-pointer">
               <input type="checkbox" checked={form.invigilators.includes(t.user.id)}
                 onChange={e => setForm(f => ({ ...f, invigilators: e.target.checked ? [...f.invigilators, t.user.id] : f.invigilators.filter(id => id !== t.user.id) }))} />
               {t.user.full_name}
@@ -940,7 +940,7 @@ function CreateAssignmentForm({ onSuccess, onCancel }: { onSuccess: () => void; 
           ))}
         </div>
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading}>Planifier</Button>
       </div>

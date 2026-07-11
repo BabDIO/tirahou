@@ -150,7 +150,7 @@ export default function ProfilePage() {
     <div className="space-y-5 max-w-3xl">
       <div>
         <h1 className="page-title">Mon Profil</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Gérez vos informations personnelles et votre sécurité</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gérez vos informations personnelles et votre sécurité</p>
       </div>
 
       {/* Avatar + info principale */}
@@ -162,26 +162,26 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900">{profile?.full_name ?? `${profile?.first_name} ${profile?.last_name}`}</h2>
-            <p className="text-sm text-gray-500 mt-0.5">{profile?.email}</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50">{profile?.full_name ?? `${profile?.first_name} ${profile?.last_name}`}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{profile?.email}</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {profile?.roles?.map((r: { id: string; name: string }) => (
                 <Badge key={r.id} label={r.name} className="badge-blue" />
               ))}
             </div>
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
+            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 dark:text-gray-500">
               {profile?.is_verified && <span className="flex items-center gap-1 text-emerald-600"><Shield className="w-3.5 h-3.5" /> Compte vérifié</span>}
               {profile?.created_at && <span>Membre depuis {formatDate(profile.created_at)}</span>}
             </div>
           </div>
           <button onClick={() => setEditMode(!editMode)}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
+            className="px-4 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
             {editMode ? 'Annuler' : 'Modifier'}
           </button>
         </div>
 
         {editMode && (
-          <div className="mt-5 pt-5 border-t border-gray-100 space-y-4">
+          <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Prénom</label>
@@ -197,7 +197,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setEditMode(false)} className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+              <button onClick={() => setEditMode(false)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
               <button onClick={() => updateMut.mutate(form)} disabled={updateMut.isPending}
                 className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
                 {updateMut.isPending ? 'Sauvegarde...' : 'Enregistrer'}
@@ -210,19 +210,19 @@ export default function ProfilePage() {
       {/* Informations de contact */}
       <Card title="Informations de contact">
         <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-            <Mail className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             <div>
-              <p className="text-xs text-gray-400">Email</p>
-              <p className="text-sm font-semibold text-gray-900">{profile?.email}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Email</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{profile?.email}</p>
             </div>
           </div>
           {profile?.phone && (
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Phone className="w-4 h-4 text-gray-400" />
+            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               <div>
-                <p className="text-xs text-gray-400">Téléphone</p>
-                <p className="text-sm font-semibold text-gray-900">{profile.phone}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Téléphone</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{profile.phone}</p>
               </div>
             </div>
           )}
@@ -243,7 +243,7 @@ export default function ProfilePage() {
             </Button>
           </div>
           {!myStudent?.id && (
-            <p className="text-xs text-gray-400 mt-3 flex items-center gap-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1.5">
               <Download className="w-3 h-3" /> Disponible une fois votre inscription validée par la scolarité.
             </p>
           )}
@@ -263,18 +263,18 @@ export default function ProfilePage() {
             </div>
           </div>
           {!myBadges?.results?.length ? (
-            <p className="text-sm text-gray-400">Aucun badge obtenu pour le moment.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Aucun badge obtenu pour le moment.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {myBadges.results.map((sb: StudentBadgeT) => (
-                <div key={sb.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                <div key={sb.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Award className="w-4 h-4 text-violet-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900">{sb.badge_detail.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{sb.reason || sb.badge_detail.description}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{formatDate(sb.awarded_at)} · +{sb.badge_detail.points} pts</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{sb.badge_detail.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{sb.reason || sb.badge_detail.description}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{formatDate(sb.awarded_at)} · +{sb.badge_detail.points} pts</p>
                   </div>
                 </div>
               ))}
@@ -287,7 +287,7 @@ export default function ProfilePage() {
       <Card title="Sécurité">
         {!pwdMode ? (
           <button onClick={() => setPwdMode(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
             <Lock className="w-4 h-4" /> Changer le mot de passe
           </button>
         ) : (
@@ -311,7 +311,7 @@ export default function ProfilePage() {
               <Alert type="error">Les mots de passe ne correspondent pas.</Alert>
             )}
             <div className="flex gap-3">
-              <button onClick={() => setPwdMode(false)} className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+              <button onClick={() => setPwdMode(false)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
               <button onClick={() => pwdMut.mutate({ old_password: pwdForm.old_password, new_password: pwdForm.new_password })}
                 disabled={!pwdForm.old_password || !pwdForm.new_password || pwdForm.new_password !== pwdForm.confirm || pwdForm.new_password.length < 8 || pwdMut.isPending}
                 className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
@@ -329,7 +329,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between">
               <Badge label="Activée" className="badge-green" dot />
               <button onClick={() => setShowMfaDisable(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
                 <ShieldOff className="w-4 h-4" /> Désactiver
               </button>
             </div>
@@ -340,7 +340,7 @@ export default function ProfilePage() {
                 value={mfaDisablePwd} onChange={e => setMfaDisablePwd(e.target.value)} />
               <div className="flex gap-3">
                 <button onClick={() => { setShowMfaDisable(false); setMfaDisablePwd('') }}
-                  className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+                  className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
                 <button onClick={() => mfaDisableMut.mutate()} disabled={!mfaDisablePwd || mfaDisableMut.isPending}
                   className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50">
                   {mfaDisableMut.isPending ? 'Désactivation...' : 'Confirmer la désactivation'}
@@ -358,21 +358,21 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Scannez ce QR code avec Google Authenticator, Authy ou une application équivalente, puis saisissez le code à 6 chiffres généré.
             </p>
             {mfaSetupData?.qr_code && (
-              <img src={mfaSetupData.qr_code} alt="QR code MFA" className="w-44 h-44 mx-auto rounded-xl border border-gray-200" />
+              <img src={mfaSetupData.qr_code} alt="QR code MFA" className="w-44 h-44 mx-auto rounded-xl border border-gray-200 dark:border-gray-700" />
             )}
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Ou saisissez manuellement</p>
-              <p className="font-mono text-sm text-gray-700 tracking-wider">{mfaSetupData?.secret}</p>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">Ou saisissez manuellement</p>
+              <p className="font-mono text-sm text-gray-700 dark:text-gray-300 tracking-wider">{mfaSetupData?.secret}</p>
             </div>
             <input type="text" inputMode="numeric" maxLength={6} className="input text-center tracking-[0.3em] font-semibold"
               placeholder="123456" value={mfaCode} onChange={e => setMfaCode(e.target.value)} />
             <div className="flex gap-3">
               <button onClick={() => { setMfaStep('idle'); setMfaSetupData(null); setMfaCode('') }}
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+                className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
               <button onClick={() => mfaVerifyMut.mutate()} disabled={mfaCode.trim().length < 6 || mfaVerifyMut.isPending}
                 className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
                 {mfaVerifyMut.isPending ? 'Vérification...' : 'Confirmer'}
@@ -389,7 +389,7 @@ export default function ProfilePage() {
             <Badge label={pushEnabled ? 'Activées' : 'Désactivées'} className={pushEnabled ? 'badge-green' : 'badge-gray'} dot />
             <button onClick={togglePush} disabled={pushLoading}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-50 ${
-                pushEnabled ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-primary-600 text-white hover:bg-primary-700'
+                pushEnabled ? 'bg-gray-100 text-gray-700 dark:text-gray-300 hover:bg-gray-200' : 'bg-primary-600 text-white hover:bg-primary-700'
               }`}>
               {pushEnabled ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
               {pushLoading ? 'Veuillez patienter...' : pushEnabled ? 'Désactiver' : 'Activer sur cet appareil'}
@@ -403,15 +403,15 @@ export default function ProfilePage() {
         <Card title="Activité récente">
           <div className="space-y-2">
             {auditLogs.results.slice(0, 8).map((log: { id: string; action: string; module: string; description: string; timestamp: string; ip_address: string | null }) => (
-              <div key={log.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-xl transition">
+              <div key={log.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 dark:bg-gray-800 rounded-xl transition">
                 <Clock className="w-4 h-4 text-gray-300 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     <span className="font-semibold">{log.action}</span>
-                    {log.module && <span className="text-gray-400"> sur {log.module}</span>}
-                    {log.description && <span className="text-gray-400"> — {log.description}</span>}
+                    {log.module && <span className="text-gray-400 dark:text-gray-500"> sur {log.module}</span>}
+                    {log.description && <span className="text-gray-400 dark:text-gray-500"> — {log.description}</span>}
                   </p>
-                  <p className="text-xs text-gray-400">{formatDate(log.timestamp)} {log.ip_address ? `· IP: ${log.ip_address}` : ''}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(log.timestamp)} {log.ip_address ? `· IP: ${log.ip_address}` : ''}</p>
                 </div>
               </div>
             ))}

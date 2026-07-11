@@ -50,7 +50,7 @@ export default function InternshipsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Stages, Mémoires & Soutenances</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Suivi des travaux de fin d'études</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Suivi des travaux de fin d'études</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
           {tab === 'internships' ? 'Nouveau stage' : tab === 'memoires' ? 'Nouveau mémoire' : 'Planifier soutenance'}
@@ -103,10 +103,10 @@ export default function InternshipsPage() {
                   }) => (
                     <tr key={s.id}>
                       <td className="font-semibold text-sm">{s.student_name}</td>
-                      <td className="text-sm text-gray-600">{s.company_name}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{s.company_name}</td>
                       <td className="text-sm max-w-[200px] truncate">{s.subject}</td>
-                      <td className="text-sm text-gray-600">{s.supervisor_name}</td>
-                      <td className="text-xs text-gray-400">{formatDate(s.start_date)} → {formatDate(s.end_date)}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{s.supervisor_name}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(s.start_date)} → {formatDate(s.end_date)}</td>
                       <td><Badge label={s.status_display} className={statusColors[s.status] ?? 'badge-gray'} dot /></td>
                       <td className="text-right">
                         <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}>Voir</Button>
@@ -143,8 +143,8 @@ export default function InternshipsPage() {
                       <td className="font-semibold text-sm">{m.student_name}</td>
                       <td className="text-sm max-w-[200px] truncate font-medium">{m.title}</td>
                       <td><Badge label={m.type} className="badge-purple" /></td>
-                      <td className="text-sm text-gray-600">{m.director_name}</td>
-                      <td className="text-xs text-gray-400">{formatDate(m.final_submission_date)}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{m.director_name}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(m.final_submission_date)}</td>
                       <td><Badge label={m.status_display} className={statusColors[m.status] ?? 'badge-gray'} dot /></td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
@@ -187,9 +187,9 @@ export default function InternshipsPage() {
                       <td className="font-semibold text-sm">{s.student_name}</td>
                       <td className="text-sm max-w-[180px] truncate">{s.memoire_title}</td>
                       <td className="text-sm">{formatDate(s.scheduled_date)}</td>
-                      <td className="text-sm text-gray-600">{s.room || '—'}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{s.room || '—'}</td>
                       <td>
-                        <span className="flex items-center gap-1 text-xs text-gray-600">
+                        <span className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                           <Users className="w-3 h-3" /> {s.jury_count} membres
                         </span>
                       </td>
@@ -278,7 +278,7 @@ function MemoireForm({ onSuccess }: { onSuccess: () => void }) {
       {error && <Alert type="error">{error}</Alert>}
       <div>
         <label className="label">Type</label>
-        <select className="input bg-white" value={form.type} onChange={e => set('type', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
           <option value="memoire">Mémoire de Master</option>
           <option value="these">Thèse de Doctorat</option>
           <option value="rapport">Rapport de stage</option>

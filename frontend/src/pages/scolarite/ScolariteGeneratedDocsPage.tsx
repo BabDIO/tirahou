@@ -50,7 +50,7 @@ export default function ScolariteGeneratedDocsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Documents Académiques</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Génération et délivrance des documents officiels</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Génération et délivrance des documents officiels</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setGenerateOpen(true)}>
           Générer un document
@@ -98,15 +98,15 @@ export default function ScolariteGeneratedDocsPage() {
                   }) => (
                     <tr key={doc.id}>
                       <td className="font-semibold text-sm">{doc.title}</td>
-                      <td className="text-sm text-gray-600">{doc.student}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{doc.student}</td>
                       <td><Badge label={doc.doc_type_display} className={docTypeColor[doc.doc_type] ?? 'badge-gray'} /></td>
                       <td>
                         <div className="flex items-center gap-1.5">
-                          <QrCode className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="font-mono text-xs text-gray-600">{doc.verification_code}</span>
+                          <QrCode className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                          <span className="font-mono text-xs text-gray-600 dark:text-gray-400">{doc.verification_code}</span>
                         </div>
                       </td>
-                      <td className="text-xs text-gray-400">{formatDate(doc.created_at)}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(doc.created_at)}</td>
                       <td><Badge label={doc.status} className={statusColor(doc.status)} dot /></td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
@@ -181,7 +181,7 @@ function GenerateDocForm({ onSuccess }: { onSuccess: () => void }) {
       {error && <Alert type="error">{error}</Alert>}
       <div>
         <label className="label">Étudiant *</label>
-        <select className="input bg-white" value={form.student} onChange={e => set('student', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.student} onChange={e => set('student', e.target.value)}>
           <option value="">— Sélectionner un étudiant —</option>
           {students?.results?.map((s: { id: string; student_id: string; user: { full_name: string } }) => (
             <option key={s.id} value={s.id}>{s.user.full_name} ({s.student_id})</option>
@@ -190,7 +190,7 @@ function GenerateDocForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div>
         <label className="label">Type de document *</label>
-        <select className="input bg-white" value={form.doc_type} onChange={e => set('doc_type', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.doc_type} onChange={e => set('doc_type', e.target.value)}>
           {DOC_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>

@@ -145,7 +145,7 @@ export default function FinancierDashboardEnriched() {
           <div className="space-y-4">
             <div className="space-y-3">
               {!financialData.categories.length && (
-                <p className="text-sm text-gray-400 py-4 text-center">Aucune facture détaillée par catégorie pour l'instant.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucune facture détaillée par catégorie pour l'instant.</p>
               )}
               {financialData.categories.map((cat: FinancialCategory) => {
                 const percentage = financialData.summary.total_invoiced
@@ -242,7 +242,7 @@ export default function FinancierDashboardEnriched() {
         <Card title="Paiements récents" subtitle="Derniers encaissements validés">
           <div className="space-y-3">
             {!financialData.recent_payments.length && (
-              <p className="text-sm text-gray-400 py-4 text-center">Aucun paiement enregistré pour l'instant.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucun paiement enregistré pour l'instant.</p>
             )}
             {financialData.recent_payments.map((payment: RecentPayment) => (
               <div key={payment.student} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
@@ -336,22 +336,22 @@ export default function FinancierDashboardEnriched() {
 
       {/* ── Footer Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Montant moyen encaissé</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Montant moyen encaissé</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">
             {formatCurrency(financialData.average_payment_amount)}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Factures en retard</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Factures en retard</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{financialData.trends.overdue_invoices}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Taux de retard</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Taux de retard</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{financialData.overdue_rate}%</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1 dark:text-gray-400">Bourses / exonérations</p>
+        <div className="bg-white border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 dark:text-gray-400">Bourses / exonérations</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{financialData.trends.scholarships_approved}</p>
         </div>
       </div>

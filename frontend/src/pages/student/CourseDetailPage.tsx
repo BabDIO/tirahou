@@ -119,7 +119,7 @@ export default function CourseDetailPage() {
           { key: 'quizzes', label: 'Quiz', icon: HelpCircle },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key as typeof activeTab)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${activeTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${activeTab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
             <Icon className="w-4 h-4" />{label}
           </button>
         ))}
@@ -134,30 +134,30 @@ export default function CourseDetailPage() {
             {modules.map((mod: { id: string; title: string; description: string; order: number; is_published: boolean; resources?: { id: string; title: string; type: string; file: string | null; external_url: string; is_downloadable: boolean }[] }) => (
               <Card key={mod.id} noPadding>
                 <button onClick={() => toggleModule(mod.id)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition rounded-2xl text-left">
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:bg-gray-800 transition rounded-2xl text-left">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm">
                       {mod.order}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{mod.title}</p>
-                      {mod.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{mod.description}</p>}
+                      <p className="font-semibold text-gray-900 dark:text-gray-50">{mod.title}</p>
+                      {mod.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-1">{mod.description}</p>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs text-gray-400">{mod.resources?.length ?? 0} ressource(s)</span>
-                    {openModules.has(mod.id) ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{mod.resources?.length ?? 0} ressource(s)</span>
+                    {openModules.has(mod.id) ? <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
                   </div>
                 </button>
 
                 {openModules.has(mod.id) && (
                   <div className="px-4 pb-4 space-y-2">
                     {!mod.resources?.length ? (
-                      <p className="text-sm text-gray-400 text-center py-3">Aucune ressource dans ce module</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">Aucune ressource dans ce module</p>
                     ) : mod.resources.map(r => (
-                      <div key={r.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
-                        <span className="flex-shrink-0">{TYPE_ICON[r.type] ?? <FileText className="w-4 h-4 text-gray-400" />}</span>
-                        <span className="flex-1 text-sm font-medium text-gray-800">{r.title}</span>
+                      <div key={r.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 transition">
+                        <span className="flex-shrink-0">{TYPE_ICON[r.type] ?? <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500" />}</span>
+                        <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">{r.title}</span>
                         {r.file && r.is_downloadable && (
                           <a href={r.file} target="_blank" rel="noopener noreferrer" download
                             className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium">
@@ -193,12 +193,12 @@ export default function CourseDetailPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-gray-900">{a.title}</p>
+                        <p className="font-bold text-gray-900 dark:text-gray-50">{a.title}</p>
                         <Badge label={a.type_display} className="badge-blue" />
                         {isPast && <Badge label="Fermé" className="badge-red" />}
                       </div>
-                      <p className="text-sm text-gray-500 line-clamp-2">{a.instructions}</p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{a.instructions}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" /> {formatDate(a.due_date)}
                         </span>
@@ -208,10 +208,10 @@ export default function CourseDetailPage() {
                   </div>
 
                   {!isPast && a.status === 'publie' && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                       {submittingId === a.id ? (
                         <div className="flex items-center gap-3">
-                          <input type="file" className="flex-1 text-sm text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-100 file:text-primary-700 file:font-medium"
+                          <input type="file" className="flex-1 text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-100 file:text-primary-700 file:font-medium"
                             onChange={e => setSelectedFile(e.target.files?.[0] ?? null)} />
                           <button onClick={() => { if (selectedFile) submitMut.mutate({ assignmentId: a.id, file: selectedFile }) }}
                             disabled={!selectedFile || submitMut.isPending}
@@ -219,7 +219,7 @@ export default function CourseDetailPage() {
                             {submitMut.isPending ? 'Envoi...' : 'Soumettre'}
                           </button>
                           <button onClick={() => { setSubmittingId(null); setSelectedFile(null) }}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition">
+                            className="px-3 py-1.5 bg-gray-100 text-gray-600 dark:text-gray-400 rounded-lg text-sm hover:bg-gray-200 transition">
                             Annuler
                           </button>
                         </div>
@@ -248,9 +248,9 @@ export default function CourseDetailPage() {
               <Card key={q.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-bold text-gray-900">{q.title}</p>
-                    {q.instructions && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{q.instructions}</p>}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                    <p className="font-bold text-gray-900 dark:text-gray-50">{q.title}</p>
+                    {q.instructions && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{q.instructions}</p>}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
                       <span>⏱ {q.duration_minutes} min</span>
                       <span>🎯 {q.max_grade}/20</span>
                       <span>🔄 {q.max_attempts} tentative(s)</span>
@@ -336,25 +336,25 @@ function QuizTaking({ quiz, attempt, onDone }: { quiz: QuizT; attempt: Attempt; 
     const answeredById = new Map((result.answers ?? []).map(a => [a.question, a]))
     return (
       <div className="space-y-4">
-        <div className="text-center bg-gray-50 rounded-2xl p-6">
-          <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Score</p>
-          <p className="text-4xl font-black text-gray-900 mt-1">{result.score ?? 0}<span className="text-lg text-gray-400">/{quiz.max_grade}</span></p>
+        <div className="text-center bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
+          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold">Score</p>
+          <p className="text-4xl font-black text-gray-900 dark:text-gray-50 mt-1">{result.score ?? 0}<span className="text-lg text-gray-400 dark:text-gray-500">/{quiz.max_grade}</span></p>
         </div>
         <div className="space-y-2">
           {orderedQuestions.map((q, i) => {
             const a = answeredById.get(q.id)
             const pending = a?.is_correct === null || a?.is_correct === undefined
             return (
-              <div key={q.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+              <div key={q.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                 {pending ? <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                   : a?.is_correct ? <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                   : <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700">Q{i + 1}. {q.text}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">Q{i + 1}. {q.text}</p>
                   {pending && <p className="text-xs text-amber-600 mt-0.5">En attente de correction manuelle (réponse libre)</p>}
-                  {q.explanation && !pending && <p className="text-xs text-gray-400 mt-0.5">{q.explanation}</p>}
+                  {q.explanation && !pending && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{q.explanation}</p>}
                 </div>
-                <span className="text-xs font-semibold text-gray-500 flex-shrink-0">{a?.points_earned ?? '—'}/{q.points}</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 flex-shrink-0">{a?.points_earned ?? '—'}/{q.points}</span>
               </div>
             )
           })}
@@ -369,18 +369,18 @@ function QuizTaking({ quiz, attempt, onDone }: { quiz: QuizT; attempt: Attempt; 
 
   return (
     <div className="space-y-5">
-      <div className={`flex items-center justify-center gap-2 py-2 rounded-xl font-mono font-bold text-lg ${secondsLeft < 60 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-700'}`}>
+      <div className={`flex items-center justify-center gap-2 py-2 rounded-xl font-mono font-bold text-lg ${secondsLeft < 60 ? 'bg-red-50 text-red-600' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}>
         <Clock className="w-4 h-4" /> {mm}:{ss}
       </div>
 
       <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
         {orderedQuestions.map((q, i) => (
-          <div key={q.id} className="p-4 border border-gray-100 rounded-xl">
-            <p className="text-sm font-semibold text-gray-900 mb-3">Q{i + 1}. {q.text} <span className="text-xs text-gray-400 font-normal">({q.points} pt{q.points > 1 ? 's' : ''})</span></p>
+          <div key={q.id} className="p-4 border border-gray-100 dark:border-gray-700 rounded-xl">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-3">Q{i + 1}. {q.text} <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">({q.points} pt{q.points > 1 ? 's' : ''})</span></p>
             {(q.type === 'qcm' || q.type === 'vrai_faux') && (
               <div className="space-y-2">
                 {q.choices.map(c => (
-                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">
+                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-800 cursor-pointer text-sm">
                     <input type="radio" name={q.id} checked={(answers[q.id]?.choice_ids ?? []).includes(c.id)}
                       onChange={() => toggleChoice(q.id, c.id, false)} />
                     {c.text}
@@ -391,7 +391,7 @@ function QuizTaking({ quiz, attempt, onDone }: { quiz: QuizT; attempt: Attempt; 
             {q.type === 'qcm_multiple' && (
               <div className="space-y-2">
                 {q.choices.map(c => (
-                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">
+                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-800 cursor-pointer text-sm">
                     <input type="checkbox" checked={(answers[q.id]?.choice_ids ?? []).includes(c.id)}
                       onChange={() => toggleChoice(q.id, c.id, true)} />
                     {c.text}

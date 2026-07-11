@@ -53,7 +53,7 @@ export default function TeachersPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Enseignants</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} enseignant(s) enregistré(s)</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} enseignant(s) enregistré(s)</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" icon={<Download className="w-4 h-4" />} size="sm">Exporter</Button>
@@ -123,20 +123,20 @@ export default function TeachersPage() {
                           <Avatar name={teacher.user.full_name} size="md"
                             color={avatarColors[idx % avatarColors.length]} />
                           <div>
-                            <p className="font-semibold text-gray-900 text-sm">{teacher.user.full_name}</p>
-                            <p className="text-xs text-gray-400">{teacher.user.email}</p>
+                            <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{teacher.user.full_name}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">{teacher.user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md">
+                        <span className="font-mono text-xs bg-gray-100 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-md">
                           {teacher.teacher_id}
                         </span>
                       </td>
                       <td><Badge label={teacher.grade_display} className={gradeColors[teacher.grade] ?? 'badge-gray'} /></td>
                       <td><Badge label={teacher.status} className={statusColor(teacher.status)} dot /></td>
-                      <td className="text-sm text-gray-600">{teacher.department_name ?? '—'}</td>
-                      <td className="text-xs text-gray-400 max-w-[180px] truncate">{teacher.specialities || '—'}</td>
+                      <td className="text-sm text-gray-600 dark:text-gray-400">{teacher.department_name ?? '—'}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500 max-w-[180px] truncate">{teacher.specialities || '—'}</td>
                       <td className="text-right">
                         <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
                           onClick={() => setSelected(teacher)}>Voir</Button>
@@ -173,8 +173,8 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
       <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
         <Avatar name={teacher.user.full_name} size="xl" color="bg-emerald-100 text-emerald-700" />
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-gray-900">{teacher.user.full_name}</h3>
-          <p className="text-sm text-gray-500">{teacher.user.email}</p>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-50">{teacher.user.full_name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{teacher.user.email}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             <Badge label={teacher.grade_display} className={gradeColors[teacher.grade] ?? 'badge-gray'} />
             <Badge label={teacher.status} className={statusColor(teacher.status)} dot />
@@ -200,9 +200,9 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
               ['Taux horaire', teacher.hourly_rate != null ? `${teacher.hourly_rate} FCFA/h` : '—'],
             ] : []),
           ].map(([label, value]) => (
-            <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-              <p className="font-semibold text-gray-800 text-sm">{value}</p>
+            <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+              <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{value}</p>
             </div>
           ))}
         </div>
@@ -214,7 +214,7 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
         <Alert type="info">Les cours assignés seront affichés ici depuis le module LMS.</Alert>
       )}
 
-      <div className="flex gap-2 pt-2 border-t border-gray-100">
+      <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" size="sm" icon={<Mail className="w-3.5 h-3.5" />} className="flex-1">
           Envoyer un message
         </Button>
@@ -266,17 +266,17 @@ function TeacherAvailabilityPanel({ teacher }: { teacher: Teacher }) {
       ) : (
         <div className="space-y-2">
           {slots.map(slot => (
-            <div key={slot.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            <div key={slot.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
                   <Clock className="w-4 h-4 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{slot.day_display}</p>
-                  <p className="text-xs text-gray-400">{slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)} {slot.notes && `· ${slot.notes}`}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{slot.day_display}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)} {slot.notes && `· ${slot.notes}`}</p>
                 </div>
               </div>
-              <button onClick={() => deleteMut.mutate(slot.id)} className="p-1.5 hover:bg-red-100 rounded-lg transition text-gray-400 hover:text-red-500">
+              <button onClick={() => deleteMut.mutate(slot.id)} className="p-1.5 hover:bg-red-100 rounded-lg transition text-gray-400 dark:text-gray-500 hover:text-red-500">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -284,7 +284,7 @@ function TeacherAvailabilityPanel({ teacher }: { teacher: Teacher }) {
         </div>
       )}
 
-      <div className="pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="pt-3 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 sm:grid-cols-4 gap-2">
         <select className="input" value={form.day_of_week} onChange={e => setForm(f => ({ ...f, day_of_week: e.target.value }))}>
           {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
         </select>
@@ -361,7 +361,7 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Compte utilisateur</h3>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Compte utilisateur</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Prénom *" placeholder="Jean" error={errors.first_name}
             value={form.first_name} onChange={e => set('first_name', e.target.value)} />
@@ -375,7 +375,7 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         </div>
       </div>
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Profil académique</h3>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Profil académique</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select label="Grade" options={[
             { value: 'assistant', label: 'Assistant' },
@@ -407,7 +407,7 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       </div>
       {isExternal && (
         <div>
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Contrat (vacataire / invité)</h3>
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Contrat (vacataire / invité)</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Référence de contrat" placeholder="CTR-2026-014"
               value={form.contract_reference} onChange={e => set('contract_reference', e.target.value)} />
@@ -419,7 +419,7 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           </div>
         </div>
       )}
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={create.isPending} icon={<UserCheck className="w-4 h-4" />}>
           Créer l'enseignant

@@ -136,8 +136,8 @@ export default function LibraryManagementPage() {
       sortable: true,
       render: (val, row) => (
         <div>
-          <p className="font-medium text-gray-900">{val}</p>
-          <p className="text-xs text-gray-400">{row.author}</p>
+          <p className="font-medium text-gray-900 dark:text-gray-50">{val}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{row.author}</p>
         </div>
       )
     },
@@ -172,7 +172,7 @@ export default function LibraryManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Gestion de la bibliothèque</h1>
-          <p className="text-sm text-gray-500 mt-1">Catalogue, emprunts et réservations</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Catalogue, emprunts et réservations</p>
         </div>
         {tab === 'catalog' && (
           <Button icon={<Plus className="w-4 h-4" />} onClick={() => setAddModal(true)}>Ajouter</Button>
@@ -206,15 +206,15 @@ export default function LibraryManagementPage() {
           <Card noPadding>
             <div className="divide-y divide-gray-100">
               {(!borrowings || borrowings.length === 0) && (
-                <p className="text-sm text-gray-400 text-center py-8">Aucun emprunt en cours.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Aucun emprunt en cours.</p>
               )}
               {borrowings?.map((b) => {
                 const isOverdue = b.status === 'en_retard' || (b.status === 'en_cours' && new Date(b.due_date) < new Date())
                 return (
                   <div key={b.id} className="flex items-center justify-between p-4">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{b.document_title}</p>
-                      <p className="text-xs text-gray-500">{b.borrower_name} • Emprunté le {formatDate(b.borrowed_at)} • Retour prévu {formatDate(b.due_date)}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{b.document_title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{b.borrower_name} • Emprunté le {formatDate(b.borrowed_at)} • Retour prévu {formatDate(b.due_date)}</p>
                       {Number(b.penalty_amount) > 0 && (
                         <p className="text-xs text-red-600 mt-1">
                           Pénalité : {b.penalty_amount} FCFA ({b.late_days}j de retard)
@@ -251,13 +251,13 @@ export default function LibraryManagementPage() {
           <Card noPadding>
             <div className="divide-y divide-gray-100">
               {(!reservations || reservations.length === 0) && (
-                <p className="text-sm text-gray-400 text-center py-8">Aucune réservation en attente.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Aucune réservation en attente.</p>
               )}
               {reservations?.map((r) => (
                 <div key={r.id} className="flex items-center justify-between p-4">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{r.document_title}</p>
-                    <p className="text-xs text-gray-500">{r.user_name} • Position {r.position} • Réservé le {formatDate(r.reserved_at)}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{r.document_title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{r.user_name} • Position {r.position} • Réservé le {formatDate(r.reserved_at)}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge

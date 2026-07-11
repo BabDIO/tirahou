@@ -125,7 +125,7 @@ export default function LibraryPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Bibliothèque Numérique</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} ressource(s) disponible(s)</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} ressource(s) disponible(s)</p>
         </div>
         {tab === 'catalog' && (
           <Button icon={<Upload className="w-4 h-4" />} size="sm" onClick={() => setUploadOpen(true)}>
@@ -203,9 +203,9 @@ export default function LibraryPage() {
                         <span className="text-3xl">{docTypeIcon[doc.type] ?? '📄'}</span>
                         <Badge label={doc.type_display} className={docTypeColor[doc.type] ?? 'badge-gray'} />
                       </div>
-                      <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1 flex-1">{doc.title}</h3>
-                      <p className="text-xs text-gray-500 mb-1">{doc.author}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                      <h3 className="font-bold text-gray-900 dark:text-gray-50 text-sm line-clamp-2 mb-1 flex-1">{doc.title}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{doc.author}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 mb-2">
                         <span>{doc.domain}</span>
                         <span>{doc.year}</span>
                       </div>
@@ -245,14 +245,14 @@ export default function LibraryPage() {
         loadingBorrowings ? <Spinner text="Chargement de vos emprunts..." /> : (
           <Card>
             {!myBorrowings || myBorrowings.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Vous n'avez aucun emprunt en cours.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Vous n'avez aucun emprunt en cours.</p>
             ) : (
               <div className="space-y-3">
                 {myBorrowings.map((b: { id: string; document: { title: string; author: string; cover: string | null }; borrowed_at: string; due_date: string; late_days: number; penalty_amount: number; status: string }) => (
-                  <div key={b.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div key={b.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{b.document.title}</p>
-                      <p className="text-xs text-gray-500">{b.document.author} • Retour prévu le {formatDate(b.due_date)}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{b.document.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{b.document.author} • Retour prévu le {formatDate(b.due_date)}</p>
                       {b.penalty_amount > 0 && (
                         <p className="text-xs text-red-600 mt-1">Pénalité : {b.penalty_amount} FCFA ({b.late_days}j de retard)</p>
                       )}
@@ -270,14 +270,14 @@ export default function LibraryPage() {
         loadingReservations ? <Spinner text="Chargement de vos réservations..." /> : (
           <Card>
             {!myReservations || myReservations.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Vous n'avez aucune réservation en attente.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Vous n'avez aucune réservation en attente.</p>
             ) : (
               <div className="space-y-3">
                 {myReservations.map((r: { id: string; document: { title: string; author: string }; position: number; status: string }) => (
-                  <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{r.document.title}</p>
-                      <p className="text-xs text-gray-500">{r.document.author} • Position {r.position} dans la file</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{r.document.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{r.document.author} • Position {r.position} dans la file</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Badge label={r.status === 'disponible' ? 'Disponible' : 'En attente'} className={r.status === 'disponible' ? 'badge-green' : 'badge-amber'} dot />
@@ -304,12 +304,12 @@ export default function LibraryPage() {
               Nouvelle liste
             </Button>
             {(!myLists || myLists.length === 0) ? (
-              <Card><p className="text-sm text-gray-400 text-center py-8">Aucune liste de lecture pour le moment.</p></Card>
+              <Card><p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Aucune liste de lecture pour le moment.</p></Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {myLists.map((list: { id: string; name: string; description: string; documents_count: number }) => (
                   <Card key={list.id} title={list.name} subtitle={`${list.documents_count} document(s)`}>
-                    <p className="text-sm text-gray-500">{list.description || 'Aucune description'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{list.description || 'Aucune description'}</p>
                   </Card>
                 ))}
               </div>
@@ -334,9 +334,9 @@ export default function LibraryPage() {
               )}
             </div>
             {selected.abstract && (
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Résumé</p>
-                <p className="text-sm text-gray-700 leading-relaxed">{selected.abstract}</p>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Résumé</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{selected.abstract}</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -347,9 +347,9 @@ export default function LibraryPage() {
                 ['Téléchargements', String(selected.download_count)],
                 ['Ajouté le', formatDate(selected.created_at)],
               ].map(([label, value]) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                  <p className="font-semibold text-gray-800">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{value}</p>
                 </div>
               ))}
             </div>
@@ -433,17 +433,17 @@ function AddToListForm({ document, onAdd, loading }: { document: LibraryDoc; onA
   })
   if (isLoading) return <Spinner />
   if (!lists || lists.length === 0) {
-    return <p className="text-sm text-gray-400 text-center py-4">Créez d'abord une liste depuis l'onglet "Mes listes de lecture".</p>
+    return <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Créez d'abord une liste depuis l'onglet "Mes listes de lecture".</p>
   }
   return (
     <div className="space-y-2">
-      <p className="text-sm text-gray-500 mb-3">Ajouter « {document.title} » à :</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Ajouter « {document.title} » à :</p>
       {lists.map((list: { id: string; name: string }) => (
         <button
           key={list.id}
           disabled={loading}
           onClick={() => onAdd(list.id)}
-          className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+          className="w-full text-left px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
         >
           {list.name}
         </button>
@@ -490,7 +490,7 @@ function LibraryUploadForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <div>
           <label className="label">Type</label>
-          <select className="input bg-white" value={form.type} onChange={e => set('type', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
             <option value="livre">Livre</option>
             <option value="memoire">Mémoire</option>
             <option value="these">Thèse</option>

@@ -26,7 +26,7 @@ const providerInfo: Record<string, { name: string; icon: string; color: string }
   zoom: { name: 'Zoom', icon: '💙', color: 'bg-blue-100 text-blue-800' },
   meet: { name: 'Google Meet', icon: '📹', color: 'bg-green-100 text-green-700' },
   teams: { name: 'Microsoft Teams', icon: '🟣', color: 'bg-purple-100 text-purple-700' },
-  autre: { name: 'Autre', icon: '🖥', color: 'bg-gray-100 text-gray-700' },
+  autre: { name: 'Autre', icon: '🖥', color: 'bg-gray-100 text-gray-700 dark:text-gray-300' },
 }
 
 export default function VirtualClassDetailPage() {
@@ -186,9 +186,9 @@ export default function VirtualClassDetailPage() {
             ].filter(Boolean).map(item => {
               const [label, value] = item as [string, string]
               return (
-                <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                  <p className="font-semibold text-gray-800 text-sm">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{value}</p>
                 </div>
               )
             })}
@@ -196,8 +196,8 @@ export default function VirtualClassDetailPage() {
 
           {session.join_url && (
             <div className="mt-4">
-              <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">Lien de connexion</p>
-              <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-3 overflow-hidden">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 font-semibold uppercase tracking-wide">Lien de connexion</p>
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-3 overflow-hidden">
                 <Wifi className="w-4 h-4 text-primary-500 flex-shrink-0" />
                 <span className="text-xs text-primary-600 font-mono truncate flex-1">{session.join_url}</span>
                 <Button variant="secondary" size="xs" icon={<ExternalLink className="w-3 h-3" />}
@@ -210,7 +210,7 @@ export default function VirtualClassDetailPage() {
 
           {session.recording_url && (
             <div className="mt-3">
-              <p className="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">Enregistrement</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 font-semibold uppercase tracking-wide">Enregistrement</p>
               <Button variant="secondary" className="w-full" size="sm" icon={<Video className="w-4 h-4" />}
                 onClick={() => window.open(session.recording_url, '_blank')}>
                 Accéder au replay
@@ -243,25 +243,25 @@ export default function VirtualClassDetailPage() {
           )}
 
           <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <span className="text-sm text-gray-600 flex items-center gap-2">
-                <Video className="w-4 h-4 text-gray-400" /> Enregistrement
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                <Video className="w-4 h-4 text-gray-400 dark:text-gray-500" /> Enregistrement
               </span>
               <Badge label={session.is_recorded ? 'Activé' : 'Non activé'}
                 className={session.is_recorded ? 'badge-green' : 'badge-gray'} />
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <span className="text-sm text-gray-600 flex items-center gap-2">
-                <Monitor className="w-4 h-4 text-gray-400" /> Replay disponible
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                <Monitor className="w-4 h-4 text-gray-400 dark:text-gray-500" /> Replay disponible
               </span>
               <Badge label={session.replay_available ? 'Oui' : 'Non'}
                 className={session.replay_available ? 'badge-green' : 'badge-gray'} />
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <span className="text-sm text-gray-600 flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-400" /> Capacité
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                <Users className="w-4 h-4 text-gray-400 dark:text-gray-500" /> Capacité
               </span>
-              <span className="text-sm font-semibold text-gray-800">{session.participants_count ?? 0} / {session.room_capacity ?? '∞'}</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{session.participants_count ?? 0} / {session.room_capacity ?? '∞'}</span>
             </div>
           </div>
         </Card>
@@ -270,27 +270,27 @@ export default function VirtualClassDetailPage() {
       {/* Join Modal */}
       <Modal open={joinOpen} onClose={() => setJoinOpen(false)} title="Rejoindre la session" size="sm">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Comment souhaitez-vous rejoindre cette session ?</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Comment souhaitez-vous rejoindre cette session ?</p>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setJoinMode('online')}
               className={`p-4 rounded-xl border-2 transition-all text-center ${
-                joinMode === 'online' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                joinMode === 'online' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <Wifi className="w-6 h-6 mx-auto mb-2 text-primary-500" />
-              <p className="text-sm font-semibold text-gray-900">En ligne</p>
-              <p className="text-xs text-gray-500 mt-0.5">Via le lien de visioconférence</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">En ligne</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Via le lien de visioconférence</p>
             </button>
             <button
               onClick={() => setJoinMode('physical')}
               className={`p-4 rounded-xl border-2 transition-all text-center ${
-                joinMode === 'physical' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                joinMode === 'physical' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               }`}
             >
               <Monitor className="w-6 h-6 mx-auto mb-2 text-primary-500" />
-              <p className="text-sm font-semibold text-gray-900">En salle</p>
-              <p className="text-xs text-gray-500 mt-0.5">Présence physique</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">En salle</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Présence physique</p>
             </button>
           </div>
           <div className="flex gap-3">

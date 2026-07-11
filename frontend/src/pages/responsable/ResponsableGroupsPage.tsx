@@ -35,7 +35,7 @@ export default function ResponsableGroupsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Groupes & Promotions</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Gestion des groupes TD/TP et promotions</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gestion des groupes TD/TP et promotions</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
           Nouveau groupe
@@ -78,9 +78,9 @@ export default function ResponsableGroupsPage() {
                   <tr key={g.id}>
                     <td className="font-semibold text-sm">{g.name}</td>
                     <td><Badge label={g.type} className={typeColor[g.type] ?? 'badge-gray'} /></td>
-                    <td className="text-sm text-gray-600">{g.program}</td>
+                    <td className="text-sm text-gray-600 dark:text-gray-400">{g.program}</td>
                     <td className="text-sm">{g.capacity} places</td>
-                    <td className="text-sm text-gray-500">{g.academic_year}</td>
+                    <td className="text-sm text-gray-500 dark:text-gray-400">{g.academic_year}</td>
                     <td className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="sm" icon={<Edit className="w-3.5 h-3.5" />}
@@ -161,7 +161,7 @@ function GroupForm({ group, onSuccess }: {
       </div>
       <div>
         <label className="label">Type</label>
-        <select className="input bg-white" value={form.type} onChange={e => set('type', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
           <option value="promotion">Promotion</option>
           <option value="td">Groupe TD</option>
           <option value="tp">Groupe TP</option>
@@ -176,7 +176,7 @@ function GroupForm({ group, onSuccess }: {
         <>
           <div>
             <label className="label">Programme *</label>
-            <select className="input bg-white" value={form.program} onChange={e => set('program', e.target.value)}>
+            <select className="input bg-white dark:bg-slate-900" value={form.program} onChange={e => set('program', e.target.value)}>
               <option value="">— Sélectionner —</option>
               {programs?.results?.map((p: { id: string; code: string; name: string }) => (
                 <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
@@ -185,7 +185,7 @@ function GroupForm({ group, onSuccess }: {
           </div>
           <div>
             <label className="label">Année académique *</label>
-            <select className="input bg-white" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
+            <select className="input bg-white dark:bg-slate-900" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
               <option value="">— Sélectionner —</option>
               {years?.results?.map((y: { id: string; label: string; is_current: boolean }) => (
                 <option key={y.id} value={y.id}>{y.label}{y.is_current ? ' (en cours)' : ''}</option>

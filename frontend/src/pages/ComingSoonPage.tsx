@@ -55,18 +55,18 @@ export default function ComingSoonPage({
           </div>
 
           {/* Titre */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3">
             {featureName} arrive bientôt !
           </h1>
 
           {/* Description */}
-          <p className="text-gray-600 mb-8 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
             {description}
           </p>
 
           {/* Barre de progression simulée */}
           <div className="mb-8">
-            <div className="flex justify-between text-sm font-medium text-gray-700 mb-2">
+            <div className="flex justify-between text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <span>Progression du développement</span>
               <span>75%</span>
             </div>
@@ -78,7 +78,7 @@ export default function ComingSoonPage({
           {/* Formulaire de notification */}
           {!subscribed ? (
             <form onSubmit={handleNotify} className="mb-6">
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Soyez notifié dès le lancement
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -87,7 +87,7 @@ export default function ComingSoonPage({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="votre.email@exemple.com"
-                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition"
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition"
                   required
                 />
                 <Button
@@ -121,16 +121,16 @@ export default function ComingSoonPage({
 
         {/* Fonctionnalités à venir */}
         <div className="mt-6 bg-white/50 backdrop-blur-sm rounded-xl p-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-3">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-3">
             ✨ Ce qui vous attend
           </h3>
-          <ul className="space-y-3 text-sm text-gray-600">
+          <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-start gap-3">
               <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <span className="text-purple-600 font-bold">1</span>
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Interface intuitive</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-50">Interface intuitive</p>
                 <p className="text-xs">Design moderne et facile à utiliser</p>
               </div>
             </li>
@@ -139,7 +139,7 @@ export default function ComingSoonPage({
                 <span className="text-pink-600 font-bold">2</span>
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Performance optimale</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-50">Performance optimale</p>
                 <p className="text-xs">Rapidité et fluidité garanties</p>
               </div>
             </li>
@@ -148,7 +148,7 @@ export default function ComingSoonPage({
                 <span className="text-orange-600 font-bold">3</span>
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Nouvelles possibilités</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-50">Nouvelles possibilités</p>
                 <p className="text-xs">Fonctionnalités innovantes et pratiques</p>
               </div>
             </li>
@@ -157,37 +157,37 @@ export default function ComingSoonPage({
 
         {/* Timeline de développement */}
         <div className="mt-6 bg-white rounded-xl p-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-4">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-4">
             📅 Feuille de route
           </h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Phase 1 : Conception</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Phase 1 : Conception</p>
               </div>
               <span className="text-xs text-green-600 font-medium">✓ Terminé</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Phase 2 : Développement</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Phase 2 : Développement</p>
               </div>
               <span className="text-xs text-green-600 font-medium">✓ Terminé</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Phase 3 : Tests</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Phase 3 : Tests</p>
               </div>
               <span className="text-xs text-orange-600 font-medium">En cours</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-gray-300" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Phase 4 : Lancement</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Phase 4 : Lancement</p>
               </div>
-              <span className="text-xs text-gray-400 font-medium">Bientôt</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Bientôt</span>
             </div>
           </div>
         </div>

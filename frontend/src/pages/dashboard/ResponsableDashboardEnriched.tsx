@@ -115,15 +115,15 @@ export default function ResponsableDashboardEnriched() {
         <Card title="Types de programmes" subtitle="Répartition par niveau">
           <div className="space-y-4">
             {!dashboardData.programs.by_type.length && (
-              <p className="text-sm text-gray-400 py-4 text-center">Aucun programme actif pour l'instant.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucun programme actif pour l'instant.</p>
             )}
             {dashboardData.programs.by_type.map((program: { type: string; count: number }) => {
               const percentage = dashboardData.programs.total ? Math.round((program.count / dashboardData.programs.total) * 100) : 0
               return (
                 <div key={program.type}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-700">{program.type}</span>
-                    <span className="text-sm font-bold text-gray-900">{program.count} programmes</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{program.type}</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-gray-50">{program.count} programmes</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -132,15 +132,15 @@ export default function ResponsableDashboardEnriched() {
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-xs font-medium text-gray-600">{percentage}%</span>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{percentage}%</span>
                   </div>
                 </div>
               )
             })}
-            <div className="pt-3 border-t border-gray-200">
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">Programmes actifs</span>
-                <span className="text-lg font-bold text-gray-900">
+                <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">Programmes actifs</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-gray-50">
                   {dashboardData.programs.active}/{dashboardData.programs.total}
                 </span>
               </div>
@@ -170,7 +170,7 @@ export default function ResponsableDashboardEnriched() {
               size="md"
             />
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Taux de rejet:</span>
+              <span className="text-gray-600 dark:text-gray-400">Taux de rejet:</span>
               <span className="font-bold text-red-600">{dashboardData.validation.rejection_rate}%</span>
             </div>
           </div>
@@ -179,14 +179,14 @@ export default function ResponsableDashboardEnriched() {
         {/* Quality Indicators */}
         <Card title="Indicateurs qualité" subtitle="Suivi pédagogique">
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Target className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Rétention</p>
-                  <p className="text-xs text-gray-500">Étudiants ni abandonnés ni exclus</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Rétention</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Étudiants ni abandonnés ni exclus</p>
                 </div>
               </div>
               <Badge label={`${dashboardData.quality.retention_rate}%`} className="badge-blue" />
@@ -197,8 +197,8 @@ export default function ResponsableDashboardEnriched() {
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Risque décrochage</p>
-                  <p className="text-xs text-gray-500">Scores d'engagement à risque</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">Risque décrochage</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Scores d'engagement à risque</p>
                 </div>
               </div>
               <Badge label={dashboardData.quality.dropout_risk != null ? `${dashboardData.quality.dropout_risk}%` : '—'} className="badge-amber" />
@@ -213,10 +213,10 @@ export default function ResponsableDashboardEnriched() {
         <Card title="Actions en attente" subtitle="Requièrent votre attention">
           <div className="space-y-3">
             {!dashboardData.pending_actions.length && (
-              <p className="text-sm text-gray-400 py-4 text-center">Aucune action en attente 🎉</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucune action en attente 🎉</p>
             )}
             {dashboardData.pending_actions.map((task, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-xl transition-colors">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5",
                   task.priority === 'haute' ? 'bg-red-100 text-red-600' :
@@ -228,8 +228,8 @@ export default function ResponsableDashboardEnriched() {
                    <Calendar className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">{task.action}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{task.action}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {task.program} • Échéance: {task.deadline}
                   </p>
                 </div>

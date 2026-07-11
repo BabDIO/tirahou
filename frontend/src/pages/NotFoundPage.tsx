@@ -8,8 +8,8 @@ export default function NotFoundPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="text-center max-w-md">
         <div className="text-8xl font-black text-gray-200 mb-4">404</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Page introuvable</h1>
-        <p className="text-gray-500 mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-2">Page introuvable</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">
           La page que vous recherchez n'existe pas ou a été déplacée.
         </p>
         <div className="flex gap-3 justify-center">

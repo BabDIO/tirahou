@@ -50,7 +50,7 @@ export default function MyDocumentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Mes Documents</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Documents officiels et pièces justificatives</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Documents officiels et pièces justificatives</p>
         </div>
         <button onClick={() => setShowRequest(true)}
           className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 text-sm font-semibold transition">
@@ -69,7 +69,7 @@ export default function MyDocumentsPage() {
           { key: 'uploaded', label: 'Mes pièces', icon: Upload },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key as typeof tab)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${tab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${tab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
             <Icon className="w-4 h-4" />{label}
           </button>
         ))}
@@ -91,18 +91,18 @@ export default function MyDocumentsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-bold text-gray-900">{doc.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Généré le {formatDate(doc.created_at)}</p>
+                        <p className="font-bold text-gray-900 dark:text-gray-50">{doc.title}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Généré le {formatDate(doc.created_at)}</p>
                         {doc.valid_until && <p className="text-xs text-amber-600 mt-0.5">Valide jusqu'au {formatDate(doc.valid_until)}</p>}
                       </div>
                       <Badge label={getDocumentStatus(doc.status).label} className={getDocumentStatus(doc.status).badge} />
                     </div>
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
-                      <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg flex items-center gap-1">
+                      <span className="font-mono text-xs bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg flex items-center gap-1">
                         <Shield className="w-3 h-3" />{doc.verification_code}
                       </span>
                       <button onClick={() => setShowQR(doc)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition">
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 dark:text-gray-400 rounded-lg text-xs font-medium hover:bg-gray-200 transition">
                         <QrCode className="w-3.5 h-3.5" /> QR Code
                       </button>
                       {doc.file && (
@@ -136,11 +136,11 @@ export default function MyDocumentsPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-gray-500" />
+                      <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{doc.title}</p>
-                      <p className="text-xs text-gray-400">{doc.category_name} · {formatDate(doc.created_at)}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-50">{doc.title}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{doc.category_name} · {formatDate(doc.created_at)}</p>
                       {doc.status === 'rejete' && doc.rejection_reason && (
                         <p className="text-xs text-red-600 mt-1">Rejeté : {doc.rejection_reason}</p>
                       )}
@@ -150,7 +150,7 @@ export default function MyDocumentsPage() {
                     <Badge label={getDocumentStatus(doc.status).label} className={getDocumentStatus(doc.status).badge} />
                     <a href={doc.file} target="_blank" rel="noopener noreferrer"
                       className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-                      <Eye className="w-4 h-4 text-gray-500" />
+                      <Eye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </a>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function MyDocumentsPage() {
           </div>
           <Alert type="info">Votre demande sera traitée par le service de scolarité. Vous serez notifié dès que le document est disponible.</Alert>
           <div className="flex gap-3">
-            <button onClick={() => setShowRequest(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+            <button onClick={() => setShowRequest(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
             <button onClick={() => requestMut.mutate(docType)} disabled={requestMut.isPending}
               className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
               {requestMut.isPending ? 'Envoi...' : 'Soumettre la demande'}
@@ -192,12 +192,12 @@ export default function MyDocumentsPage() {
               <img src={showQR.qr_code} alt="QR Code" className="w-48 h-48 mx-auto rounded-xl" />
             ) : (
               <div className="w-48 h-48 mx-auto bg-gray-100 rounded-xl flex items-center justify-center">
-                <QrCode className="w-16 h-16 text-gray-400" />
+                <QrCode className="w-16 h-16 text-gray-400 dark:text-gray-500" />
               </div>
             )}
             <div>
-              <p className="font-semibold text-gray-900">{showQR.title}</p>
-              <p className="font-mono text-sm text-gray-500 mt-1">{showQR.verification_code}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-50">{showQR.title}</p>
+              <p className="font-mono text-sm text-gray-500 dark:text-gray-400 mt-1">{showQR.verification_code}</p>
               <a href={`/verify/${showQR.verification_code}`} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">
                 <Eye className="w-4 h-4" /> Vérifier en ligne

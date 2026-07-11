@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Analytics & Pilotage</h1>
-          <p className="text-gray-500 text-sm mt-1">Indicateurs clés de performance institutionnelle</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Indicateurs clés de performance institutionnelle</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" icon={<FileSpreadsheet className="w-4 h-4" />}
@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-60 text-gray-400 text-sm">Aucune donnée</div>
+              <div className="flex items-center justify-center h-60 text-gray-400 dark:text-gray-500 text-sm">Aucune donnée</div>
             )}
           </Card>
 
@@ -243,8 +243,8 @@ export default function AnalyticsPage() {
                 { label: 'Ajournés', value: report?.results?.ajournes ?? '—', color: 'text-amber-600' },
                 { label: 'Redoublants', value: report?.results?.redoublants ?? '—', color: 'text-red-600' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
-                  <p className="text-xs text-gray-500 mb-1">{label}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
                   <p className={`text-2xl font-bold ${color}`}>{value}</p>
                 </div>
               ))}
@@ -259,17 +259,17 @@ export default function AnalyticsPage() {
           <Card title="Résumé financier">
             <div className="space-y-4">
               {[
-                { label: 'Total facturé', value: formatCurrency(dashboard?.finance.total_invoiced ?? 0), color: 'text-gray-900' },
+                { label: 'Total facturé', value: formatCurrency(dashboard?.finance.total_invoiced ?? 0), color: 'text-gray-900 dark:text-gray-50' },
                 { label: 'Encaissé', value: formatCurrency(dashboard?.finance.total_paid ?? 0), color: 'text-emerald-600' },
                 { label: 'Reste à collecter', value: formatCurrency((dashboard?.finance.total_invoiced ?? 0) - (dashboard?.finance.total_paid ?? 0)), color: 'text-red-600' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm text-gray-600">{label}</span>
+                <div key={label} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
                   <span className={`font-bold ${color}`}>{value}</span>
                 </div>
               ))}
               <div>
-                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
                   <span>Taux de collecte</span>
                   <span className="font-semibold">{paidRate}%</span>
                 </div>
@@ -289,9 +289,9 @@ export default function AnalyticsPage() {
                 { label: 'Taux paiement', value: report?.finance?.collection_rate ? `${report.finance.collection_rate}%` : '—' },
                 { label: 'Impayées', value: (report?.finance?.total_invoices ?? 0) - (report?.finance?.paid_invoices ?? 0) },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">{label}</p>
-                  <p className="text-xl font-bold text-gray-900">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-50">{value}</p>
                 </div>
               ))}
             </div>
@@ -312,8 +312,8 @@ export default function AnalyticsPage() {
                 { label: 'Tentatives quiz', value: lmsStats?.quiz_attempts ?? 0 },
                 { label: 'Sessions virtuelles', value: lmsStats?.virtual_sessions_done ?? 0 },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">{label}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
                   <p className="text-2xl font-bold text-primary-600">{value}</p>
                 </div>
               ))}
@@ -329,7 +329,7 @@ export default function AnalyticsPage() {
                   return (
                     <div key={item.range}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">{item.range}</span>
+                        <span className="text-gray-600 dark:text-gray-400">{item.range}</span>
                         <span className="font-semibold">{item.count} étudiants ({pct}%)</span>
                       </div>
                       <div className="w-full bg-gray-100 rounded-full h-2">
@@ -340,7 +340,7 @@ export default function AnalyticsPage() {
                 })}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-48 text-gray-400 flex-col gap-3">
+              <div className="flex items-center justify-center h-48 text-gray-400 dark:text-gray-500 flex-col gap-3">
                 <RefreshCw className="w-10 h-10 opacity-30" />
                 <p className="text-sm">Aucune donnée de progression disponible</p>
               </div>
@@ -397,7 +397,7 @@ export default function AnalyticsPage() {
                   recommendations: string[]; contact_email: string; course: string
                 }) => (
                   <div key={student.student_id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    className="border rounded-lg p-4 hover:bg-gray-50 dark:bg-gray-800 transition-colors">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
@@ -410,15 +410,15 @@ export default function AnalyticsPage() {
                           {student.risk_level}
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900">{student.student_name}</h3>
-                          <p className="text-sm text-gray-600">{student.student_number} • {student.course}</p>
+                          <h3 className="font-medium text-gray-900 dark:text-gray-50">{student.student_name}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{student.student_number} • {student.course}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">
+                        <div className="text-lg font-bold text-gray-900 dark:text-gray-50">
                           {student.prediction_score.toFixed(1)}/100
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
                           {student.success_probability}
                         </div>
                       </div>
@@ -426,23 +426,23 @@ export default function AnalyticsPage() {
                     
                     <div className="grid grid-cols-3 gap-4 text-sm mb-3">
                       <div>
-                        <span className="text-gray-600">Engagement:</span>
+                        <span className="text-gray-600 dark:text-gray-400">Engagement:</span>
                         <span className="ml-1 font-medium">{student.engagement_score.toFixed(1)}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Complétion:</span>
+                        <span className="text-gray-600 dark:text-gray-400">Complétion:</span>
                         <span className="ml-1 font-medium">{student.completion_rate.toFixed(1)}%</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Inactif:</span>
+                        <span className="text-gray-600 dark:text-gray-400">Inactif:</span>
                         <span className="ml-1 font-medium">{student.days_inactive}j</span>
                       </div>
                     </div>
 
                     {student.recommendations.length > 0 && (
                       <div className="mb-3">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Recommandations:</p>
-                        <ul className="text-sm text-gray-600 space-y-1">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recommandations:</p>
+                        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           {student.recommendations.map((rec, idx) => (
                             <li key={idx} className="flex items-center gap-2">
                               <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
@@ -530,7 +530,7 @@ export default function AnalyticsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Aucune donnée</div>
+                  <div className="flex items-center justify-center h-48 text-gray-400 dark:text-gray-500 text-sm">Aucune donnée</div>
                 )}
               </Card>
 
@@ -549,7 +549,7 @@ export default function AnalyticsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Aucune donnée</div>
+                  <div className="flex items-center justify-center h-48 text-gray-400 dark:text-gray-500 text-sm">Aucune donnée</div>
                 )}
               </Card>
             </div>

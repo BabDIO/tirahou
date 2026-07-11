@@ -24,18 +24,18 @@ export default function MyCoursesTeacherPage() {
                 <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 truncate">{course.name}</h3>
-                <p className="text-sm text-gray-500">{course.code}</p>
+                <h3 className="font-bold text-gray-900 dark:text-gray-50 truncate">{course.name}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{course.code}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <p className="text-xs text-gray-500">Étudiants</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Étudiants</p>
                 <p className="text-lg font-bold">{course.students_count}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Séances</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Séances</p>
                 <p className="text-lg font-bold">{course.sessions_count}</p>
               </div>
             </div>

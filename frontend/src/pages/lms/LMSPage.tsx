@@ -47,7 +47,7 @@ export default function LMSPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Campus Virtuel — LMS</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} espace(s) de cours</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} espace(s) de cours</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>Nouvel espace</Button>
       </div>
@@ -149,14 +149,14 @@ function CourseCard({ space, onView, onPublish, publishing }: {
 
       {/* Content */}
       <div className="flex-1">
-        <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1">{space.title}</h3>
+        <h3 className="font-bold text-gray-900 dark:text-gray-50 text-sm line-clamp-2 mb-1">{space.title}</h3>
         <p className="text-xs font-mono text-primary-600 mb-3">{space.ue_code} — {space.ue_name}</p>
 
         {/* Progress */}
         <div className="mb-4">
-          <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-1.5">
             <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Complétion</span>
-            <span className="font-medium text-gray-600">{completionRate}%</span>
+            <span className="font-medium text-gray-600 dark:text-gray-400">{completionRate}%</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
             <div
@@ -196,13 +196,13 @@ function CourseDetail({ detail }: { detail: CourseSpace & { modules?: { id: stri
 
       {/* Modules */}
       {detail.modules?.length ? detail.modules.map(mod => (
-        <div key={mod.id} className="border border-gray-100 rounded-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-50 to-slate-50 px-5 py-3 flex justify-between items-center border-b border-gray-100">
+        <div key={mod.id} className="border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-50 to-slate-50 px-5 py-3 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2">
               <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-lg flex items-center justify-center text-xs font-bold">
                 {mod.order}
               </span>
-              <h4 className="font-semibold text-gray-800 text-sm">{mod.title}</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{mod.title}</h4>
             </div>
             <Badge label={mod.is_published ? 'Publié' : 'Brouillon'}
               className={mod.is_published ? 'badge-green' : 'badge-gray'} />
@@ -216,7 +216,7 @@ function CourseDetail({ detail }: { detail: CourseSpace & { modules?: { id: stri
                       res.type === 'pdf' ? '📄' : res.type === 'video' ? '🎬' :
                       res.type === 'ppt' ? '📊' : res.type === 'link' ? '🔗' : '📁'
                     }</span>
-                    <span className="text-gray-700 font-medium">{res.title}</span>
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">{res.title}</span>
                   </div>
                   <Badge label={res.type.toUpperCase()} className="badge-blue" />
                 </div>
@@ -224,7 +224,7 @@ function CourseDetail({ detail }: { detail: CourseSpace & { modules?: { id: stri
             </div>
           )}
           {(!mod.resources || mod.resources.length === 0) && (
-            <p className="px-5 py-3 text-xs text-gray-400 italic">Aucune ressource dans ce module</p>
+            <p className="px-5 py-3 text-xs text-gray-400 dark:text-gray-500 italic">Aucune ressource dans ce module</p>
           )}
         </div>
       )) : (
@@ -279,7 +279,7 @@ function CourseSpaceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void;
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label">Unité d'Enseignement (UE) *</label>
-        <select className={`input bg-white ${errors.ue ? 'border-red-400' : ''}`}
+        <select className={`input bg-white dark:bg-slate-900 ${errors.ue ? 'border-red-400' : ''}`}
           value={form.ue} onChange={e => set('ue', e.target.value)}>
           <option value="">— Sélectionner une UE —</option>
           {ues?.results.map((u: { id: string; code: string; name: string }) => (
@@ -290,7 +290,7 @@ function CourseSpaceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void;
       </div>
       <div>
         <label className="label">Année académique *</label>
-        <select className={`input bg-white ${errors.academic_year ? 'border-red-400' : ''}`}
+        <select className={`input bg-white dark:bg-slate-900 ${errors.academic_year ? 'border-red-400' : ''}`}
           value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
           <option value="">— Sélectionner —</option>
           {years?.results.map((y: { id: string; label: string; is_current: boolean }) => (
@@ -308,7 +308,7 @@ function CourseSpaceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void;
       </div>
       <div>
         <label className="label">Mode d'enseignement</label>
-        <select className="input bg-white" value={form.mode} onChange={e => set('mode', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.mode} onChange={e => set('mode', e.target.value)}>
           <option value="presentiel">Présentiel</option>
           <option value="distanciel_sync">Distanciel Synchrone</option>
           <option value="distanciel_async">Distanciel Asynchrone</option>
@@ -321,7 +321,7 @@ function CourseSpaceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void;
         <textarea className="input min-h-[70px] resize-none" placeholder="Description du cours..."
           value={form.description} onChange={e => set('description', e.target.value)} />
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<BookOpen className="w-4 h-4" />}>
           Créer l'espace

@@ -108,9 +108,9 @@ function StudentPicker({ value, onSelect }: { value: string; onSelect: (id: stri
               <button
                 type="button" key={s.id}
                 onClick={() => { onSelect(s.id, `${label} — ${s.student_id}`); setQuery('') }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
               >
-                {label} <span className="text-gray-400 text-xs">— {s.student_id}</span>
+                {label} <span className="text-gray-400 dark:text-gray-500 text-xs">— {s.student_id}</span>
               </button>
             )
           })}
@@ -226,7 +226,7 @@ export default function GamificationPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Badges & Récompenses</h1>
-          <p className="text-gray-500 text-sm mt-1">Gamification pédagogique — badges numériques et portefeuille de points</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Gamification pédagogique — badges numériques et portefeuille de points</p>
         </div>
         <div className="flex gap-2">
           {tab === 'certifications' ? (
@@ -254,7 +254,7 @@ export default function GamificationPage() {
         loadingBadges ? <Spinner text="Chargement des badges..." /> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(!badges || badges.length === 0) && (
-              <p className="text-sm text-gray-400 col-span-full text-center py-8">Aucun badge créé pour le moment.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 col-span-full text-center py-8">Aucun badge créé pour le moment.</p>
             )}
             {badges?.map((b) => (
               <Card key={b.id} noPadding className="p-4">
@@ -263,11 +263,11 @@ export default function GamificationPage() {
                     <Trophy className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{b.name}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{b.name}</p>
                     <Badge label={b.type_display} className="badge-purple" />
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">{b.description}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{b.description}</p>
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-xs font-bold text-amber-600">{b.points} pts</span>
                   <Badge label={b.is_published ? 'Publié' : 'Brouillon'} className={b.is_published ? 'badge-green' : 'badge-gray'} dot />
@@ -331,12 +331,12 @@ export default function GamificationPage() {
           <Card title="Portefeuilles des étudiants" subtitle={`${wallets?.length ?? 0} portefeuille(s)`}>
             <div className="space-y-2">
               {(!wallets || wallets.length === 0) && (
-                <p className="text-sm text-gray-400 text-center py-8">Aucun portefeuille actif pour le moment.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Aucun portefeuille actif pour le moment.</p>
               )}
               {wallets?.map((w) => (
-                <div key={w.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm font-medium text-gray-900">{w.student_name}</span>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div key={w.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{w.student_name}</span>
+                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                     <span>Gagné: <strong className="text-emerald-600">{Number(w.total_earned).toFixed(0)}</strong></span>
                     <span>Dépensé: <strong className="text-red-600">{Number(w.total_spent).toFixed(0)}</strong></span>
                     <span className="text-sm font-bold text-violet-600">{Number(w.balance).toFixed(0)} pts</span>
@@ -354,17 +354,17 @@ export default function GamificationPage() {
           <div className="space-y-5">
             <Card title="Catalogue" subtitle={`${certifications?.length ?? 0} certification(s)`}>
               {(!certifications || certifications.length === 0) ? (
-                <p className="text-sm text-gray-400 text-center py-6">Aucune micro-certification créée pour le moment.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Aucune micro-certification créée pour le moment.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {certifications.map((c) => (
                     <Card key={c.id} noPadding className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{c.title}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{c.title}</p>
                         <Badge label={c.status_display} className={c.status === 'published' ? 'badge-green' : 'badge-gray'} dot />
                       </div>
-                      <p className="text-xs text-gray-500 font-mono">{c.code}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{c.code}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-2">
                         <span>{c.duration_hours}h</span>
                         <span>{c.credits} crédit(s)</span>
                         <span>{c.enrolled_count} inscrit(s)</span>
@@ -377,14 +377,14 @@ export default function GamificationPage() {
 
             <Card title="Inscriptions & certification" subtitle={`${enrollments?.length ?? 0} inscription(s)`}>
               {(!enrollments || enrollments.length === 0) ? (
-                <p className="text-sm text-gray-400 text-center py-6">Aucun étudiant inscrit pour le moment.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Aucun étudiant inscrit pour le moment.</p>
               ) : (
                 <div className="space-y-2">
                   {enrollments.map((e) => (
-                    <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{e.student_name}</p>
-                        <p className="text-xs text-gray-500">{e.certification_detail.title}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{e.student_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{e.certification_detail.title}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <Badge label={e.status_display} className={CERT_STATUS_BADGE[e.status] ?? 'badge-gray'} dot />
@@ -434,7 +434,7 @@ export default function GamificationPage() {
             <option value="">Aucun badge</option>
             {badges?.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </Select>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" checked={certForm.is_free} onChange={(e) => setCertForm({ ...certForm, is_free: e.target.checked })} />
             Gratuit
           </label>
@@ -463,7 +463,7 @@ export default function GamificationPage() {
           <Select label="Type" value={badgeForm.type} onChange={(e) => setBadgeForm({ ...badgeForm, type: e.target.value })} options={BADGE_TYPES} />
           <Input label="Points" type="number" min="0" value={badgeForm.points} onChange={(e) => setBadgeForm({ ...badgeForm, points: Number(e.target.value) })} />
           <Textarea label="Critères d'obtention" value={badgeForm.criteria} onChange={(e) => setBadgeForm({ ...badgeForm, criteria: e.target.value })} rows={2} />
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" checked={badgeForm.is_published} onChange={(e) => setBadgeForm({ ...badgeForm, is_published: e.target.checked })} />
             Publié (visible immédiatement)
           </label>

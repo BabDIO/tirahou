@@ -88,7 +88,7 @@ export default function MyCertificationsPage() {
       {/* My certifications */}
       <Card title="Mes certifications" subtitle={`${myCertifications?.length ?? 0} inscription(s)`}>
         {!myCertifications || myCertifications.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">Vous n'êtes inscrit à aucune certification pour le moment.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Vous n'êtes inscrit à aucune certification pour le moment.</p>
         ) : (
           <div className="space-y-3">
             {myCertifications.map((sc) => (
@@ -117,7 +117,7 @@ export default function MyCertificationsPage() {
       {/* Catalog */}
       <Card title="Catalogue disponible" subtitle={`${catalog?.length ?? 0} certification(s) publiée(s)`}>
         {!catalog || catalog.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">Aucune micro-certification disponible pour le moment.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Aucune micro-certification disponible pour le moment.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {catalog.map((cert) => {

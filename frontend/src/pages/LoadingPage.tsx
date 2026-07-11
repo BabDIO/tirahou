@@ -28,10 +28,10 @@ export default function LoadingPage({
         </div>
 
         {/* Message */}
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50 mb-2">
           {message}
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Veuillez patienter quelques instants
         </p>
 

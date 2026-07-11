@@ -34,7 +34,7 @@ export default function FinanceScholarshipsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Bourses & Exonérations</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Gestion des réductions et aides financières</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gestion des réductions et aides financières</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
           Nouvelle bourse
@@ -91,8 +91,8 @@ export default function FinanceScholarshipsPage() {
                         </span>
                       </td>
                       <td className="font-bold text-emerald-600">{formatCurrency(sc.amount)}</td>
-                      <td className="text-sm text-gray-500 max-w-xs truncate">{sc.reason || '—'}</td>
-                      <td className="text-xs text-gray-400">{formatDate(sc.created_at)}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{sc.reason || '—'}</td>
+                      <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(sc.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -139,7 +139,7 @@ function ScholarshipForm({ onSuccess }: { onSuccess: () => void }) {
       {error && <Alert type="error">{error}</Alert>}
       <div>
         <label className="label">Étudiant *</label>
-        <select className="input bg-white" value={form.student} onChange={e => set('student', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.student} onChange={e => set('student', e.target.value)}>
           <option value="">— Sélectionner —</option>
           {students?.results?.map((s: { id: string; student_id: string; user: { full_name: string } }) => (
             <option key={s.id} value={s.id}>{s.user.full_name} ({s.student_id})</option>
@@ -158,7 +158,7 @@ function ScholarshipForm({ onSuccess }: { onSuccess: () => void }) {
             ].map(t => (
               <button key={t.value} type="button" onClick={() => set('type', t.value)}
                 className={`p-2.5 rounded-xl border text-sm font-medium transition-all ${
-                  form.type === t.value ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  form.type === t.value ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
                 }`}>
                 {t.label}
               </button>

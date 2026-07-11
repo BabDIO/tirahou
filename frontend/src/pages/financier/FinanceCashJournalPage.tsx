@@ -28,7 +28,7 @@ export default function FinanceCashJournalPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Journal de Caisse</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Suivi des encaissements et rapprochement financier</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Suivi des encaissements et rapprochement financier</p>
         </div>
         <button
           onClick={() => {
@@ -40,7 +40,7 @@ export default function FinanceCashJournalPage() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a'); a.href = url; a.download = `journal_${startDate}.csv`; a.click()
           }}
-          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800 transition-colors shadow-sm"
         >
           <Download className="w-4 h-4" /> Exporter CSV
         </button>
@@ -95,11 +95,11 @@ export default function FinanceCashJournalPage() {
           ) : (
             <div className="space-y-3">
               {Object.entries(byMethod).map(([method, amount]) => (
-                <div key={method} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <div key={method} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <span className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     {methodIcon[method] ?? '💰'} {method.replace('_', ' ')}
                   </span>
-                  <span className="font-bold text-sm text-gray-900">{formatCurrency(amount as number)}</span>
+                  <span className="font-bold text-sm text-gray-900 dark:text-gray-50">{formatCurrency(amount as number)}</span>
                 </div>
               ))}
             </div>
@@ -113,15 +113,15 @@ export default function FinanceCashJournalPage() {
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {data.payments.map((p: { id: string; amount: number; method: string; method_display: string; receipt_number: string; paid_at: string | null; status: string }) => (
-                <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{methodIcon[p.method] ?? '💰'}</span>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{formatCurrency(p.amount)}</p>
-                      <p className="text-xs text-gray-400">{p.method_display} · {formatDate(p.paid_at)}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(p.amount)}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{p.method_display} · {formatDate(p.paid_at)}</p>
                     </div>
                   </div>
-                  <span className="font-mono text-xs text-gray-500">{p.receipt_number}</span>
+                  <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{p.receipt_number}</span>
                 </div>
               ))}
             </div>

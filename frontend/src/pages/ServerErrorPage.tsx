@@ -71,12 +71,12 @@ export default function ServerErrorPage({
           </div>
 
           {/* Titre */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3">
             {title}
           </h1>
 
           {/* Description */}
-          <p className="text-gray-600 mb-8 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
             {description}
           </p>
 
@@ -117,8 +117,8 @@ export default function ServerErrorPage({
           </div>
 
           {/* Informations supplémentaires */}
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <p className="text-sm text-gray-500">
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Si le problème persiste, contactez le support technique à{' '}
               <a 
                 href="mailto:support@votre-universite.edu" 
@@ -132,10 +132,10 @@ export default function ServerErrorPage({
 
         {/* Conseils */}
         <div className="mt-6 bg-white/50 backdrop-blur-sm rounded-xl p-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-3">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-3">
             💡 Que faire en attendant ?
           </h3>
-          <ul className="space-y-2 text-sm text-gray-600">
+          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-start gap-2">
               <span className="text-primary-600 font-bold">•</span>
               <span>Actualisez la page dans quelques minutes</span>

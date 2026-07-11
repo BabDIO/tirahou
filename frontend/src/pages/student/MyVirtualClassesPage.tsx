@@ -41,7 +41,7 @@ export default function MyVirtualClassesPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Mes Classes Virtuelles</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Sessions en direct et replays disponibles</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Sessions en direct et replays disponibles</p>
       </div>
 
       {/* En cours maintenant */}
@@ -54,8 +54,8 @@ export default function MyVirtualClassesPage() {
           {live.map((s: { id: string; title: string; provider: string; course_space_title?: string; join_url?: string }) => (
             <div key={s.id} className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-bold text-gray-900">{s.title}</p>
-                {s.course_space_title && <p className="text-xs text-gray-500">{s.course_space_title}</p>}
+                <p className="font-bold text-gray-900 dark:text-gray-50">{s.title}</p>
+                {s.course_space_title && <p className="text-xs text-gray-500 dark:text-gray-400">{s.course_space_title}</p>}
               </div>
               <button onClick={() => joinMut.mutate(s.id)}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition animate-pulse">
@@ -73,7 +73,7 @@ export default function MyVirtualClassesPage() {
         <div className="space-y-5">
           {upcoming.length > 0 && (
             <div>
-              <h2 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">À venir</h2>
+              <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">À venir</h2>
               <div className="space-y-3">
                 {upcoming.map((s: {
                   id: string; title: string; provider: string; mode: string
@@ -87,9 +87,9 @@ export default function MyVirtualClassesPage() {
                           {PROVIDER_ICONS[s.provider] ?? '📡'}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">{s.title}</p>
-                          {s.course_space_title && <p className="text-xs text-gray-400">{s.course_space_title}</p>}
-                          <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 flex-wrap">
+                          <p className="font-bold text-gray-900 dark:text-gray-50">{s.title}</p>
+                          {s.course_space_title && <p className="text-xs text-gray-400 dark:text-gray-500">{s.course_space_title}</p>}
+                          <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(s.scheduled_start)}</span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
@@ -115,7 +115,7 @@ export default function MyVirtualClassesPage() {
 
           {past.length > 0 && (
             <div>
-              <h2 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Sessions passées</h2>
+              <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">Sessions passées</h2>
               <div className="space-y-2">
                 {past.map((s: {
                   id: string; title: string; provider: string; status: string
@@ -127,15 +127,15 @@ export default function MyVirtualClassesPage() {
                       <div className="flex items-center gap-3">
                         <span className="text-lg">{PROVIDER_ICONS[s.provider] ?? '📡'}</span>
                         <div>
-                          <p className="font-semibold text-gray-800 text-sm">{s.title}</p>
-                          <p className="text-xs text-gray-400">{formatDate(s.scheduled_start)}</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{s.title}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(s.scheduled_start)}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge label={s.status} className={statusColor(s.status)} />
                         {s.replay_available && s.recording_url && (
                           <a href={s.recording_url} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition">
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium hover:bg-gray-200 transition">
                             <Video className="w-3.5 h-3.5" /> Replay
                           </a>
                         )}

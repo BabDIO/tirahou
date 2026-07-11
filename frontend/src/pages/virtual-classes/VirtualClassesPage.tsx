@@ -33,9 +33,9 @@ const PROVIDER_LABELS: Record<string, string> = {
 const statusColor = (s: string) => ({
   planifiee: 'bg-blue-100 text-blue-700',
   en_cours: 'bg-emerald-100 text-emerald-700 animate-pulse',
-  terminee: 'bg-gray-100 text-gray-600',
+  terminee: 'bg-gray-100 text-gray-600 dark:text-gray-400',
   annulee: 'bg-red-100 text-red-600',
-}[s] ?? 'bg-gray-100 text-gray-600')
+}[s] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400')
 
 export default function VirtualClassesPage() {
   const qc = useQueryClient()
@@ -85,7 +85,7 @@ export default function VirtualClassesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Classes Virtuelles</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Sessions hybrides synchrones et asynchrones</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Sessions hybrides synchrones et asynchrones</p>
         </div>
         {(isEnseignant || isAdmin) && (
           <button onClick={() => setShowCreate(true)}
@@ -108,8 +108,8 @@ export default function VirtualClassesPage() {
                     <MonitorPlay className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{s.title}</p>
-                    {s.course_space_title && <p className="text-xs text-gray-400">{s.course_space_title}</p>}
+                    <p className="font-bold text-gray-900 dark:text-gray-50">{s.title}</p>
+                    {s.course_space_title && <p className="text-xs text-gray-400 dark:text-gray-500">{s.course_space_title}</p>}
                   </div>
                 </div>
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor(s.status)}`}>
@@ -117,34 +117,34 @@ export default function VirtualClassesPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                   {formatDate(s.scheduled_start)}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-gray-400" />
+                  <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                   {new Date(s.scheduled_start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   {' → '}
                   {new Date(s.scheduled_end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Wifi className="w-3.5 h-3.5 text-gray-400" />
+                  <Wifi className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                   {PROVIDER_LABELS[s.provider] ?? s.provider}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-gray-400" />
+                  <Users className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                   {s.room_capacity} places
                 </span>
               </div>
 
               {s.physical_room && (
-                <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5">
                   📍 Salle physique : <span className="font-medium">{s.physical_room}</span>
                 </p>
               )}
 
-              {s.description && <p className="text-sm text-gray-600 line-clamp-2">{s.description}</p>}
+              {s.description && <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{s.description}</p>}
 
               <div className="flex gap-2 pt-1">
                 {s.status !== 'annulee' && s.status !== 'terminee' && (
@@ -157,12 +157,12 @@ export default function VirtualClassesPage() {
                 )}
                 {s.replay_available && s.recording_url && (
                   <a href={s.recording_url} target="_blank" rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 text-sm font-semibold transition">
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 text-sm font-semibold transition">
                     <Video className="w-4 h-4" /> Replay
                   </a>
                 )}
                 <a href={`/virtual-classes/${s.id}`}
-                  className="px-3 py-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 text-sm font-semibold transition">
+                  className="px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-100 text-sm font-semibold transition">
                   Détails
                 </a>
               </div>
@@ -226,7 +226,7 @@ export default function VirtualClassesPage() {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Annuler</button>
+            <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
             <button
               onClick={() => createMut.mutate({ ...form, course_space: form.course_space || undefined })}
               disabled={!form.title || !form.scheduled_start || !form.scheduled_end || createMut.isPending}

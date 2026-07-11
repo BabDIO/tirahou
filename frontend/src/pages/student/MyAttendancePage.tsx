@@ -42,13 +42,13 @@ export default function MyAttendancePage() {
       <Card title="Historique">
         <div className="space-y-3">
           {attendance?.map((record: any) => (
-            <div key={record.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+            <div key={record.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${record.status === 'present' ? 'bg-emerald-100' : 'bg-red-100'}`}>
                 {record.status === 'present' ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <XCircle className="w-5 h-5 text-red-600" />}
               </div>
               <div className="flex-1">
                 <p className="font-medium">{record.course_name}</p>
-                <p className="text-sm text-gray-500">{record.date} - {record.time}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{record.date} - {record.time}</p>
               </div>
               <Badge label={record.status === 'present' ? 'Présent' : 'Absent'} className={record.status === 'present' ? 'badge-green' : 'badge-red'} />
             </div>

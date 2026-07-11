@@ -60,7 +60,7 @@ export default function VirtualClassesPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Classes Virtuelles</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{data?.count ?? 0} session(s) de classe virtuelle</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} session(s) de classe virtuelle</p>
         </div>
         {(isEnseignant || isAdmin) && (
           <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
@@ -175,22 +175,22 @@ function SessionCard({
 
       {/* Content */}
       <div className="flex-1">
-        <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1">{session.title}</h3>
-        <p className="text-xs text-gray-400 mb-3">{session.course_space_title}</p>
-        <div className="space-y-1.5 text-xs text-gray-500">
+        <h3 className="font-bold text-gray-900 dark:text-gray-50 text-sm line-clamp-2 mb-1">{session.title}</h3>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{session.course_space_title}</p>
+        <div className="space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+            <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
             {new Date(session.scheduled_start).toLocaleString('fr-FR', {
               day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
             })}
           </div>
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-gray-400" />
+            <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
             {durationMin} min
           </div>
           {session.participants_count !== undefined && (
             <div className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-gray-400" />
+              <Users className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
               {session.participants_count} participant(s)
             </div>
           )}
@@ -198,7 +198,7 @@ function SessionCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+      <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" size="sm" className="flex-1" icon={<Eye className="w-3.5 h-3.5" />}
           onClick={onView}>Détails</Button>
         {canManage && session.status === 'planifiee' && (
@@ -266,7 +266,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label">Espace de cours *</label>
-        <select className="input bg-white" value={form.course_space} onChange={e => set('course_space', e.target.value)}>
+        <select className="input bg-white dark:bg-slate-900" value={form.course_space} onChange={e => set('course_space', e.target.value)}>
           <option value="">— Sélectionner un cours —</option>
           {spaces?.results?.map((s: { id: string; title: string; ue_code: string }) => (
             <option key={s.id} value={s.id}>{s.ue_code} — {s.title}</option>
@@ -281,7 +281,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Mode</label>
-          <select className="input bg-white" value={form.mode} onChange={e => set('mode', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.mode} onChange={e => set('mode', e.target.value)}>
             <option value="presentiel">Présentiel</option>
             <option value="distanciel_sync">Distanciel synchrone</option>
             <option value="hybride">Hybride</option>
@@ -289,7 +289,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         </div>
         <div>
           <label className="label">Plateforme</label>
-          <select className="input bg-white" value={form.provider} onChange={e => set('provider', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.provider} onChange={e => set('provider', e.target.value)}>
             <option value="bbb">BigBlueButton</option>
             <option value="jitsi">Jitsi Meet</option>
             <option value="zoom">Zoom</option>
@@ -317,19 +317,19 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           <input type="checkbox" id="is_recorded" checked={form.is_recorded}
             onChange={e => set('is_recorded', e.target.checked)}
             className="w-4 h-4 text-primary-600 rounded" />
-          <label htmlFor="is_recorded" className="text-sm text-gray-700 cursor-pointer">Enregistrement activé</label>
+          <label htmlFor="is_recorded" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Enregistrement activé</label>
         </div>
       </div>
       {form.mode === 'hybride' && (
         <div>
           <label className="label">Créneau physique correspondant</label>
-          <select className="input bg-white" value={form.scheduled_session} onChange={e => set('scheduled_session', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.scheduled_session} onChange={e => set('scheduled_session', e.target.value)}>
             <option value="">— Aucun (classe 100% en ligne) —</option>
             {physicalSessions?.results?.map((s: { id: string; ec_name?: string; start_datetime: string; room_name?: string }) => (
               <option key={s.id} value={s.id}>{s.ec_name ?? 'Séance'} — {s.room_name ?? ''} — {new Date(s.start_datetime).toLocaleString('fr-FR')}</option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-400">Relier au créneau permet de fusionner présence en salle et en ligne sur une seule feuille de présence.</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Relier au créneau permet de fusionner présence en salle et en ligne sur une seule feuille de présence.</p>
         </div>
       )}
       <div>
@@ -337,7 +337,7 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         <textarea className="input min-h-[60px] resize-none" value={form.description}
           onChange={e => set('description', e.target.value)} placeholder="Description de la session..." />
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<Video className="w-4 h-4" />}>
           Créer la session

@@ -64,7 +64,7 @@ export default function MyEnrollmentPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Mon Inscription</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Détails de votre inscription administrative et pédagogique</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Détails de votre inscription administrative et pédagogique</p>
       </div>
 
       {isLoading ? <Spinner text="Chargement de votre inscription..." /> : !adminList.length ? (
@@ -83,9 +83,9 @@ export default function MyEnrollmentPage() {
               ].map(({ label, done }, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center ${done ? 'bg-emerald-100' : 'bg-gray-100'}`}>
-                    {done ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <span className="text-gray-400 font-bold text-sm">{i + 1}</span>}
+                    {done ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <span className="text-gray-400 dark:text-gray-500 font-bold text-sm">{i + 1}</span>}
                   </div>
-                  <p className={`text-xs text-center font-medium ${done ? 'text-emerald-700' : 'text-gray-400'}`}>{label}</p>
+                  <p className={`text-xs text-center font-medium ${done ? 'text-emerald-700' : 'text-gray-400 dark:text-gray-500'}`}>{label}</p>
                 </div>
               ))}
             </div>
@@ -106,9 +106,9 @@ export default function MyEnrollmentPage() {
                   ['Validation', enroll.validated_at ? formatDate(enroll.validated_at) : '—'],
                   ['Paiement', enroll.payment_validated ? '✓ Validé' : '⏳ En attente'],
                 ].map(([label, value]) => (
-                  <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                    <p className={`font-semibold text-sm ${value === '✓ Validé' ? 'text-emerald-700' : value === '⏳ En attente' ? 'text-amber-700' : 'text-gray-800'}`}>{value}</p>
+                  <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                    <p className={`font-semibold text-sm ${value === '✓ Validé' ? 'text-emerald-700' : value === '⏳ En attente' ? 'text-amber-700' : 'text-gray-800 dark:text-gray-200'}`}>{value}</p>
                   </div>
                 ))}
               </div>
@@ -175,19 +175,19 @@ function PedaEnrollmentBlock({ pe, myUEs }: { pe: PedaEnrollment; myUEs: UeEnrol
   }
 
   return (
-    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="font-bold text-gray-900">{pe.semester_label}</p>
+          <p className="font-bold text-gray-900 dark:text-gray-50">{pe.semester_label}</p>
           {pe.group_name && (
-            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
               <Users className="w-3 h-3" /> Groupe : {pe.group_name}
             </p>
           )}
         </div>
         <Badge label={pe.status_display} className={statusColor(pe.status)} dot />
       </div>
-      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
         <span className="flex items-center gap-1.5">
           <BookMarked className="w-3.5 h-3.5 text-primary-500" />
           {myUEs.length > 0 ? `${myUEs.length} UE inscrites` : (pe.ue_count ?? 0) + ' UE'}
@@ -203,10 +203,10 @@ function PedaEnrollmentBlock({ pe, myUEs }: { pe: PedaEnrollment; myUEs: UeEnrol
       {myUEs.length > 0 && (
         <div className="space-y-1 mb-3">
           {myUEs.map(ue => (
-            <div key={ue.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-white rounded-lg border border-gray-100">
+            <div key={ue.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-white rounded-lg border border-gray-100 dark:border-gray-700">
               <BookOpen className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
-              <span className="text-xs font-semibold text-gray-700">{ue.ue_code}</span>
-              <span className="text-xs text-gray-400 truncate">{ue.ue_name}</span>
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{ue.ue_code}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{ue.ue_name}</span>
               {ue.is_optional && <span className="ml-auto text-xs text-amber-600 font-medium">Optionnelle</span>}
             </div>
           ))}
@@ -214,18 +214,18 @@ function PedaEnrollmentBlock({ pe, myUEs }: { pe: PedaEnrollment; myUEs: UeEnrol
       )}
 
       {pending && (
-        <div className="pt-3 border-t border-gray-200 space-y-3">
+        <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3">
           {optionalChoices.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">UE optionnelles disponibles</p>
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">UE optionnelles disponibles</p>
               <div className="space-y-1.5">
                 {optionalChoices.map(ue => (
-                  <label key={ue.id} className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-gray-100 hover:border-primary-200 cursor-pointer text-sm">
+                  <label key={ue.id} className="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-gray-100 dark:border-gray-700 hover:border-primary-200 cursor-pointer text-sm">
                     <input type="checkbox" checked={selectedOptional.includes(ue.id)}
                       onChange={e => setSelectedOptional(prev => e.target.checked ? [...prev, ue.id] : prev.filter(id => id !== ue.id))} />
-                    <span className="font-mono text-xs text-gray-600">{ue.code}</span>
-                    <span className="text-gray-700">{ue.name}</span>
-                    <span className="ml-auto text-xs text-gray-400">{ue.credits} cr.</span>
+                    <span className="font-mono text-xs text-gray-600 dark:text-gray-400">{ue.code}</span>
+                    <span className="text-gray-700 dark:text-gray-300">{ue.name}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">{ue.credits} cr.</span>
                   </label>
                 ))}
               </div>

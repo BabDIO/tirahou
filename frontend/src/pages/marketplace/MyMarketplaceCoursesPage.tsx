@@ -146,21 +146,21 @@ export default function MyMarketplaceCoursesPage() {
         </Button>
         <div>
           <h1 className="page-title">{managingCourse.title}</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestion des leçons</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Gestion des leçons</p>
         </div>
 
         <Card title="Leçons" subtitle={`${lessons?.length ?? 0} leçon(s)`}>
           {loadingLessons ? <Spinner /> : (
             <div className="space-y-2 mb-5">
               {(!lessons || lessons.length === 0) && (
-                <p className="text-sm text-gray-400 text-center py-4">Aucune leçon. Ajoutez-en une ci-dessous pour pouvoir publier le cours.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Aucune leçon. Ajoutez-en une ci-dessous pour pouvoir publier le cours.</p>
               )}
               {lessons?.map((l) => (
-                <div key={l.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div key={l.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{l.title}</p>
-                    <p className="text-xs text-gray-500">{l.content_type_display} • {l.duration_minutes} min</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{l.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{l.content_type_display} • {l.duration_minutes} min</p>
                   </div>
                   {l.is_preview && <Badge label="Aperçu" className="badge-blue" />}
                   <button onClick={() => deleteLessonMutation.mutate(l.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded">
@@ -171,8 +171,8 @@ export default function MyMarketplaceCoursesPage() {
             </div>
           )}
 
-          <div className="pt-4 border-t border-gray-100 space-y-3">
-            <p className="text-sm font-semibold text-gray-700">Ajouter une leçon</p>
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Ajouter une leçon</p>
             <Input label="Titre" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
             <div className="grid grid-cols-2 gap-4">
               <Select label="Type de contenu" value={lessonForm.content_type} onChange={(e) => setLessonForm({ ...lessonForm, content_type: e.target.value })} options={CONTENT_TYPE_OPTIONS} />
@@ -184,7 +184,7 @@ export default function MyMarketplaceCoursesPage() {
             {(lessonForm.content_type === 'text' || lessonForm.content_type === 'quiz') && (
               <Textarea label="Contenu" value={lessonForm.content_text} onChange={(e) => setLessonForm({ ...lessonForm, content_text: e.target.value })} rows={3} />
             )}
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={lessonForm.is_preview} onChange={(e) => setLessonForm({ ...lessonForm, is_preview: e.target.checked })} />
               Aperçu gratuit (visible sans achat)
             </label>
@@ -216,7 +216,7 @@ export default function MyMarketplaceCoursesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Mes cours marketplace</h1>
-          <p className="text-gray-500 text-sm mt-1">Créez et vendez vos propres cours en dehors du cursus officiel</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Créez et vendez vos propres cours en dehors du cursus officiel</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" icon={<Store className="w-4 h-4" />} onClick={() => navigate('/marketplace')}>Voir le catalogue</Button>
@@ -228,7 +228,7 @@ export default function MyMarketplaceCoursesPage() {
         <Spinner text="Chargement de vos cours..." />
       ) : !courses || courses.length === 0 ? (
         <Card>
-          <div className="flex flex-col items-center py-12 text-gray-400">
+          <div className="flex flex-col items-center py-12 text-gray-400 dark:text-gray-500">
             <BookOpen className="w-10 h-10 mb-2 opacity-30" />
             <p className="text-sm">Vous n'avez créé aucun cours pour le moment.</p>
           </div>
@@ -238,10 +238,10 @@ export default function MyMarketplaceCoursesPage() {
           {courses.map((c) => (
             <Card key={c.id} noPadding className="p-4">
               <div className="flex items-start justify-between gap-2 mb-2">
-                <p className="text-sm font-semibold text-gray-900 truncate">{c.title}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{c.title}</p>
                 <Badge label={c.status_display} className={STATUS_BADGE[c.status] ?? 'badge-gray'} dot />
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
                 <span>{c.lessons_count} leçon(s)</span>
                 <span>{c.students_count} élève(s)</span>
                 <span>{c.is_free ? 'Gratuit' : `${c.price} pts`}</span>
@@ -249,7 +249,7 @@ export default function MyMarketplaceCoursesPage() {
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="secondary" className="flex-1" onClick={() => setManagingCourseId(c.id)}>Gérer</Button>
                 {c.status === 'published' ? (
-                  <button onClick={() => archiveMutation.mutate(c.id)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Archiver">
+                  <button onClick={() => archiveMutation.mutate(c.id)} className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 rounded-lg" title="Archiver">
                     <Archive className="w-4 h-4" />
                   </button>
                 ) : c.status === 'draft' && (
@@ -273,7 +273,7 @@ export default function MyMarketplaceCoursesPage() {
             <Select label="Niveau" value={courseForm.level} onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })} options={LEVEL_OPTIONS} />
           </div>
           <Input label="Durée estimée (heures)" type="number" min="1" value={courseForm.duration_hours} onChange={(e) => setCourseForm({ ...courseForm, duration_hours: Number(e.target.value) })} />
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" checked={courseForm.is_free} onChange={(e) => setCourseForm({ ...courseForm, is_free: e.target.checked })} />
             Gratuit
           </label>

@@ -54,8 +54,8 @@ export default function GradesValidationPage() {
       label: 'Étudiant',
       render: (_, row) => (
         <div>
-          <p className="font-medium text-gray-900">{row.student_name}</p>
-          <p className="text-xs text-gray-400">{row.ec_code}</p>
+          <p className="font-medium text-gray-900 dark:text-gray-50">{row.student_name}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{row.ec_code}</p>
         </div>
       )
     },
@@ -111,8 +111,8 @@ export default function GradesValidationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Validation des notes</h1>
-          <p className="text-sm text-gray-500 mt-1">Vérifiez et validez les notes saisies</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Validation des notes</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Vérifiez et validez les notes saisies</p>
         </div>
         {tab === 'pending' && selectedGrades.length > 0 && (
           <Button
@@ -168,30 +168,30 @@ export default function GradesValidationPage() {
         >
           <div className="space-y-4">
             <div>
-              <label className="text-xs text-gray-500">Étudiant</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400">Étudiant</label>
               <p className="font-medium">{detailModal.student_name}</p>
             </div>
             <div>
-              <label className="text-xs text-gray-500">EC</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400">EC</label>
               <p className="font-medium">{detailModal.ec_name} ({detailModal.ec_code})</p>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-xs text-gray-500">CC (40%)</label>
+                <label className="text-xs text-gray-500 dark:text-gray-400">CC (40%)</label>
                 <p className="text-lg font-bold">{detailModal.cc_grade?.toFixed(2) || '—'}</p>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Examen (60%)</label>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Examen (60%)</label>
                 <p className="text-lg font-bold">{detailModal.exam_grade?.toFixed(2) || '—'}</p>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Note finale</label>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Note finale</label>
                 <p className="text-lg font-bold text-blue-600">{detailModal.final_grade?.toFixed(2) || '—'}/20</p>
               </div>
             </div>
             {detailModal.appreciation && (
               <div>
-                <label className="text-xs text-gray-500">Appréciation</label>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Appréciation</label>
                 <p className="text-sm">{detailModal.appreciation}</p>
               </div>
             )}

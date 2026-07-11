@@ -34,12 +34,12 @@ export default function MaintenancePage({
           </div>
 
           {/* Titre */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3">
             🔧 Maintenance en cours
           </h1>
 
           {/* Description */}
-          <p className="text-gray-600 mb-6 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
             Notre plateforme est temporairement indisponible pour maintenance.
           </p>
 
@@ -53,7 +53,7 @@ export default function MaintenancePage({
           {/* Temps estimé */}
           <div className="flex items-center justify-center gap-2 mb-8">
             <Clock className="w-5 h-5 text-orange-600" />
-            <p className="text-gray-700">
+            <p className="text-gray-700 dark:text-gray-300">
               <strong>Temps estimé :</strong>{' '}
               <span className="text-orange-600 font-bold">{estimatedTime}</span>
             </p>
@@ -72,8 +72,8 @@ export default function MaintenancePage({
           </div>
 
           {/* Contact */}
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Mail className="w-4 h-4" />
               <span>
                 Questions ? Contactez-nous à{' '}
@@ -90,10 +90,10 @@ export default function MaintenancePage({
 
         {/* Informations supplémentaires */}
         <div className="mt-6 bg-white/50 backdrop-blur-sm rounded-xl p-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-3">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-3">
             📋 Ce que nous faisons
           </h3>
-          <ul className="space-y-2 text-sm text-gray-600">
+          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-start gap-2">
               <span className="text-orange-600 font-bold">✓</span>
               <span>Mise à jour des systèmes de sécurité</span>
@@ -115,48 +115,48 @@ export default function MaintenancePage({
 
         {/* Timeline estimée */}
         <div className="mt-6 bg-white rounded-xl p-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-4">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-4">
             ⏱️ Chronologie estimée
           </h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Début de maintenance</p>
-                <p className="text-xs text-gray-500">Sauvegarde des données</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Début de maintenance</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Sauvegarde des données</p>
               </div>
               <span className="text-xs text-green-600 font-medium">Terminé</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Mise à jour en cours</p>
-                <p className="text-xs text-gray-500">Installation des améliorations</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Mise à jour en cours</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Installation des améliorations</p>
               </div>
               <span className="text-xs text-orange-600 font-medium">En cours</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-gray-300" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Tests de vérification</p>
-                <p className="text-xs text-gray-500">Validation des changements</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Tests de vérification</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Validation des changements</p>
               </div>
-              <span className="text-xs text-gray-400 font-medium">À venir</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">À venir</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-gray-300" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Retour en ligne</p>
-                <p className="text-xs text-gray-500">Restauration du service</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Retour en ligne</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Restauration du service</p>
               </div>
-              <span className="text-xs text-gray-400 font-medium">À venir</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">À venir</span>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Merci de votre patience et de votre compréhension 🙏
           </p>
         </div>

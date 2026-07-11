@@ -41,7 +41,7 @@ export default function MyInternshipsTeacherPage() {
     <div className="space-y-5">
       <div>
         <h1 className="page-title">Mes Encadrements</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Stages et mémoires que vous encadrez</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Stages et mémoires que vous encadrez</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -71,10 +71,10 @@ export default function MyInternshipsTeacherPage() {
               <Card key={s.id} hover>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <p className="font-bold text-gray-900">{s.student_name}</p>
-                    <p className="text-sm text-gray-600 mt-0.5">{s.company_name}</p>
-                    <p className="text-sm text-gray-500 mt-1 italic">"{s.subject}"</p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="font-bold text-gray-900 dark:text-gray-50">{s.student_name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{s.company_name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">"{s.subject}"</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       {formatDate(s.start_date)} → {formatDate(s.end_date)}
                     </p>
                   </div>
@@ -98,14 +98,14 @@ export default function MyInternshipsTeacherPage() {
               <Card key={t.id} hover>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">{t.student_name}</p>
-                    <p className="text-sm font-medium text-gray-700 mt-1 line-clamp-2">{t.title}</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-50">{t.student_name}</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mt-1 line-clamp-2">{t.title}</p>
                     <p className="text-xs text-violet-600 font-semibold mt-1">{t.type_display}</p>
-                    {t.keywords && <p className="text-xs text-gray-400 mt-1">Mots-clés: {t.keywords}</p>}
+                    {t.keywords && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Mots-clés: {t.keywords}</p>}
                   </div>
                   <Badge label={t.status_display} className={statusColor(t.status)} dot />
                 </div>
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                   {t.status === 'sujet_propose' && (
                     <Button size="sm" variant="success" icon={<CheckCircle className="w-3.5 h-3.5" />}
                       loading={validateSubject.isPending}

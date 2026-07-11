@@ -79,7 +79,7 @@ export default function SchedulingPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Emploi du temps & Planning</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Planification des séances, salles et emplois du temps</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Planification des séances, salles et emplois du temps</p>
         </div>
         <div className="flex gap-2">
           {tab === 'sessions' && (
@@ -162,31 +162,31 @@ export default function SchedulingPage() {
                           <td>
                             <div>
                               <p className="font-mono text-xs font-bold text-primary-600">{session.ec_code}</p>
-                              <p className="text-xs text-gray-500 mt-0.5 max-w-[120px] truncate">{session.ec_name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-[120px] truncate">{session.ec_name}</p>
                             </div>
                           </td>
-                          <td className="text-sm text-gray-700">{session.teacher_name}</td>
-                          <td className="text-xs text-gray-600">
+                          <td className="text-sm text-gray-700 dark:text-gray-300">{session.teacher_name}</td>
+                          <td className="text-xs text-gray-600 dark:text-gray-400">
                             <div className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3 text-gray-400" />
+                              <Calendar className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                               {new Date(session.start_datetime).toLocaleDateString('fr-FR', {
                                 day: '2-digit', month: '2-digit', year: '2-digit'
                               })}
                             </div>
                             <div className="flex items-center gap-1 mt-0.5">
-                              <Clock className="w-3 h-3 text-gray-400" />
+                              <Clock className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                               {new Date(session.start_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           </td>
-                          <td className="text-xs text-gray-500">
+                          <td className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(session.end_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </td>
                           <td>
                             {session.room_name ? (
-                              <span className="flex items-center gap-1 text-xs text-gray-600">
+                              <span className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                                 <MapPin className="w-3 h-3" />{session.room_name}
                               </span>
-                            ) : <span className="text-xs text-gray-400">—</span>}
+                            ) : <span className="text-xs text-gray-400 dark:text-gray-500">—</span>}
                           </td>
                           <td><Badge label={session.mode_display} className={modeColor[session.mode] ?? 'badge-gray'} /></td>
                           <td><Badge label={session.status_display} className={statusSession[session.status] ?? 'badge-gray'} dot /></td>
@@ -226,9 +226,9 @@ export default function SchedulingPage() {
                   {room.is_virtual && <Badge label="Virtuelle" className="badge-blue" />}
                 </div>
               </div>
-              <h3 className="font-bold text-gray-900 text-sm mb-0.5">{room.name}</h3>
+              <h3 className="font-bold text-gray-900 dark:text-gray-50 text-sm mb-0.5">{room.name}</h3>
               <p className="text-xs font-mono text-primary-600 mb-3">{room.code}</p>
-              <div className="flex flex-wrap gap-1 text-xs text-gray-500 mb-3">
+              <div className="flex flex-wrap gap-1 text-xs text-gray-500 dark:text-gray-400 mb-3">
                 <span className="bg-gray-100 px-2 py-0.5 rounded-full">
                   <Users className="w-3 h-3 inline mr-1" />{room.capacity} places
                 </span>
@@ -264,8 +264,8 @@ export default function SchedulingPage() {
                       <Calendar className="w-4 h-4 text-primary-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">Groupe {tt.group}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">Groupe {tt.group}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         Année: {tt.academic_year}
                         {tt.week_number != null ? ` · Semaine ${tt.week_number}` : ''}
                       </p>
@@ -303,9 +303,9 @@ export default function SchedulingPage() {
                 ['Salle', selectedSession.room_name ?? '—'],
                 ['Mode', selectedSession.mode_display],
               ].map(([label, value]) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold mb-1">{label}</p>
-                  <p className="font-semibold text-gray-800">{value}</p>
+                <div key={label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide font-semibold mb-1">{label}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{value}</p>
                 </div>
               ))}
             </div>
@@ -412,7 +412,7 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         </div>
         <div>
           <label className="label">Année académique *</label>
-          <select className="input bg-white" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
             <option value="">— Sélectionner —</option>
             {years?.results?.map((y: { id: string; label: string }) => (
               <option key={y.id} value={y.id}>{y.label}</option>
@@ -421,7 +421,7 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         </div>
         <div>
           <label className="label">Mode</label>
-          <select className="input bg-white" value={form.mode} onChange={e => set('mode', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.mode} onChange={e => set('mode', e.target.value)}>
             <option value="presentiel">Présentiel</option>
             <option value="distanciel_sync">Distanciel synchrone</option>
             <option value="distanciel_async">Distanciel asynchrone</option>
@@ -430,7 +430,7 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         </div>
         <div>
           <label className="label">Salle</label>
-          <select className="input bg-white" value={form.room} onChange={e => set('room', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.room} onChange={e => set('room', e.target.value)}>
             <option value="">— Aucune salle —</option>
             {rooms?.results?.map((r: Room) => (
               <option key={r.id} value={r.id}>{r.code} — {r.name} ({r.capacity} pl.)</option>
@@ -450,7 +450,7 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           </div>
         </div>
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<Calendar className="w-4 h-4" />}>
           Créer la séance
@@ -494,7 +494,7 @@ function RoomCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
         </div>
         <div>
           <label className="label">Type</label>
-          <select className="input bg-white" value={form.type} onChange={e => set('type', e.target.value)}>
+          <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
             <option value="amphi">Amphithéâtre</option>
             <option value="salle_cours">Salle de cours</option>
             <option value="salle_td">Salle TD</option>
@@ -524,11 +524,11 @@ function RoomCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
             <input type="checkbox" checked={form[key as keyof typeof form] as boolean}
               onChange={e => set(key, e.target.checked)}
               className="w-4 h-4 text-primary-600 rounded" />
-            <span className="text-sm text-gray-700">{label}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
           </label>
         ))}
       </div>
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<MapPin className="w-4 h-4" />}>
           Créer la salle
