@@ -11,4 +11,7 @@ DJANGO_SETTINGS_MODULE=config.settings_production python manage.py collectstatic
 echo "=== Running database migrations ==="
 DJANGO_SETTINGS_MODULE=config.settings_production python manage.py migrate
 
+echo "=== Seeding demo accounts ==="
+DJANGO_SETTINGS_MODULE=config.settings_production python create_test_users.py
+
 echo "=== Build complete ==="
