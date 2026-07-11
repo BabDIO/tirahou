@@ -163,3 +163,51 @@ def system_stats(request):
         ),
         'timestamp': timezone.now().isoformat(),
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def global_search(request):
+    """Recherche globale (étudiants, enseignants, programmes, documents bibliothèque)."""
+    query = request.query_params.get('q', '').strip()
+    if len(query) < 2:
+        return Response({'students': [], 'teachers': [], 'programs': [], 'documents': []})
+
+    from django.db.models import Q
+    from apps.people.models import Student, Teacher
+    from apps.programs.models import Program
+    from apps.library.models import LibraryDocument
+
+    students = Student.objects.filter(
+        Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query) | Q(student_id__icontains=query),
+        is_active=True,
+    ).select_related('user')[:5]
+    teachers = Teacher.objects.filter(
+        Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query) | Q(teacher_id__icontains=query),
+        is_active=True,
+    ).select_related('user')[:5]
+    programs = Program.objects.filter(
+        Q(name__icontains=query) | Q(code__icontains=query), is_active=True,
+    )[:5]
+    documents = LibraryDocument.objects.filter(
+        Q(title__icontains=query) | Q(author__icontains=query), is_active=True,
+    )[:5]
+
+    return Response({
+        'students': [{
+            'id': str(s.id), 'name': s.user.get_full_name(), 'description': f'Étudiant — {s.student_id}',
+            'url': f'/students?q={s.student_id}',
+        } for s in students],
+        'teachers': [{
+            'id': str(t.id), 'name': t.user.get_full_name(), 'description': f'Enseignant — {t.teacher_id}',
+            'url': f'/teachers?q={t.teacher_id}',
+        } for t in teachers],
+        'programs': [{
+            'id': str(p.id), 'name': p.name, 'description': f'Programme — {p.code}',
+            'url': f'/programs?q={p.code}',
+        } for p in programs],
+        'documents': [{
+            'id': str(d.id), 'name': d.title, 'description': f'{d.author} — Bibliothèque',
+            'url': f'/library?q={d.title}',
+        } for d in documents],
+    })

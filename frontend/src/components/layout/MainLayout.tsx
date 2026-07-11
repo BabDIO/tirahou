@@ -9,9 +9,10 @@ import {
   CreditCard, FileText, BarChart3, Calendar, Video, Bell,
   ChevronDown, LogOut, Settings, Menu, BookMarked,
   UserCheck, Building2, Award, MessageSquare, ChevronRight,
-  Search, HelpCircle, Zap, Library, Briefcase, Home, Shield, Gift,
+  Search, HelpCircle, Zap, Library, Briefcase, Home, Shield, Gift, UserPlus,
 } from 'lucide-react'
 import { Avatar, ThemeToggle } from '../ui'
+import GlobalSearch from '../search/GlobalSearch'
 import { useQuery } from '@tanstack/react-query'
 import { communicationApi } from '../../api'
 import { Link } from 'react-router-dom'
@@ -66,6 +67,7 @@ const ADMIN_NAV = [
     group: 'Administration',
     items: [
       { to: '/admin/users', icon: Users, label: 'Utilisateurs', color: 'text-red-400' },
+      { to: '/scolarite/parents', icon: UserPlus, label: 'Parents & Tuteurs', color: 'text-cyan-400' },
       { to: '/admin/audit', icon: Shield, label: 'Journal d\'audit', color: 'text-slate-400' },
       { to: '/admin/settings', icon: Settings, label: 'Paramètres', color: 'text-gray-400' },
     ],
@@ -86,6 +88,7 @@ const SCOLARITE_NAV = [
       { to: '/students', icon: GraduationCap, label: 'Étudiants', color: 'text-violet-400' },
       { to: '/admissions', icon: ClipboardList, label: 'Admissions', color: 'text-pink-400' },
       { to: '/enrollment', icon: Users, label: 'Inscriptions', color: 'text-teal-400' },
+      { to: '/scolarite/parents', icon: UserPlus, label: 'Parents & Tuteurs', color: 'text-cyan-400' },
       { to: '/documents', icon: FileText, label: 'Documents', color: 'text-indigo-400' },
       { to: '/scolarite/documents', icon: Shield, label: 'Vérification pièces', color: 'text-amber-400' },
       { to: '/scolarite/generated-docs', icon: FileText, label: 'Générer documents', color: 'text-emerald-400' },
@@ -278,6 +281,7 @@ const breadcrumbMap: Record<string, string> = {
   '/admin/settings': 'Paramètres Système',
   '/scolarite/documents': 'Vérification Documents',
   '/scolarite/generated-docs': 'Documents Académiques',
+  '/scolarite/parents': 'Parents & Tuteurs',
   '/finance/journal': 'Journal de Caisse',
   '/finance/scholarships': 'Bourses & Exonérations',
   '/responsable/programs': 'Pilotage Pédagogique',
@@ -308,6 +312,7 @@ const roleBadge: Record<string, { label: string; color: string }> = {
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const { user, logout, refreshToken } = useAuthStore()
   const { isAdmin, isScolarite, isFinancier, isEnseignant, isEtudiant, isResponsable, isBibliothecaire, roles } = useRole()
   const navigate = useNavigate()
@@ -476,13 +481,14 @@ export default function MainLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 w-56 focus-within:border-primary-400 focus-within:bg-white dark:focus-within:bg-slate-900 transition-all">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="hidden md:flex items-center gap-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 w-56 hover:border-primary-400 hover:bg-white dark:hover:bg-slate-900 transition-all text-left"
+            >
               <Search className="w-3.5 h-3.5 text-gray-400 dark:text-slate-500 flex-shrink-0" />
-              <input
-                placeholder="Recherche rapide..."
-                className="bg-transparent text-xs text-gray-600 dark:text-slate-300 placeholder:text-gray-400 dark:placeholder:text-slate-500 outline-none w-full"
-              />
-            </div>
+              <span className="text-xs text-gray-400 dark:text-slate-500 flex-1">Recherche rapide...</span>
+              <kbd className="text-[10px] text-gray-400 dark:text-slate-500 font-mono">Ctrl K</kbd>
+            </button>
             <ThemeToggle />
             <NotificationBell />
             {user && (
@@ -507,6 +513,7 @@ export default function MainLayout() {
           </div>
         </main>
       </div>
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   )
 }

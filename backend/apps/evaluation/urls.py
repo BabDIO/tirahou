@@ -12,5 +12,6 @@ router.register('ue-results', views.UEResultViewSet, basename='ue-results')
 router.register('exam-room-assignments', views.ExamRoomAssignmentViewSet)
 
 urlpatterns = [
+    path('evaluation/analytics/distribution/', views.grade_distribution, name='grade-distribution'),
     path('', include(router.urls)),
 ]

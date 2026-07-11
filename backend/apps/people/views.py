@@ -263,20 +263,42 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
             parent for parent in queryset
             if parent.can_receive_notification_type(notification_type)
         ]
-        
-        # TODO: Implémenter l'envoi réel via Celery
-        # from apps.communication.tasks import send_notification_to_parents
-        # send_notification_to_parents.delay(
-        #     parent_ids=[p.id for p in eligible_parents],
-        #     message=message,
-        #     send_email=send_email,
-        #     send_sms=send_sms
-        # )
-        
+
+        from django.core.mail import send_mail
+        from django.conf import settings
+        import logging
+        logger = logging.getLogger(__name__)
+
+        sent_count = 0
+        for parent in eligible_parents:
+            sent_this_parent = False
+            if send_email and parent.email:
+                try:
+                    send_mail(
+                        subject=f"[TIRAHOU] {notification_type}",
+                        message=message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[parent.email],
+                        fail_silently=False,
+                    )
+                    sent_this_parent = True
+                except Exception as e:
+                    logger.error(f"Email non envoyé à {parent.email}: {e}")
+            if send_sms and parent.phone:
+                try:
+                    from apps.communication.sms import send_sms as send_sms_message
+                    send_sms_message(parent.phone, message[:300])
+                    sent_this_parent = True
+                except Exception as e:
+                    logger.warning(f"SMS non envoyé à {parent.phone}: {e}")
+            if sent_this_parent:
+                sent_count += 1
+
         return Response({
             'success': True,
-            'message': f'{len(eligible_parents)} notifications envoyées',
-            'recipients_count': len(eligible_parents)
+            'message': f'{sent_count} notification(s) envoyée(s) sur {len(eligible_parents)} destinataire(s) éligible(s)',
+            'recipients_count': len(eligible_parents),
+            'sent_count': sent_count,
         })
     
     @action(detail=True, methods=['post'])

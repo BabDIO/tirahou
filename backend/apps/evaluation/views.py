@@ -542,3 +542,27 @@ def publish_semester_results(request):
         return Response({'error': 'Session non trouvée'}, status=404)
     count = ResultService.publish_semester_results(exam_session)
     return Response({'detail': f'{count} résultats publiés'})
+
+
+@extend_schema(responses={200: OpenApiResponse(description='Distribution statistique des notes d\'un EC')})
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def grade_distribution(request):
+    """Statistiques avancées (quartiles, écart-type, distribution) des notes d'un EC pour une session d'examen."""
+    from .analytics import GradeAnalytics
+    from apps.programs.models import EC
+
+    ec_id = request.query_params.get('ec')
+    exam_session_id = request.query_params.get('exam_session')
+    if not ec_id or not exam_session_id:
+        return Response({'error': 'Paramètres ec et exam_session requis'}, status=400)
+    try:
+        ec = EC.objects.get(id=ec_id)
+        exam_session = ExamSession.objects.get(id=exam_session_id)
+    except (EC.DoesNotExist, ExamSession.DoesNotExist):
+        return Response({'error': 'EC ou session introuvable'}, status=404)
+
+    stats = GradeAnalytics.get_distribution(ec, exam_session)
+    if stats is None:
+        return Response({'detail': 'Aucune note disponible pour cette combinaison EC/session.'}, status=404)
+    return Response(stats)

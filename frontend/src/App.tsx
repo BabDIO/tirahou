@@ -56,6 +56,7 @@ import MyInternshipsTeacherPage from './pages/teacher/MyInternshipsTeacherPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminAuditPage from './pages/admin/AdminAuditPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
+import ParentsManagementPage from './pages/admin/ParentsManagementPage'
 // Pages scolarité
 import ScolariteDocumentsPage from './pages/scolarite/ScolariteDocumentsPage'
 import ScolariteGeneratedDocsPage from './pages/scolarite/ScolariteGeneratedDocsPage'
@@ -175,6 +176,7 @@ export default function App() {
               <Route element={<ProtectedRoute allowedRoles={[...SCOLARITE]} />}>
                 <Route path="/scolarite/documents" element={<ScolariteDocumentsPage />} />
                 <Route path="/scolarite/generated-docs" element={<ScolariteGeneratedDocsPage />} />
+                <Route path="/scolarite/parents" element={<ParentsManagementPage />} />
               </Route>
 
               {/* ── RESPONSABLE SPÉCIFIQUE ── */}

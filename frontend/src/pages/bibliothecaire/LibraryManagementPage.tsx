@@ -104,7 +104,7 @@ export default function LibraryManagementPage() {
 
       <DataTable data={documents || []} columns={columns} isLoading={isLoading} />
 
-      <Modal open={addModal} onClose={() => { setAddModal(false); setFormData({}) }} title={formData.id ? 'Modifier' : 'Ajouter'}>
+      <Modal isOpen={addModal} onClose={() => { setAddModal(false); setFormData({}) }} title={formData.id ? 'Modifier' : 'Ajouter'}>
         <div className="space-y-4">
           <input placeholder="Titre" className="input" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
           <input placeholder="Auteur" className="input" value={formData.author || ''} onChange={e => setFormData({ ...formData, author: e.target.value })} />

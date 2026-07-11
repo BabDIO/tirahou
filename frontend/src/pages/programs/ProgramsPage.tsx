@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, Plus, Eye, BookMarked, Layers, Users, Clock, GraduationCap, Copy, UserCog } from 'lucide-react'
 import { programsApi, teachersApi } from '../../api'
@@ -21,8 +22,9 @@ const typeColor: Record<string, string> = {
 }
 
 export default function ProgramsPage() {
+  const [searchParams] = useSearchParams()
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [createOpen, setCreateOpen] = useState(false)
   const debouncedSearch = useDebounce(search, 400)
   const [typeFilter, setTypeFilter] = useState('')

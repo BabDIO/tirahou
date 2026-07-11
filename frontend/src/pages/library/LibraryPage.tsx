@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, BookOpen, Upload, Download, Eye, Filter } from 'lucide-react'
 import { Button, Input, Badge, Spinner, Empty, Card, StatsCard, Modal, Alert } from '../../components/ui'
@@ -14,7 +15,8 @@ const docTypeIcon: Record<string, string> = {
 }
 
 export default function LibraryPage() {
-  const [search, setSearch] = useState('')
+  const [searchParams] = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [typeFilter, setTypeFilter] = useState('')
   const [domainFilter, setDomainFilter] = useState('')
   const [uploadOpen, setUploadOpen] = useState(false)

@@ -27,4 +27,6 @@ urlpatterns = [
     # AMÉLIORATIONS: Prédiction et analyse
     path('predict-success/', views.predict_student_success, name='predict_student_success'),
     path('students-at-risk/', views.students_at_risk, name='students_at_risk'),
+    path('cohort-analysis/', views.cohort_analysis, name='cohort_analysis'),
+    path('performance-trends/', views.performance_trends, name='performance_trends'),
 ]

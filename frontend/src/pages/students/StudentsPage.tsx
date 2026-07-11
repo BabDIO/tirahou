@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, Plus, Eye, GraduationCap, Filter, Download } from 'lucide-react'
 import { studentsApi, analyticsApi } from '../../api'
@@ -34,8 +35,9 @@ const avatarColors = [
 ]
 
 export default function StudentsPage() {
+  const [searchParams] = useSearchParams()
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [statusFilter, setStatusFilter] = useState('')
   const [levelFilter, setLevelFilter] = useState('')
   const [selected, setSelected] = useState<Student | null>(null)

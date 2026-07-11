@@ -162,7 +162,7 @@ export default function GradesValidationPage() {
 
       {detailModal && (
         <Modal
-          open={!!detailModal}
+          isOpen={!!detailModal}
           onClose={() => setDetailModal(null)}
           title="Détails de la note"
         >

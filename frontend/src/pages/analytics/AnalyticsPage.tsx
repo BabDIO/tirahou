@@ -22,7 +22,7 @@ const riskColor: Record<string, string> = {
   eleve: 'badge-red', critique: 'badge-red',
 }
 
-type TabKey = 'overview' | 'academic' | 'finance' | 'lms' | 'risk'
+type TabKey = 'overview' | 'academic' | 'finance' | 'lms' | 'risk' | 'trends'
 
 export default function AnalyticsPage() {
   const [tab, setTab] = useState<TabKey>('overview')
@@ -60,6 +60,18 @@ export default function AnalyticsPage() {
     queryKey: ['attendance-stats'],
     queryFn: () => analyticsApi.getAttendanceStats().then(r => r.data),
     enabled: tab === 'overview' || tab === 'academic',
+  })
+
+  const { data: trends, isLoading: loadingTrends } = useQuery({
+    queryKey: ['performance-trends'],
+    queryFn: () => analyticsApi.getPerformanceTrends(30).then(r => r.data),
+    enabled: tab === 'trends',
+  })
+
+  const { data: cohort, isLoading: loadingCohort } = useQuery({
+    queryKey: ['cohort-analysis'],
+    queryFn: () => analyticsApi.getCohortAnalysis().then(r => r.data),
+    enabled: tab === 'trends',
   })
 
   const handleExport = async (type: 'students' | 'grades' | 'payments') => {
@@ -155,6 +167,7 @@ export default function AnalyticsPage() {
           { key: 'finance', label: 'Finance', icon: <TrendingUp className="w-4 h-4" /> },
           { key: 'lms', label: 'LMS', icon: <FileText className="w-4 h-4" /> },
           { key: 'risk', label: 'Risques', icon: <AlertTriangle className="w-4 h-4" />, count: Array.isArray(atRisk) ? atRisk.length : 0 },
+          { key: 'trends', label: 'Tendances', icon: <TrendingUp className="w-4 h-4" /> },
         ]}
         active={tab}
         onChange={k => setTab(k as TabKey)}
@@ -454,6 +467,94 @@ export default function AnalyticsPage() {
             )}
           </Card>
         </div>
+      )}
+
+      {/* Tendances */}
+      {tab === 'trends' && (
+        loadingTrends || loadingCohort ? <Spinner text="Chargement des tendances..." /> : (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <StatsCard title="Taux de rétention" value={`${cohort?.retention_rate ?? 0}%`}
+                icon={<Users className="w-5 h-5" />} color="bg-blue-500" />
+              <StatsCard title="Taux de diplomation" value={`${cohort?.graduation_rate ?? 0}%`}
+                icon={<TrendingUp className="w-5 h-5" />} color="bg-emerald-500" />
+              <StatsCard title="Total inscrits" value={cohort?.total_enrolled ?? 0}
+                icon={<BarChart3 className="w-5 h-5" />} color="bg-violet-500" />
+              <StatsCard title="Programmes suivis" value={cohort?.by_program?.length ?? 0}
+                icon={<FileText className="w-5 h-5" />} color="bg-amber-500" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card title="Évolution des notes (30 derniers jours)">
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={(trends?.grades ?? []).map((item: { day: string; avg_score: number }) => ({
+                    name: new Date(item.day).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }),
+                    Note: Number(item.avg_score.toFixed(2)),
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 20]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="Note" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+
+              <Card title="Taux de présence (%)">
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={(trends?.attendance ?? []).map((item: { day: string; present: number; total: number }) => ({
+                    name: new Date(item.day).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }),
+                    Taux: item.total > 0 ? Math.round((item.present / item.total) * 100) : 0,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="Taux" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+
+              <Card title="Répartition par programme">
+                {(cohort?.by_program ?? []).length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={(cohort?.by_program ?? []).slice(0, 8).map((item: { program__name?: string; count: number }) => ({
+                      name: (item.program__name ?? 'N/A').substring(0, 20),
+                      Étudiants: item.count,
+                    }))} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis type="number" tick={{ fontSize: 10 }} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={110} />
+                      <Tooltip />
+                      <Bar dataKey="Étudiants" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Aucune donnée</div>
+                )}
+              </Card>
+
+              <Card title="Répartition par niveau">
+                {(cohort?.by_level ?? []).length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie data={(cohort?.by_level ?? []).map((item: { level: string; count: number }) => ({
+                        name: item.level ?? 'N/A', value: item.count,
+                      }))} cx="50%" cy="50%" outerRadius={80} dataKey="value"
+                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
+                        {(cohort?.by_level ?? []).map((_: unknown, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Aucune donnée</div>
+                )}
+              </Card>
+            </div>
+          </div>
+        )
       )}
     </div>
   )

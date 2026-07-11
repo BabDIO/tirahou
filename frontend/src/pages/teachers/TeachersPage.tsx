@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, Plus, Eye, UserCheck, Download, Mail, Phone, BookOpen, X, Clock, Trash2 } from 'lucide-react'
 import { teachersApi, academicApi, teacherAvailabilityApi } from '../../api'
@@ -26,8 +27,9 @@ const avatarColors = [
 ]
 
 export default function TeachersPage() {
+  const [searchParams] = useSearchParams()
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [gradeFilter, setGradeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [selected, setSelected] = useState<Teacher | null>(null)
