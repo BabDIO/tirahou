@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push *)",
+      "Bash(python manage.py makemigrations communication)",
+      "Bash(python manage.py migrate communication)",
+      "Bash(python manage.py makemigrations internships)",
+      "Bash(python manage.py migrate internships)",
+      "Bash(python manage.py makemigrations --check --dry-run)",
+      "Bash(python manage.py makemigrations accounts library)",
+      "Bash(python manage.py migrate accounts library)",
+      "Bash(python manage.py migrate library)",
+      "Bash(git commit -m ' *)",
+      "Bash(grep -rln \"from '.*/FinancierDashboard'\\\\|from '\\\\.\\\\./FinancierDashboard'\\\\|from '\\\\./FinancierDashboard'\" .)",
+      "Bash(grep -rln \"from '.*/ResponsableDashboard'\\\\|from '\\\\.\\\\./ResponsableDashboard'\\\\|from '\\\\./ResponsableDashboard'\" .)",
+      "Bash(xargs grep -l \"analytics\\\\|notifications\\\\|search\\\\|ecs\\\\|exam-sessions\\\\|evaluation\")",
+      "Bash(grep -rn \"ecs\\\\b\" apps/*/urls.py)",
+      "Bash(grep -rn \"distribution\" apps/evaluation/*.py)",
+      "Bash(grep -rn \"teacher/grades\\\\|teacher_grades\" apps/evaluation/*.py)",
+      "Bash(grep -rn \"register\\('students'\" apps/*/urls.py)",
+      "Bash(grep -rln \"search\" apps/*/urls.py)",
+      "Bash(grep -rn \"distribution\" apps/evaluation/urls.py apps/evaluation/extra_urls.py apps/evaluation/views.py)",
+      "Bash(grep -rln \"def search\\\\|GlobalSearch\\\\|class Search\" apps/*/views.py)",
+      "Bash(find . -iname \"urls.py\" -path \"*config*\" -o -iname \"urls.py\" -path \"*memoire*\")",
+      "Bash(grep -rn \"^\\\\s*pass\\\\s*$\" apps/ --include=\"*.py\")",
+      "Bash(grep -rln \"notification\" pages/communication/)",
+      "Bash(ls pages/communication/)",
+      "Bash(grep -n \"navigate\\(\\\\`/students\\\\|navigate\\(\\\\`/courses\\\\|navigate\\(\\\\`/documents\\\\|StudentProfile\\\\|/my-documents\\\\|CourseSpace\" pages/people/StudentsPage.tsx)"
+    ]
+  }
+}
