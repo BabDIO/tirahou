@@ -35,8 +35,12 @@ STATIC_URL = '/static/'
 # ── CORS — autoriser le frontend Vercel ──────────────────────────────────────
 CORS_ALLOWED_ORIGINS = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
-    'https://tirahou.vercel.app'
+    'https://tirahou-git-main-alibadra.vercel.app,https://tirahou.vercel.app'
 ).split(',')
+# Autorise aussi les URLs de preview Vercel (https://tirahou-<hash>-alibadra.vercel.app)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://tirahou-[\w-]+-alibadra\.vercel\.app$',
+]
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
