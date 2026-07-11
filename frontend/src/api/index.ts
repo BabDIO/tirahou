@@ -451,4 +451,31 @@ export const libraryApi = {
   downloadDocument: (id: string) => api.post(`/library/${id}/download/`),
   getStats: () => api.get('/library/stats/'),
   getFeatured: () => api.get('/library/featured/'),
+  getRecommendations: () => api.get('/library/recommendations/'),
+  getPopular: () => api.get('/library/popular/'),
+  getRecent: () => api.get('/library/recent/'),
+  // Circulation — emprunts
+  borrowDocument: (id: string) => api.post(`/library/${id}/borrow/`),
+  reserveDocument: (id: string) => api.post(`/library/${id}/reserve/`),
+  rateDocument: (id: string, data: { rating: number; comment?: string }) =>
+    api.post(`/library/${id}/rate/`, data),
+  getMyBorrowings: () => api.get('/library/my_borrowings/'),
+  getMyReservations: () => api.get('/library/my_reservations/'),
+  // Circulation — gestion (bibliothécaire)
+  getBorrowings: (params?: object) => api.get('/library-borrowings/', { params }),
+  returnBorrowing: (id: string) => api.post(`/library-borrowings/${id}/return_book/`),
+  markPenaltyPaid: (id: string) => api.post(`/library-borrowings/${id}/mark_penalty_paid/`),
+  getOverdueBorrowings: () => api.get('/library-borrowings/overdue/'),
+  getReservations: (params?: object) => api.get('/library-reservations/', { params }),
+  cancelReservation: (id: string) => api.post(`/library-reservations/${id}/cancel/`),
+  notifyReservationAvailable: (id: string) => api.post(`/library-reservations/${id}/notify_available/`),
+  // Listes de lecture
+  getReadingLists: (params?: object) => api.get('/reading-lists/', { params }),
+  createReadingList: (data: { name: string; description?: string; is_public?: boolean }) =>
+    api.post('/reading-lists/', data),
+  deleteReadingList: (id: string) => api.delete(`/reading-lists/${id}/`),
+  addToReadingList: (listId: string, documentId: string) =>
+    api.post(`/reading-lists/${listId}/add_document/`, { document_id: documentId }),
+  removeFromReadingList: (listId: string, documentId: string) =>
+    api.post(`/reading-lists/${listId}/remove_document/`, { document_id: documentId }),
 }
