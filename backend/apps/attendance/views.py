@@ -226,3 +226,44 @@ class AbsenceSummaryViewSet(viewsets.ReadOnlyModelViewSet):
             summary.student, summary.course_space
         )
         return Response(AbsenceSummarySerializer(updated).data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def student_attendance(request):
+    """Historique de présence de l'étudiant connecté (ÉTUDIANT)."""
+    if not hasattr(request.user, 'student_profile'):
+        return Response({'error': 'Profil étudiant non trouvé'}, status=404)
+    student = request.user.student_profile
+    records = AttendanceRecord.objects.filter(student=student).select_related(
+        'sheet__session__ec'
+    ).order_by('-sheet__session__start_datetime')[:100]
+
+    data = []
+    for r in records:
+        session = r.sheet.session
+        data.append({
+            'id': str(r.id),
+            'course_name': session.ec.name if session.ec_id else '—',
+            'status': r.status,
+            'status_display': r.get_status_display(),
+            'date': session.start_datetime.strftime('%d/%m/%Y'),
+            'time': session.start_datetime.strftime('%H:%M'),
+        })
+    return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def student_attendance_stats(request):
+    """Statistiques d'assiduité globales de l'étudiant connecté (ÉTUDIANT)."""
+    if not hasattr(request.user, 'student_profile'):
+        return Response({'error': 'Profil étudiant non trouvé'}, status=404)
+    student = request.user.student_profile
+    stats = AttendanceService.get_student_attendance_stats(student)
+    return Response({
+        'rate': stats['attendance_rate'],
+        'present': stats['present'],
+        'absent': stats['absent'],
+        'total': stats['total_sessions'],
+    })

@@ -377,6 +377,29 @@ def student_grades(request):
     return Response(GradeSerializer(grades, many=True).data)
 
 
+@extend_schema(responses={200: OpenApiResponse(description='Statistiques de notes d\'un étudiant')})
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def student_statistics(request):
+    """Statistiques globales de notes de l'étudiant connecté (ÉTUDIANT) — crédits obtenus/disponibles cumulés."""
+    from django.db.models import Avg
+    if not hasattr(request.user, 'student_profile'):
+        return Response({'error': 'Profil étudiant non trouvé'}, status=404)
+    student = request.user.student_profile
+    results = SemesterResult.objects.filter(student=student)
+    total_credits = sum(r.credits_obtained for r in results)
+    total_credits_available = sum(r.total_credits for r in results)
+    avg = Grade.objects.filter(
+        student=student, is_absent=False, final_grade__isnull=False
+    ).aggregate(avg=Avg('final_grade'))['avg']
+    return Response({
+        'total_credits': total_credits,
+        'total_credits_available': total_credits_available,
+        'average': round(float(avg), 2) if avg is not None else None,
+        'semesters_validated': results.filter(decision='admis').count(),
+    })
+
+
 @extend_schema(responses={200: OpenApiResponse(description='Relevé de notes complet')})
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])

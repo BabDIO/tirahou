@@ -11,6 +11,7 @@ urlpatterns = [
 
     # ── Étudiant ──────────────────────────────────────────────
     path('student/grades/',   views.student_grades,        name='student-grades'),
+    path('student/statistics/', views.student_statistics,  name='student-statistics'),
     path('student/transcript/', views.student_transcript,  name='student-transcript'),
     path('student/contest/',  views.submit_grade_contest,  name='submit-contest'),
 

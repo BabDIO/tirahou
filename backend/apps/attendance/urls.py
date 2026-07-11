@@ -7,4 +7,8 @@ router.register('attendance-sheets', views.AttendanceSheetViewSet)
 router.register('attendance-records', views.AttendanceRecordViewSet)
 router.register('absence-summaries', views.AbsenceSummaryViewSet)
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('student/attendance/', views.student_attendance, name='student-attendance'),
+    path('student/attendance/stats/', views.student_attendance_stats, name='student-attendance-stats'),
+    path('', include(router.urls)),
+]
