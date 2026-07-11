@@ -275,6 +275,29 @@ class SemesterResultViewSet(viewsets.ModelViewSet):
         resp['Content-Disposition'] = 'attachment; filename="pv_deliberation.pdf"'
         return resp
 
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """Export CSV des résultats semestriels (filtrable par exam_session)."""
+        import csv
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="resultats.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Matricule', 'Étudiant', 'Semestre', 'Moyenne', 'Crédits obtenus', 'Crédits total', 'Mention', 'Décision', 'Publié'])
+        qs = self.filter_queryset(self.get_queryset())
+        for r in qs:
+            writer.writerow([
+                r.student.student_id,
+                r.student.user.get_full_name(),
+                r.semester.label,
+                float(r.average) if r.average is not None else '',
+                r.credits_obtained,
+                r.total_credits,
+                r.mention or '',
+                r.get_decision_display() if r.decision else '',
+                'Oui' if r.published else 'Non',
+            ])
+        return response
+
 
 class JuryViewSet(viewsets.ModelViewSet):
     queryset = Jury.objects.all()

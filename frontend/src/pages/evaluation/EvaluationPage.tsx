@@ -133,6 +133,12 @@ export default function EvaluationPage() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['grades'] }); toast.success('Note publiée') },
   })
 
+  const publishSemesterResults = useMutation({
+    mutationFn: (examSessionId: string) => evaluationApi.publishSemesterResults(examSessionId),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['semester-results'] }); toast.success('Résultats de la session publiés') },
+    onError: () => toast.error('Erreur lors de la publication'),
+  })
+
   const handleExportGrades = async () => {
     const tid = toast.loading('Export en cours...')
     try {
@@ -450,7 +456,7 @@ export default function EvaluationPage() {
                   <tbody>
                     {results.results.map((result: SemesterResult) => (
                       <tr key={result.id}>
-                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{result.student}</td>
+                        <td className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{result.student_name}</td>
                         <td className="text-sm text-gray-600 dark:text-gray-400">{result.semester_label}</td>
                         <td>
                           <span className={`font-bold text-sm ${
@@ -478,7 +484,11 @@ export default function EvaluationPage() {
                         </td>
                         <td className="text-right">
                           {!result.published && (
-                            <Button variant="secondary" size="sm">Publier</Button>
+                            <Button variant="secondary" size="sm"
+                              loading={publishSemesterResults.isPending}
+                              onClick={() => publishSemesterResults.mutate(result.exam_session)}>
+                              Publier
+                            </Button>
                           )}
                         </td>
                       </tr>

@@ -31,4 +31,5 @@ urlpatterns = [
     path('students-at-risk/', views.students_at_risk, name='students_at_risk'),
     path('cohort-analysis/', views.cohort_analysis, name='cohort_analysis'),
     path('performance-trends/', views.performance_trends, name='performance_trends'),
+    path('top-performers/', views.top_performers, name='top_performers'),
 ]

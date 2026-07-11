@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { DollarSign, CheckCircle, Clock, XCircle, Filter, Download } from 'lucide-react'
+import { DollarSign, CheckCircle, Clock, Download } from 'lucide-react'
 import { Card, Button, Badge, StatsCard, Tabs } from '../../components/ui'
 import DataTable, { Column } from '../../components/ui/DataTable'
+import { analyticsApi } from '../../api'
+import { formatCurrency } from '../../lib/utils'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 
@@ -12,18 +14,18 @@ export default function PaymentsManagementPage() {
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ['payments', status],
-    queryFn: () => api.get('/finance/payments/', {
+    queryFn: () => api.get('/payments/', {
       params: status !== 'all' ? { status } : {}
-    }).then(r => r.data)
+    }).then(r => r.data.results ?? r.data)
   })
 
   const { data: stats } = useQuery({
     queryKey: ['payment-stats'],
-    queryFn: () => api.get('/finance/statistics/').then(r => r.data)
+    queryFn: () => api.get('/payments/stats/').then(r => r.data)
   })
 
   const validatePaymentMut = useMutation({
-    mutationFn: (id: string) => api.post(`/finance/payments/${id}/validate/`),
+    mutationFn: (id: string) => api.post(`/payments/${id}/validate/`),
     onSuccess: () => {
       toast.success('Paiement validé')
       qc.invalidateQueries({ queryKey: ['payments'] })
@@ -48,34 +50,21 @@ export default function PaymentsManagementPage() {
       label: 'Montant',
       sortable: true,
       render: (val) => (
-        <span className="font-bold text-gray-900 dark:text-gray-50">{val?.toLocaleString()}€</span>
+        <span className="font-bold text-gray-900 dark:text-gray-50">{formatCurrency(val ?? 0)}</span>
       )
     },
     {
-      key: 'payment_method',
+      key: 'method_display',
       label: 'Méthode',
-      render: (val) => {
-        const methods: Record<string, string> = {
-          cash: 'Espèces',
-          check: 'Chèque',
-          card: 'Carte',
-          transfer: 'Virement',
-          mobile: 'Mobile Money'
-        }
-        return methods[val] || val
-      }
     },
     {
       key: 'status',
       label: 'Statut',
-      render: (val) => {
-        const config: Record<string, any> = {
-          pending: { label: 'En attente', className: 'badge-yellow' },
-          validated: { label: 'Validé', className: 'badge-green' },
-          rejected: { label: 'Rejeté', className: 'badge-red' }
+      render: (val, row) => {
+        const config: Record<string, string> = {
+          en_attente: 'badge-yellow', valide: 'badge-green', rejete: 'badge-red', rembourse: 'badge-gray',
         }
-        const c = config[val] || config.pending
-        return <Badge label={c.label} className={c.className} />
+        return <Badge label={row.status_display} className={config[val] ?? 'badge-gray'} />
       }
     },
     {
@@ -87,7 +76,7 @@ export default function PaymentsManagementPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_, row) => row.status === 'pending' && (
+      render: (_, row) => row.status === 'en_attente' && (
         <Button
           size="xs"
           onClick={() => validatePaymentMut.mutate(row.id)}
@@ -101,10 +90,7 @@ export default function PaymentsManagementPage() {
   ]
 
   const exportMut = useMutation({
-    mutationFn: () => api.get('/finance/export-payments/', {
-      params: status !== 'all' ? { status } : {},
-      responseType: 'blob'
-    }).then(r => {
+    mutationFn: () => analyticsApi.exportPayments().then(r => {
       const url = window.URL.createObjectURL(new Blob([r.data]))
       const link = document.createElement('a')
       link.href = url
@@ -136,13 +122,13 @@ export default function PaymentsManagementPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total reçu"
-          value={`${stats?.total_amount?.toLocaleString() || 0}€`}
+          value={formatCurrency(stats?.total_amount ?? 0)}
           icon={<DollarSign className="w-5 h-5" />}
           color="bg-emerald-600"
         />
         <StatsCard
           title="En attente"
-          value={`${stats?.pending_amount?.toLocaleString() || 0}€`}
+          value={formatCurrency(stats?.pending_amount ?? 0)}
           icon={<Clock className="w-5 h-5" />}
           color="bg-amber-600"
         />
@@ -164,9 +150,9 @@ export default function PaymentsManagementPage() {
         <Tabs
           tabs={[
             { key: 'all', label: 'Tous' },
-            { key: 'pending', label: 'En attente', count: stats?.pending_count || 0 },
-            { key: 'validated', label: 'Validés' },
-            { key: 'rejected', label: 'Rejetés' }
+            { key: 'en_attente', label: 'En attente', count: stats?.pending_count || 0 },
+            { key: 'valide', label: 'Validés' },
+            { key: 'rejete', label: 'Rejetés' }
           ]}
           active={status}
           onChange={setStatus}

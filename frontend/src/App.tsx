@@ -66,12 +66,15 @@ import GamificationPage from './pages/admin/GamificationPage'
 // Pages scolarité
 import ScolariteDocumentsPage from './pages/scolarite/ScolariteDocumentsPage'
 import ScolariteGeneratedDocsPage from './pages/scolarite/ScolariteGeneratedDocsPage'
+import ResultsManagementPage from './pages/scolarite/ResultsManagementPage'
 // Pages financier
 import FinanceCashJournalPage from './pages/financier/FinanceCashJournalPage'
 import FinanceScholarshipsPage from './pages/financier/FinanceScholarshipsPage'
+import PaymentsManagementPage from './pages/financier/PaymentsManagementPage'
 // Pages responsable
 import ResponsableProgramPage from './pages/responsable/ResponsableProgramPage'
 import ResponsableGroupsPage from './pages/responsable/ResponsableGroupsPage'
+import GradesValidationPage from './pages/responsable/GradesValidationPage'
 // Pages bibliothécaire
 import BibliothecairePage from './pages/bibliothecaire/BibliothecairePage'
 import TestPage from './pages/TestPage'
@@ -172,6 +175,7 @@ export default function App() {
                 <Route path="/finance" element={<FinancePage />} />
                 <Route path="/finance/journal" element={<FinanceCashJournalPage />} />
                 <Route path="/finance/scholarships" element={<FinanceScholarshipsPage />} />
+                <Route path="/finance/payments" element={<PaymentsManagementPage />} />
               </Route>
 
               {/* ── PÉDAGOGIE ── */}
@@ -189,6 +193,7 @@ export default function App() {
               <Route element={<ProtectedRoute allowedRoles={[...SCOLARITE]} />}>
                 <Route path="/scolarite/documents" element={<ScolariteDocumentsPage />} />
                 <Route path="/scolarite/generated-docs" element={<ScolariteGeneratedDocsPage />} />
+                <Route path="/scolarite/results" element={<ResultsManagementPage />} />
                 <Route path="/scolarite/parents" element={<ParentsManagementPage />} />
               </Route>
 
@@ -196,6 +201,7 @@ export default function App() {
               <Route element={<ProtectedRoute allowedRoles={[...RESP]} />}>
                 <Route path="/responsable/programs" element={<ResponsableProgramPage />} />
                 <Route path="/responsable/groups" element={<ResponsableGroupsPage />} />
+                <Route path="/responsable/grades-validation" element={<GradesValidationPage />} />
               </Route>
 
               {/* ── BIBLIOTHÉCAIRE ── */}

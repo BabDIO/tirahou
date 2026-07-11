@@ -80,7 +80,7 @@ function StudentPicker({ value, onSelect }: { value: string; onSelect: (id: stri
   const { data: options } = useQuery({
     queryKey: ['student-search', debounced],
     queryFn: async () => {
-      const res = await api.get('/people/students/', { params: { search: debounced } })
+      const res = await api.get('/students/', { params: { search: debounced } })
       return (res.data.results || res.data) as StudentOption[]
     },
     enabled: debounced.length >= 2,

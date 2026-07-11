@@ -409,6 +409,7 @@ export interface Grade {
 export interface SemesterResult {
   id: string
   student: string
+  student_name: string
   semester: string
   semester_label: string
   exam_session: string

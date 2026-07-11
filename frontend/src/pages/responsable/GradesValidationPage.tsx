@@ -15,15 +15,15 @@ export default function GradesValidationPage() {
 
   const { data: grades, isLoading } = useQuery({
     queryKey: ['grades-validation', tab],
-    queryFn: () => api.get('/evaluation/grades/', {
+    queryFn: () => api.get('/grades/', {
       params: { status: tab === 'pending' ? 'saisie' : 'validee' }
-    }).then(r => r.data)
+    }).then(r => r.data.results ?? r.data)
   })
 
   const validateMut = useMutation({
-    mutationFn: (ids: string[]) => api.post('/evaluation/validate-grades-bulk/', { grade_ids: ids }),
-    onSuccess: (data) => {
-      toast.success(data.detail)
+    mutationFn: (ids: string[]) => api.post('/evaluation/admin/validate-bulk/', { grade_ids: ids }),
+    onSuccess: (res) => {
+      toast.success(res.data.detail)
       setSelectedGrades([])
       qc.invalidateQueries({ queryKey: ['grades-validation'] })
     }
@@ -79,9 +79,9 @@ export default function GradesValidationPage() {
       )
     },
     {
-      key: 'entered_by',
+      key: 'entered_by_name',
       label: 'Saisi par',
-      render: (val) => val?.name || '—'
+      render: (val) => val || '—'
     },
     {
       key: 'actions',

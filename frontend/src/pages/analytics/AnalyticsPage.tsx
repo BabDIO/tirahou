@@ -44,12 +44,6 @@ export default function AnalyticsPage() {
     enabled: tab === 'risk',
   })
 
-  const { data: predictions } = useQuery({
-    queryKey: ['predictions'],
-    queryFn: () => analyticsApi.getPredictions().then(r => r.data),
-    enabled: tab === 'risk',
-  })
-
   const { data: lmsStats } = useQuery({
     queryKey: ['lms-stats'],
     queryFn: () => analyticsApi.getLmsStats().then(r => r.data),

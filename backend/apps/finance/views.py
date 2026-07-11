@@ -450,6 +450,28 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
         return Response(PaymentSerializer(payment).data)
 
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Statistiques des paiements — file de validation manuelle."""
+        from django.db.models import Sum, Count
+        from datetime import timedelta
+        qs = self.get_queryset()
+        this_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        valid_qs = qs.filter(status='valide')
+        pending_qs = qs.filter(status='en_attente')
+        total_amount = float(valid_qs.aggregate(t=Sum('amount'))['t'] or 0)
+        pending_amount = float(pending_qs.aggregate(t=Sum('amount'))['t'] or 0)
+        validated_this_month = valid_qs.filter(paid_at__gte=this_month_start).count()
+        total_count = qs.count()
+        collection_rate = round((valid_qs.count() / total_count) * 100, 1) if total_count else 0
+        return Response({
+            'total_amount': total_amount,
+            'pending_amount': pending_amount,
+            'pending_count': pending_qs.count(),
+            'validated_count': validated_this_month,
+            'collection_rate': collection_rate,
+        })
+
     @extend_schema(responses={200: OpenApiResponse(description='Reçu de paiement (PDF)')})
     @action(detail=True, methods=['get'], url_path='receipt_pdf')
     def receipt_pdf(self, request, pk=None):

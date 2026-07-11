@@ -17,14 +17,14 @@ export default function ResultsManagementPage() {
 
   const { data: results, isLoading } = useQuery({
     queryKey: ['semester-results', selectedSession],
-    queryFn: () => api.get('/evaluation/semester-results/', {
+    queryFn: () => api.get('/semester-results/', {
       params: { exam_session: selectedSession }
-    }).then(r => r.data),
+    }).then(r => r.data.results ?? r.data),
     enabled: !!selectedSession
   })
 
   const calculateResultsMut = useMutation({
-    mutationFn: () => api.post('/evaluation/calculate-semester-results/', {
+    mutationFn: () => api.post('/evaluation/admin/calculate-semester/', {
       exam_session_id: selectedSession
     }),
     onSuccess: () => {
@@ -34,17 +34,17 @@ export default function ResultsManagementPage() {
   })
 
   const publishResultsMut = useMutation({
-    mutationFn: () => api.post('/evaluation/publish-semester-results/', {
+    mutationFn: () => api.post('/evaluation/admin/publish-results/', {
       exam_session_id: selectedSession
     }),
     onSuccess: (data) => {
-      toast.success(`${data.detail}`)
+      toast.success(`${data.data.detail}`)
       qc.invalidateQueries({ queryKey: ['semester-results'] })
     }
   })
 
   const exportResultsMut = useMutation({
-    mutationFn: () => api.get('/evaluation/export-results/', {
+    mutationFn: () => api.get('/semester-results/export/', {
       params: { exam_session: selectedSession },
       responseType: 'blob'
     }).then(r => {

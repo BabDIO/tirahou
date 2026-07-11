@@ -155,7 +155,7 @@ export const financeApi = {
   createInstallment: (data: object) => api.post('/installments/', data),
   markInstallmentPaid: (id: string) => api.post(`/installments/${id}/mark_paid/`),
   // Remises
-  applyDiscount: (invoiceId: string, data: object) => api.post(`/invoices/${invoiceId}/apply_discount/`, data),
+  applyDiscount: (invoiceId: string, data: object) => api.post('/invoices/apply_discount/', { invoice: invoiceId, ...data }),
   // Paiement mobile money en ligne (E7)
   payOnline: (invoiceId: string, data: { phone: string; operator: string }) =>
     api.post<{ payment_url: string; transaction_id: string }>(`/invoices/${invoiceId}/pay_online/`, data),
@@ -213,9 +213,9 @@ export const evaluationApi = {
   publishGrade: (id: string) => api.post(`/grades/${id}/publish/`),
   bulkImport: (data: object) => api.post('/grades/bulk_import/', data),
   exportGrades: (params?: object) =>
-    api.get('/grades/export/', { params, responseType: 'blob' }),
+    api.get('/evaluation/grades/export/', { params, responseType: 'blob' }),
   downloadTemplate: () =>
-    api.get('/grades/template/', { responseType: 'blob' }),
+    api.get('/evaluation/grades/template/', { responseType: 'blob' }),
   getSemesterResults: (params?: object) =>
     api.get<PaginatedResponse<SemesterResult>>('/semester-results/', { params }),
   publishAllResults: (examSessionId: string) =>
@@ -347,7 +347,7 @@ export const communicationApi = {
   getUnreadCount: () => api.get('/notifications/unread_count/'),
   clearRead: () => api.delete('/notifications/clear_read/'),
   // NOUVEAU ENDPOINT
-  sendNotification: (data: object) => api.post('/communication/notifications/send_notification/', data),
+  sendNotification: (data: object) => api.post('/notifications/send_notification/', data),
   
   getAnnouncements: (params?: object) => api.get('/announcements/', { params }),
   createAnnouncement: (data: object) => api.post('/announcements/', data),
@@ -378,7 +378,6 @@ export const analyticsApi = {
   getPredictSuccess: (studentId: string) =>
     api.get(`/analytics/predict-success/?student_id=${studentId}`),
   getStudentsAtRisk: () => api.get('/analytics/students-at-risk/'),
-  getPredictions: () => api.get('/analytics/predictions/'),
   getCohortAnalysis: (academicYearId?: string) =>
     api.get('/analytics/cohort-analysis/', { params: academicYearId ? { academic_year: academicYearId } : {} }),
   getPerformanceTrends: (days = 30) =>
@@ -393,10 +392,6 @@ export const analyticsApi = {
     api.get('/analytics/export/students/', { params, responseType: 'blob' }),
   exportGrades: (params?: object) =>
     api.get('/analytics/export/grades/', { params, responseType: 'blob' }),
-  exportGradesCSV: (params?: object) =>
-    api.get('/grades/export/', { params, responseType: 'blob' }),
-  downloadGradesTemplate: () =>
-    api.get('/grades/template/', { responseType: 'blob' }),
   exportPayments: (params?: object) =>
     api.get('/analytics/export/payments/', { params, responseType: 'blob' }),
   // Badges & Wallet (S2/S3)

@@ -27,7 +27,9 @@ class ExamRoomAssignmentSerializer(serializers.ModelSerializer):
 class GradeSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     ec_code = serializers.CharField(source='ec.code', read_only=True)
+    ec_name = serializers.CharField(source='ec.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    entered_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Grade
@@ -35,6 +37,9 @@ class GradeSerializer(serializers.ModelSerializer):
 
     def get_student_name(self, obj):
         return obj.student.user.get_full_name()
+
+    def get_entered_by_name(self, obj):
+        return obj.entered_by.get_full_name() if obj.entered_by else None
 
 
 class UEResultSerializer(serializers.ModelSerializer):
@@ -51,6 +56,8 @@ class SemesterResultSerializer(serializers.ModelSerializer):
     semester_label = serializers.CharField(source='semester.label', read_only=True)
     decision_display = serializers.CharField(source='get_decision_display', read_only=True)
     ue_results = UEResultSerializer(many=True, read_only=True, source='student.ue_results')
+    student_name = serializers.CharField(source='student.user.get_full_name', read_only=True)
+    student_id = serializers.CharField(source='student.student_id', read_only=True)
 
     class Meta:
         model = SemesterResult

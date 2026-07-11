@@ -90,7 +90,7 @@ export default function ParentsManagementPage() {
   const { data: studentOptions } = useQuery({
     queryKey: ['student-search', debouncedStudentQuery],
     queryFn: async () => {
-      const response = await api.get('/people/students/', { params: { search: debouncedStudentQuery } });
+      const response = await api.get('/students/', { params: { search: debouncedStudentQuery } });
       return (response.data.results || response.data) as StudentOption[];
     },
     enabled: debouncedStudentQuery.length >= 2,
@@ -101,8 +101,8 @@ export default function ParentsManagementPage() {
       const { id, student_label, ...payload } = data;
       void student_label;
       return id
-        ? api.patch(`/people/parent-guardians/${id}/`, payload)
-        : api.post('/people/parent-guardians/', payload);
+        ? api.patch(`/parent-guardians/${id}/`, payload)
+        : api.post('/parent-guardians/', payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parent-guardians'] });
@@ -148,7 +148,7 @@ export default function ParentsManagementPage() {
   const { data: parents, isLoading } = useQuery({
     queryKey: ['parent-guardians', searchTerm],
     queryFn: async () => {
-      const response = await api.get('/people/parent-guardians/', {
+      const response = await api.get('/parent-guardians/', {
         params: { search: searchTerm || undefined }
       });
       return response.data.results || response.data;
@@ -157,7 +157,7 @@ export default function ParentsManagementPage() {
 
   // Delete parent
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/people/parent-guardians/${id}/`),
+    mutationFn: (id: string) => api.delete(`/parent-guardians/${id}/`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parent-guardians'] });
       toast.success('Parent/Tuteur supprimé avec succès');
@@ -169,7 +169,7 @@ export default function ParentsManagementPage() {
 
   // Set primary contact
   const setPrimaryMutation = useMutation({
-    mutationFn: (id: string) => api.post(`/people/parent-guardians/${id}/set_primary/`),
+    mutationFn: (id: string) => api.post(`/parent-guardians/${id}/set_primary/`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parent-guardians'] });
       toast.success('Contact prioritaire défini');

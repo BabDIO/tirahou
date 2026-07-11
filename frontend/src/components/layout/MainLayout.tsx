@@ -10,7 +10,7 @@ import {
   ChevronDown, LogOut, Settings, Menu, BookMarked,
   UserCheck, Building2, Award, MessageSquare, ChevronRight,
   Search, HelpCircle, Zap, Library, Briefcase, Home, Shield, Gift, UserPlus,
-  Wallet as WalletIcon, Store as StoreIcon,
+  Wallet as WalletIcon, Store as StoreIcon, CheckSquare,
 } from 'lucide-react'
 import { Avatar, ThemeToggle } from '../ui'
 import GlobalSearch from '../search/GlobalSearch'
@@ -101,6 +101,7 @@ const SCOLARITE_NAV = [
     group: 'Pédagogie',
     items: [
       { to: '/evaluation', icon: Award, label: 'Notes & Résultats', color: 'text-yellow-400' },
+      { to: '/scolarite/results', icon: CheckSquare, label: 'Résultats semestriels', color: 'text-emerald-400' },
       { to: '/scheduling', icon: Calendar, label: 'Emploi du temps', color: 'text-fuchsia-400' },
       { to: '/attendance', icon: UserCheck, label: 'Présences', color: 'text-lime-400' },
     ],
@@ -125,6 +126,7 @@ const FINANCIER_NAV = [
     group: 'Finance',
     items: [
       { to: '/finance', icon: CreditCard, label: 'Factures & Paiements', color: 'text-green-400' },
+      { to: '/finance/payments', icon: CheckSquare, label: 'Validation paiements', color: 'text-emerald-400' },
       { to: '/finance/journal', icon: FileText, label: 'Journal de caisse', color: 'text-emerald-400' },
       { to: '/finance/scholarships', icon: Gift, label: 'Bourses & Exonérations', color: 'text-violet-400' },
       { to: '/students', icon: GraduationCap, label: 'Étudiants', color: 'text-violet-400' },
@@ -232,6 +234,7 @@ const RESPONSABLE_NAV = [
     items: [
       { to: '/lms', icon: BookOpen, label: 'Campus Virtuel', color: 'text-cyan-400' },
       { to: '/evaluation', icon: Award, label: 'Évaluations', color: 'text-yellow-400' },
+      { to: '/responsable/grades-validation', icon: CheckSquare, label: 'Validation des notes', color: 'text-emerald-400' },
       { to: '/scheduling', icon: Calendar, label: 'Emploi du temps', color: 'text-fuchsia-400' },
       { to: '/internships', icon: Briefcase, label: 'Stages & Mémoires', color: 'text-orange-400' },
     ],
@@ -291,6 +294,7 @@ const breadcrumbMap: Record<string, string> = {
   '/admin/settings': 'Paramètres Système',
   '/scolarite/documents': 'Vérification Documents',
   '/scolarite/generated-docs': 'Documents Académiques',
+  '/scolarite/results': 'Résultats Semestriels',
   '/scolarite/parents': 'Parents & Tuteurs',
   '/my-wallet': 'Mon Portefeuille',
   '/my-certifications': 'Micro-certifications',
@@ -299,8 +303,10 @@ const breadcrumbMap: Record<string, string> = {
   '/marketplace/my-courses': 'Mes cours marketplace',
   '/finance/journal': 'Journal de Caisse',
   '/finance/scholarships': 'Bourses & Exonérations',
+  '/finance/payments': 'Validation des Paiements',
   '/responsable/programs': 'Pilotage Pédagogique',
   '/responsable/groups': 'Groupes TD/TP',
+  '/responsable/grades-validation': 'Validation des Notes',
   '/bibliothecaire': 'Gestion Bibliothèque',
   '/student/courses': 'Mes Cours',
   '/profile': 'Mon Profil',
