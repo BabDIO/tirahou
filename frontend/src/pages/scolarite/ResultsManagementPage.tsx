@@ -76,8 +76,8 @@ export default function ResultsManagementPage() {
       label: 'Moyenne',
       sortable: true,
       render: (val) => (
-        <span className={`font-bold ${val >= 10 ? 'text-emerald-600' : 'text-red-600'}`}>
-          {val?.toFixed(2) || '—'}/20
+        <span className={`font-bold ${Number(val) >= 10 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {val != null ? Number(val).toFixed(2) : '—'}/20
         </span>
       )
     },

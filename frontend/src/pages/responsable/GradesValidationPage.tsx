@@ -62,19 +62,19 @@ export default function GradesValidationPage() {
     {
       key: 'cc_grade',
       label: 'CC (40%)',
-      render: (val) => val?.toFixed(2) || '—'
+      render: (val) => val != null ? Number(val).toFixed(2) : '—'
     },
     {
       key: 'exam_grade',
       label: 'Examen (60%)',
-      render: (val) => val?.toFixed(2) || '—'
+      render: (val) => val != null ? Number(val).toFixed(2) : '—'
     },
     {
       key: 'final_grade',
       label: 'Note finale',
       render: (val) => (
-        <span className={`font-bold ${val >= 10 ? 'text-emerald-600' : 'text-red-600'}`}>
-          {val?.toFixed(2) || '—'}/20
+        <span className={`font-bold ${Number(val) >= 10 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {val != null ? Number(val).toFixed(2) : '—'}/20
         </span>
       )
     },
@@ -178,15 +178,15 @@ export default function GradesValidationPage() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-xs text-gray-500 dark:text-gray-400">CC (40%)</label>
-                <p className="text-lg font-bold">{detailModal.cc_grade?.toFixed(2) || '—'}</p>
+                <p className="text-lg font-bold">{detailModal.cc_grade != null ? Number(detailModal.cc_grade).toFixed(2) : '—'}</p>
               </div>
               <div>
                 <label className="text-xs text-gray-500 dark:text-gray-400">Examen (60%)</label>
-                <p className="text-lg font-bold">{detailModal.exam_grade?.toFixed(2) || '—'}</p>
+                <p className="text-lg font-bold">{detailModal.exam_grade != null ? Number(detailModal.exam_grade).toFixed(2) : '—'}</p>
               </div>
               <div>
                 <label className="text-xs text-gray-500 dark:text-gray-400">Note finale</label>
-                <p className="text-lg font-bold text-blue-600">{detailModal.final_grade?.toFixed(2) || '—'}/20</p>
+                <p className="text-lg font-bold text-blue-600">{detailModal.final_grade != null ? Number(detailModal.final_grade).toFixed(2) : '—'}/20</p>
               </div>
             </div>
             {detailModal.appreciation && (

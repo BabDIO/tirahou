@@ -66,30 +66,30 @@ export default function GradeStatistics({ ecId, examSessionId }: GradeStatistics
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card noPadding className="p-4 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Moyenne</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{stats.mean?.toFixed(2) || '—'}</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Médiane: {stats.median?.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{stats.mean != null ? Number(stats.mean).toFixed(2) : '—'}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Médiane: {stats.median != null ? Number(stats.median).toFixed(2) : '—'}</p>
         </Card>
 
         <Card noPadding className="p-4 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Écart-type</p>
-          <p className="text-2xl font-bold text-blue-600">{stats.std_dev?.toFixed(2) || '—'}</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Variance: {stats.variance?.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-blue-600">{stats.std_dev != null ? Number(stats.std_dev).toFixed(2) : '—'}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Variance: {stats.variance != null ? Number(stats.variance).toFixed(2) : '—'}</p>
         </Card>
 
         <Card noPadding className="p-4 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Min / Max</p>
           <p className="text-2xl font-bold text-purple-600">
-            {stats.min?.toFixed(1)} / {stats.max?.toFixed(1)}
+            {stats.min != null ? Number(stats.min).toFixed(1) : '—'} / {stats.max != null ? Number(stats.max).toFixed(1) : '—'}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Étendue: {stats.range?.toFixed(1)}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Étendue: {stats.range != null ? Number(stats.range).toFixed(1) : '—'}</p>
         </Card>
 
         <Card noPadding className="p-4 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Quartiles</p>
           <p className="text-lg font-bold text-emerald-600">
-            Q1: {stats.q1?.toFixed(1)} | Q3: {stats.q3?.toFixed(1)}
+            Q1: {stats.q1 != null ? Number(stats.q1).toFixed(1) : '—'} | Q3: {stats.q3 != null ? Number(stats.q3).toFixed(1) : '—'}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">IQR: {stats.iqr?.toFixed(1)}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">IQR: {stats.iqr != null ? Number(stats.iqr).toFixed(1) : '—'}</p>
         </Card>
       </div>
 
