@@ -97,7 +97,7 @@ export default function DataTable<T extends Record<string, any>>({
 
   if (isLoading) {
     return (
-      <div className={cn('rounded-xl border border-gray-200 dark:border-gray-700 bg-white overflow-hidden', className)}>
+      <div className={cn('rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 overflow-hidden', className)}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -127,7 +127,7 @@ export default function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <div className={cn('rounded-xl border border-gray-200 dark:border-gray-700 bg-white overflow-hidden', className)}>
+    <div className={cn('rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 overflow-hidden', className)}>
       {/* Header avec recherche */}
       {searchable && (
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -151,7 +151,7 @@ export default function DataTable<T extends Record<string, any>>({
                   key={column.key}
                   className={cn(
                     'px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider',
-                    column.sortable && 'cursor-pointer hover:bg-gray-100 select-none',
+                    column.sortable && 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-none',
                     column.className
                   )}
                   style={{ width: column.width }}
@@ -172,7 +172,7 @@ export default function DataTable<T extends Record<string, any>>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center">
