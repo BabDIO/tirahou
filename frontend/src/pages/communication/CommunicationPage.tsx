@@ -172,7 +172,7 @@ export default function CommunicationPage() {
           { key: 'forums', label: 'Forums', icon: Users2, count: 0 },
         ].map(({ key, label, icon: Icon, count }) => (
           <button key={key} onClick={() => setTab(key as typeof tab)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-lg text-sm font-semibold transition whitespace-nowrap ${tab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-lg text-sm font-semibold transition whitespace-nowrap ${tab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}>
             <Icon className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline">{label}</span>
             {count > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-1.5 min-w-[18px] text-center leading-4 py-0.5">{count}</span>}
@@ -372,7 +372,7 @@ export default function CommunicationPage() {
               placeholder="Votre message..." />
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setShowCompose(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => setShowCompose(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
             <button onClick={() => sendMessageMut.mutate(composeData)}
               disabled={!composeData.recipient || !composeData.body || sendMessageMut.isPending}
               className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
@@ -411,7 +411,7 @@ export default function CommunicationPage() {
             📌 Épingler cette annonce
           </label>
           <div className="flex gap-3">
-            <button onClick={() => setShowAnnounce(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => setShowAnnounce(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
             <button onClick={() => createAnnounceMut.mutate({ ...announceData, is_published: true })}
               disabled={!announceData.title || !announceData.content || createAnnounceMut.isPending}
               className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
@@ -445,7 +445,7 @@ export default function CommunicationPage() {
               onChange={e => setNewForum(f => ({ ...f, description: e.target.value }))} />
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setShowNewForum(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => setShowNewForum(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
             <button onClick={() => createForumMut.mutate(newForum)}
               disabled={!newForum.course_space || !newForum.title || createForumMut.isPending}
               className="flex-1 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-semibold hover:bg-cyan-700 transition disabled:opacity-50">

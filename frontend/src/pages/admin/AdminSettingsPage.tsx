@@ -113,7 +113,7 @@ export default function AdminSettingsPage() {
         <div className="w-56 flex-shrink-0 space-y-1">
           {sections.map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setActiveSection(key)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition text-left ${activeSection === key ? 'bg-primary-50 text-primary-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800'}`}>
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition text-left ${activeSection === key ? 'bg-primary-50 text-primary-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
               <Icon className="w-4 h-4" /> {label}
             </button>
           ))}

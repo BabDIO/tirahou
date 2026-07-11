@@ -397,7 +397,7 @@ export default function AnalyticsPage() {
                   recommendations: string[]; contact_email: string; course: string
                 }) => (
                   <div key={student.student_id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 dark:bg-gray-800 transition-colors">
+                    className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${

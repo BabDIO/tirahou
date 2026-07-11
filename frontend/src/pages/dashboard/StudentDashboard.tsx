@@ -158,23 +158,23 @@ export default function StudentDashboard() {
 
         <Card title="Actions rapides" subtitle="Mon espace">
           <div className="space-y-2">
-            <button onClick={() => navigate('/my-grades')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
+            <button onClick={() => navigate('/my-grades')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
               <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Mes notes</span>
             </button>
-            <button onClick={() => navigate('/my-schedule')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
+            <button onClick={() => navigate('/my-schedule')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
               <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Mon emploi du temps</span>
             </button>
-            <button onClick={() => navigate('/my-documents')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
+            <button onClick={() => navigate('/my-documents')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
               <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Mes documents</span>
             </button>
-            <button onClick={() => navigate('/my-finance')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
+            <button onClick={() => navigate('/my-finance')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
               <CreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Mes paiements</span>
             </button>
-            <button onClick={() => navigate('/my-internship')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
+            <button onClick={() => navigate('/my-internship')} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800 transition text-left">
               <Briefcase className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Mon stage / mémoire</span>
             </button>

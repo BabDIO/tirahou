@@ -829,7 +829,7 @@ function CreateJuryForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
         <label className="label">Membres</label>
         <div className="max-h-36 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-2 space-y-1">
           {users?.results?.map((u: { id: string; full_name: string }) => (
-            <label key={u.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:bg-gray-800 cursor-pointer">
+            <label key={u.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
               <input type="checkbox" checked={form.members.includes(u.id)}
                 onChange={e => setForm(f => ({ ...f, members: e.target.checked ? [...f.members, u.id] : f.members.filter(id => id !== u.id) }))} />
               {u.full_name}
@@ -932,7 +932,7 @@ function CreateAssignmentForm({ onSuccess, onCancel }: { onSuccess: () => void; 
         <label className="label">Surveillants</label>
         <div className="max-h-36 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-2 space-y-1">
           {teachers?.results?.map((t: { id: string; user: { id: string; full_name: string } }) => (
-            <label key={t.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:bg-gray-800 cursor-pointer">
+            <label key={t.id} className="flex items-center gap-2 text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
               <input type="checkbox" checked={form.invigilators.includes(t.user.id)}
                 onChange={e => setForm(f => ({ ...f, invigilators: e.target.checked ? [...f.invigilators, t.user.id] : f.invigilators.filter(id => id !== t.user.id) }))} />
               {t.user.full_name}

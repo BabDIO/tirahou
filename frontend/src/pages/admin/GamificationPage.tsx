@@ -108,7 +108,7 @@ function StudentPicker({ value, onSelect }: { value: string; onSelect: (id: stri
               <button
                 type="button" key={s.id}
                 onClick={() => { onSelect(s.id, `${label} — ${s.student_id}`); setQuery('') }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
               >
                 {label} <span className="text-gray-400 dark:text-gray-500 text-xs">— {s.student_id}</span>
               </button>

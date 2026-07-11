@@ -119,7 +119,7 @@ export default function CourseDetailPage() {
           { key: 'quizzes', label: 'Quiz', icon: HelpCircle },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key as typeof activeTab)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${activeTab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${activeTab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}>
             <Icon className="w-4 h-4" />{label}
           </button>
         ))}
@@ -134,7 +134,7 @@ export default function CourseDetailPage() {
             {modules.map((mod: { id: string; title: string; description: string; order: number; is_published: boolean; resources?: { id: string; title: string; type: string; file: string | null; external_url: string; is_downloadable: boolean }[] }) => (
               <Card key={mod.id} noPadding>
                 <button onClick={() => toggleModule(mod.id)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:bg-gray-800 transition rounded-2xl text-left">
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition rounded-2xl text-left">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm">
                       {mod.order}
@@ -380,7 +380,7 @@ function QuizTaking({ quiz, attempt, onDone }: { quiz: QuizT; attempt: Attempt; 
             {(q.type === 'qcm' || q.type === 'vrai_faux') && (
               <div className="space-y-2">
                 {q.choices.map(c => (
-                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-800 cursor-pointer text-sm">
+                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-sm">
                     <input type="radio" name={q.id} checked={(answers[q.id]?.choice_ids ?? []).includes(c.id)}
                       onChange={() => toggleChoice(q.id, c.id, false)} />
                     {c.text}
@@ -391,7 +391,7 @@ function QuizTaking({ quiz, attempt, onDone }: { quiz: QuizT; attempt: Attempt; 
             {q.type === 'qcm_multiple' && (
               <div className="space-y-2">
                 {q.choices.map(c => (
-                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-800 cursor-pointer text-sm">
+                  <label key={c.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-sm">
                     <input type="checkbox" checked={(answers[q.id]?.choice_ids ?? []).includes(c.id)}
                       onChange={() => toggleChoice(q.id, c.id, true)} />
                     {c.text}

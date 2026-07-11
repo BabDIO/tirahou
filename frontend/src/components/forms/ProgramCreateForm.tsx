@@ -140,7 +140,7 @@ export default function ProgramCreateForm({ onSuccess, onCancel }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-3 pt-2 border-t border-gray-100">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={create.isPending} icon={<BookMarked className="w-4 h-4" />}>
           Créer le programme

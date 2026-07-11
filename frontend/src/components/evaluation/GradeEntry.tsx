@@ -117,7 +117,7 @@ const GradeEntry = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="page-title">Saisie des notes</h1>
-          <p className="text-gray-500 text-sm">Gérer les notes de vos étudiants</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Gérer les notes de vos étudiants</p>
         </div>
         <Button
           variant={bulkMode ? 'primary' : 'secondary'}
@@ -143,7 +143,7 @@ const GradeEntry = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="label">Élément Constitutif (EC)</label>
-            <select className="input bg-white"
+            <select className="input bg-white dark:bg-slate-900"
               value={selectedEC?.toString() ?? ''}
               onChange={e => setSelectedEC(e.target.value ? parseInt(e.target.value) : null)}>
               <option value="">— Sélectionner un EC —</option>
@@ -154,7 +154,7 @@ const GradeEntry = () => {
           </div>
           <div>
             <label className="label">Session d'examen</label>
-            <select className="input bg-white"
+            <select className="input bg-white dark:bg-slate-900"
               value={selectedSession?.toString() ?? ''}
               onChange={e => setSelectedSession(e.target.value ? parseInt(e.target.value) : null)}>
               <option value="">— Sélectionner une session —</option>
@@ -206,8 +206,8 @@ const GradeEntry = () => {
                       return (
                         <tr key={student.id}>
                           <td>
-                            <div className="font-medium text-sm text-gray-900">{student.name}</div>
-                            {student.email && <div className="text-xs text-gray-400">{student.email}</div>}
+                            <div className="font-medium text-sm text-gray-900 dark:text-gray-50">{student.name}</div>
+                            {student.email && <div className="text-xs text-gray-400 dark:text-gray-500">{student.email}</div>}
                           </td>
                           <td className="text-center font-mono text-sm">{student.student_number}</td>
                           <td className="text-center">
@@ -225,11 +225,11 @@ const GradeEntry = () => {
                               placeholder="0-20" disabled={locked} />
                           </td>
                           <td className="text-center">
-                            <span className={`font-bold text-sm ${final == null ? 'text-gray-400' : final >= 10 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <span className={`font-bold text-sm ${final == null ? 'text-gray-400 dark:text-gray-500' : final >= 10 ? 'text-emerald-600' : 'text-red-500'}`}>
                               {final != null ? `${typeof final === 'number' ? final.toFixed(2) : final}/20` : '—'}
                             </span>
                           </td>
-                          <td className="text-center text-xs text-gray-500">
+                          <td className="text-center text-xs text-gray-500 dark:text-gray-400">
                             {existing?.appreciation || (final == null ? '—' :
                               final >= 16 ? 'Très bien' : final >= 14 ? 'Bien' :
                               final >= 12 ? 'Assez bien' : final >= 10 ? 'Passable' : 'Insuffisant')}

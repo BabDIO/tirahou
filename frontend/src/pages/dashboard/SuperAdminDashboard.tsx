@@ -232,7 +232,7 @@ export default function SuperAdminDashboard() {
             {!systemStats.recent_activities?.length ? (
               <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucune activité récente.</p>
             ) : systemStats.recent_activities.map((activity: SystemActivity, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors">
+              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800 rounded-lg transition-colors">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
                   activity.type === 'success' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300' :

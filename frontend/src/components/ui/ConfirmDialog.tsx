@@ -29,11 +29,11 @@ export default function ConfirmDialog() {
           <div className="flex-shrink-0 mt-0.5">{icons[variant]}</div>
           <div className="flex-1">
             {state.title && (
-              <h3 className="font-semibold text-gray-900 mb-1">{state.title}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-1">{state.title}</h3>
             )}
-            <p className="text-sm text-gray-600">{state.message}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{state.message}</p>
           </div>
-          <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button onClick={handleCancel} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 flex-shrink-0">
             <X className="w-4 h-4" />
           </button>
         </div>

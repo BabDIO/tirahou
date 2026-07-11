@@ -69,7 +69,7 @@ export default function MyDocumentsPage() {
           { key: 'uploaded', label: 'Mes pièces', icon: Upload },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key as typeof tab)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${tab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition ${tab === key ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}>
             <Icon className="w-4 h-4" />{label}
           </button>
         ))}
@@ -175,7 +175,7 @@ export default function MyDocumentsPage() {
           </div>
           <Alert type="info">Votre demande sera traitée par le service de scolarité. Vous serez notifié dès que le document est disponible.</Alert>
           <div className="flex gap-3">
-            <button onClick={() => setShowRequest(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => setShowRequest(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
             <button onClick={() => requestMut.mutate(docType)} disabled={requestMut.isPending}
               className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
               {requestMut.isPending ? 'Envoi...' : 'Soumettre la demande'}

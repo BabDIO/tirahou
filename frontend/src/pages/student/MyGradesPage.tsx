@@ -197,7 +197,7 @@ export default function MyGradesPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {validGrades.map((grade: Grade) => (
-                  <tr key={grade.id} className="hover:bg-gray-50 dark:bg-gray-800 transition">
+                  <tr key={grade.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900 dark:text-gray-50">{grade.ec_name}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">{grade.ec_code}</p>

@@ -104,7 +104,7 @@ const NotificationList = () => {
           <BellRing className="h-6 w-6 text-primary-600" />
           <div>
             <h1 className="page-title">Notifications</h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {count > 0 ? `${count} non lue(s)` : 'Toutes lues'}
             </p>
           </div>
@@ -134,7 +134,7 @@ const NotificationList = () => {
             ] as { key: typeof filter; label: string }[]).map(f => (
               <button key={f.key} onClick={() => { setFilter(f.key); setPage(1) }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  filter === f.key ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  filter === f.key ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                 }`}>
                 {f.label}
               </button>
@@ -175,14 +175,14 @@ const NotificationList = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className={`text-sm leading-tight ${!n.is_read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                      <p className={`text-sm leading-tight ${!n.is_read ? 'font-semibold text-gray-900 dark:text-gray-50' : 'font-medium text-gray-700 dark:text-gray-300'}`}>
                         {n.title}
                       </p>
                       <Badge label={n.priority} className={priorityClass[n.priority] ?? 'badge-gray'} />
                       {!n.is_read && <span className="w-2 h-2 bg-primary-500 rounded-full" />}
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-1.5">{n.message}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-1.5">{n.message}</p>
+                    <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                       <span>{formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}</span>
                       <span className="capitalize">{n.type}</span>
                       <span className="capitalize">{n.channel}</span>

@@ -81,7 +81,7 @@ export default function Tooltip({
                 className={`
                   absolute w-0 h-0 border-4
                   ${arrowClasses[position]}
-                  ${actualTheme === 'dark' ? 'text-slate-900' : 'text-gray-900'}
+                  ${actualTheme === 'dark' ? 'text-slate-900' : 'text-gray-900 dark:text-gray-50'}
                 `}
               />
             </div>

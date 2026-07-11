@@ -14,9 +14,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', loading, icon, children, className, disabled, ...props }, ref) => {
     const variants = {
       primary: 'bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] shadow-sm hover:shadow focus:ring-primary-500',
-      secondary: 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm focus:ring-gray-300',
+      secondary: 'bg-white text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 shadow-sm focus:ring-gray-300',
       danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm focus:ring-red-500',
-      ghost: 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:ring-gray-300',
+      ghost: 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:text-gray-300 focus:ring-gray-300',
       success: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm focus:ring-emerald-500',
     }
     const sizes = {
@@ -65,7 +65,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       {label && <label className="label">{label}</label>}
       <div className="relative">
         {li && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">{li}</div>
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">{li}</div>
         )}
         <input
           ref={ref}
@@ -79,11 +79,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {rightIcon && (
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">{rightIcon}</div>
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">{rightIcon}</div>
         )}
       </div>
       {error && <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">⚠ {error}</p>}
-      {hint && !error && <p className="mt-1.5 text-xs text-gray-400">{hint}</p>}
+      {hint && !error && <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
     </div>
     )
   }
@@ -111,7 +111,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {...props}
       />
       {error && <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">⚠ {error}</p>}
-      {hint && !error && <p className="mt-1.5 text-xs text-gray-400">{hint}</p>}
+      {hint && !error && <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
     </div>
   )
 )
@@ -134,7 +134,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       {label && <label className="label">{label}</label>}
       <select
         ref={ref}
-        className={cn('input bg-white cursor-pointer', error && 'border-red-400', className)}
+        className={cn('input bg-white dark:bg-slate-900 cursor-pointer', error && 'border-red-400', className)}
         {...props}
       >
         {options
@@ -205,7 +205,7 @@ export const Spinner = ({ size = 'md', text }: { size?: 'sm' | 'md' | 'lg'; text
   return (
     <div className="flex flex-col items-center justify-center p-10 gap-3">
       <Loader2 className={cn('animate-spin text-primary-500', sizes[size])} />
-      {text && <p className="text-sm text-gray-400">{text}</p>}
+      {text && <p className="text-sm text-gray-400 dark:text-gray-500">{text}</p>}
     </div>
   )
 }
@@ -239,14 +239,14 @@ export const Modal = ({ show, open, onClose, title, subtitle, children, size = '
         style={{ animation: 'slideUp 0.2s ease-out' }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-            {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">{title}</h2>
+            {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors ml-4 flex-shrink-0"
+            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 transition-colors ml-4 flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -255,7 +255,7 @@ export const Modal = ({ show, open, onClose, title, subtitle, children, size = '
         <div className="p-6 overflow-y-auto flex-1">{children}</div>
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
+          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
             {footer}
           </div>
         )}
@@ -277,8 +277,8 @@ export const Empty = ({ message = 'Aucune donnée', description, icon, action }:
         {icon}
       </div>
     )}
-    <p className="text-sm font-medium text-gray-500">{message}</p>
-    {description && <p className="text-xs text-gray-400 mt-1 max-w-xs">{description}</p>}
+    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{message}</p>
+    {description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-xs">{description}</p>}
     {action && <div className="mt-4">{action}</div>}
   </div>
 )
@@ -317,9 +317,9 @@ export const StatsCard = ({ title, value, icon, color = 'bg-primary-500', trend,
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide truncate dark:text-gray-400">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1 tabular-nums leading-none dark:text-gray-50">{value}</p>
-      {subtitle && <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">{subtitle}</p>}
+      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate dark:text-gray-400">{title}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-gray-50 mt-1 tabular-nums leading-none dark:text-gray-50">{value}</p>
+      {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 dark:text-gray-500">{subtitle}</p>}
       {trend && (
         <div className={cn(
           'flex items-center gap-1 mt-1.5 text-xs font-medium',
@@ -347,15 +347,15 @@ export const Pagination = ({ page, total, pageSize, onChange }: PaginationProps)
   const to = Math.min(page * pageSize, total)
 
   return (
-    <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 bg-gray-50/50">
-      <p className="text-xs text-gray-500">
-        <span className="font-medium text-gray-700">{from}–{to}</span> sur <span className="font-medium text-gray-700">{total}</span> résultats
+    <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="font-medium text-gray-700 dark:text-gray-300">{from}–{to}</span> sur <span className="font-medium text-gray-700 dark:text-gray-300">{total}</span> résultats
       </p>
       <div className="flex items-center gap-1">
         <button
           disabled={page === 1}
           onClick={() => onChange(page - 1)}
-          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -374,7 +374,7 @@ export const Pagination = ({ page, total, pageSize, onChange }: PaginationProps)
                 'w-7 h-7 rounded-lg text-xs font-medium transition-colors',
                 p === page
                   ? 'bg-primary-600 text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-200'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200'
               )}
             >
               {p}
@@ -384,7 +384,7 @@ export const Pagination = ({ page, total, pageSize, onChange }: PaginationProps)
         <button
           disabled={page === totalPages}
           onClick={() => onChange(page + 1)}
-          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -401,7 +401,7 @@ export const Progress = ({ value, max = 100, color = 'bg-primary-500', size = 'm
   return (
     <div className="w-full">
       {label && (
-        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
           <span>{label}</span><span className="font-medium">{pct}%</span>
         </div>
       )}
@@ -434,7 +434,7 @@ interface TabsProps { tabs: TabItem[]; active: string; onChange: (key: string) =
 export const Tabs = ({ tabs, active, onChange, variant = 'pills' }: TabsProps) => {
   if (variant === 'underline') {
     return (
-      <div className="flex gap-0 border-b border-gray-200">
+      <div className="flex gap-0 border-b border-gray-200 dark:border-gray-700">
         {tabs.map(tab => (
           <button
             key={tab.key}
@@ -443,7 +443,7 @@ export const Tabs = ({ tabs, active, onChange, variant = 'pills' }: TabsProps) =
               'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
               active === tab.key
                 ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
             )}
           >
             {tab.icon}{tab.label}
@@ -466,8 +466,8 @@ export const Tabs = ({ tabs, active, onChange, variant = 'pills' }: TabsProps) =
           className={cn(
             'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150',
             active === tab.key
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white text-gray-900 dark:text-gray-50 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           )}
         >
           {tab.icon}{tab.label}
@@ -510,7 +510,7 @@ export const Skeleton = ({ className }: { className?: string }) => (
 
 export const SkeletonTable = ({ rows = 5, cols = 5 }: { rows?: number; cols?: number }) => (
   <div className="space-y-0">
-    <div className="flex gap-4 px-5 py-3.5 bg-gray-50 border-b border-gray-100">
+    <div className="flex gap-4 px-5 py-3.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
       {Array.from({ length: cols }).map((_, i) => <Skeleton key={i} className="h-3 flex-1" />)}
     </div>
     {Array.from({ length: rows }).map((_, i) => (

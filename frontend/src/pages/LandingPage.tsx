@@ -78,7 +78,7 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-7">
             {['Fonctionnalités', 'Modules', 'Architecture'].map(l => (
               <a key={l} href={`#${l.toLowerCase()}`}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-50 font-medium transition-colors">
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50 font-medium transition-colors">
                 {l}
               </a>
             ))}
@@ -86,7 +86,7 @@ export default function LandingPage() {
           {/* CTA */}
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/login')}
-              className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-gray-50 transition-colors px-3 py-2 hidden sm:block">
+              className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50 transition-colors px-3 py-2 hidden sm:block">
               Connexion
             </button>
             <button onClick={() => navigate('/login')}
@@ -171,7 +171,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {MODULES_GRID.map(({ icon: Icon, label, color }) => (
               <div key={label}
-                className="flex flex-col items-center gap-2.5 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:border-gray-700 hover:bg-white hover:shadow-md transition-all cursor-default group">
+                className="flex flex-col items-center gap-2.5 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-white hover:shadow-md transition-all cursor-default group">
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-200">
                   <Icon className={`w-5 h-5 ${color}`} />
                 </div>
@@ -344,7 +344,7 @@ export default function LandingPage() {
               <ArrowRight className="w-5 h-5" />
             </button>
             <button onClick={() => window.open('http://localhost:8000/api/docs/', '_blank')}
-              className="flex items-center gap-2 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 hover:bg-gray-50 dark:bg-gray-800 font-bold px-8 py-4 rounded-2xl transition-all text-base w-full sm:w-auto justify-center">
+              className="flex items-center gap-2 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-bold px-8 py-4 rounded-2xl transition-all text-base w-full sm:w-auto justify-center">
               <Globe className="w-4 h-4" /> API Swagger
             </button>
           </div>

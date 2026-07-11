@@ -215,7 +215,7 @@ export default function TeacherGradesPage() {
                     const finalGrade = entry.is_absent ? 0 : !entry.cc_grade && !entry.exam_grade ? null : Math.min(20, Math.max(0, ccVal * 0.4 + examVal * 0.6))
                     const gradeColor = finalGrade === null ? 'text-gray-400 dark:text-gray-500' : finalGrade >= 10 ? 'text-emerald-600 font-black' : 'text-red-600 font-black'
                     return (
-                      <tr key={s.id} className={`hover:bg-gray-50 dark:bg-gray-800 transition ${entry.is_absent ? 'opacity-60' : ''}`}>
+                      <tr key={s.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition ${entry.is_absent ? 'opacity-60' : ''}`}>
                         <td className="px-4 py-3">
                           <p className="font-semibold text-gray-900 dark:text-gray-50">{s.user.first_name} {s.user.last_name}</p>
                           <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id}</p>

@@ -61,7 +61,7 @@ export default function PageHeader({
           {backButton && (
             <button
               onClick={handleBack}
-              className="mt-1 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0"
+              className="mt-1 p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 transition-colors flex-shrink-0"
               aria-label="Retour"
             >
               <ArrowLeft className="w-5 h-5" />

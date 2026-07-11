@@ -40,7 +40,7 @@ export default function FinanceCashJournalPage() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a'); a.href = url; a.download = `journal_${startDate}.csv`; a.click()
           }}
-          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm"
         >
           <Download className="w-4 h-4" /> Exporter CSV
         </button>

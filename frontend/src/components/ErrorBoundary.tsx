@@ -82,12 +82,12 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* Titre */}
-              <h1 className="text-3xl font-bold text-gray-900 mb-3 text-center">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3 text-center">
                 Une erreur est survenue
               </h1>
 
               {/* Description */}
-              <p className="text-gray-600 mb-6 text-center">
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
                 Désolé, quelque chose s'est mal passé. Notre équipe a été notifiée et travaille sur le problème.
               </p>
 
@@ -157,8 +157,8 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* Support */}
-              <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-                <p className="text-sm text-gray-600">
+              <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Si le problème persiste, contactez le support à{' '}
                   <a
                     href="mailto:support@votre-universite.edu"
@@ -172,14 +172,14 @@ class ErrorBoundary extends Component<Props, State> {
 
             {/* Conseils */}
             <div className="mt-6 bg-white/50 backdrop-blur-sm rounded-xl p-6">
-              <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50 mb-3 flex items-center gap-2">
                 <Bug className="w-4 h-4 text-orange-600" />
                 Que s'est-il passé ?
               </h3>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Une erreur inattendue s'est produite dans l'application. Cela peut être dû à :
               </p>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li className="flex items-start gap-2">
                   <span className="text-orange-600 font-bold">•</span>
                   <span>Un problème temporaire avec le serveur</span>

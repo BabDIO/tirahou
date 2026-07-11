@@ -197,7 +197,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setEditMode(false)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+              <button onClick={() => setEditMode(false)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
               <button onClick={() => updateMut.mutate(form)} disabled={updateMut.isPending}
                 className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
                 {updateMut.isPending ? 'Sauvegarde...' : 'Enregistrer'}
@@ -311,7 +311,7 @@ export default function ProfilePage() {
               <Alert type="error">Les mots de passe ne correspondent pas.</Alert>
             )}
             <div className="flex gap-3">
-              <button onClick={() => setPwdMode(false)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+              <button onClick={() => setPwdMode(false)} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
               <button onClick={() => pwdMut.mutate({ old_password: pwdForm.old_password, new_password: pwdForm.new_password })}
                 disabled={!pwdForm.old_password || !pwdForm.new_password || pwdForm.new_password !== pwdForm.confirm || pwdForm.new_password.length < 8 || pwdMut.isPending}
                 className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
@@ -340,7 +340,7 @@ export default function ProfilePage() {
                 value={mfaDisablePwd} onChange={e => setMfaDisablePwd(e.target.value)} />
               <div className="flex gap-3">
                 <button onClick={() => { setShowMfaDisable(false); setMfaDisablePwd('') }}
-                  className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+                  className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
                 <button onClick={() => mfaDisableMut.mutate()} disabled={!mfaDisablePwd || mfaDisableMut.isPending}
                   className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50">
                   {mfaDisableMut.isPending ? 'Désactivation...' : 'Confirmer la désactivation'}
@@ -372,7 +372,7 @@ export default function ProfilePage() {
               placeholder="123456" value={mfaCode} onChange={e => setMfaCode(e.target.value)} />
             <div className="flex gap-3">
               <button onClick={() => { setMfaStep('idle'); setMfaSetupData(null); setMfaCode('') }}
-                className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+                className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
               <button onClick={() => mfaVerifyMut.mutate()} disabled={mfaCode.trim().length < 6 || mfaVerifyMut.isPending}
                 className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
                 {mfaVerifyMut.isPending ? 'Vérification...' : 'Confirmer'}
@@ -403,7 +403,7 @@ export default function ProfilePage() {
         <Card title="Activité récente">
           <div className="space-y-2">
             {auditLogs.results.slice(0, 8).map((log: { id: string; action: string; module: string; description: string; timestamp: string; ip_address: string | null }) => (
-              <div key={log.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 dark:bg-gray-800 rounded-xl transition">
+              <div key={log.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition">
                 <Clock className="w-4 h-4 text-gray-300 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-700 dark:text-gray-300">

@@ -424,7 +424,7 @@ function AssignRolesForm({ user, allRoles, onSuccess }: { user: User; allRoles: 
         <label className="label">Rôles assignés</label>
         <div className="space-y-2 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
           {allRoles.map(role => (
-            <label key={role.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:bg-gray-800">
+            <label key={role.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
               <input type="checkbox"
                 checked={selectedRoles.includes(role.id)}
                 onChange={e => setSelectedRoles(prev =>

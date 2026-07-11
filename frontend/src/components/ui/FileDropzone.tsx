@@ -141,7 +141,7 @@ export function FileDropzone({
                   <button
                     type="button"
                     onClick={() => onRemove(index)}
-                    className="ml-2 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                    className="ml-2 p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>

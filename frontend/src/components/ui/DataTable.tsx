@@ -97,10 +97,10 @@ export default function DataTable<T extends Record<string, any>>({
 
   if (isLoading) {
     return (
-      <div className={cn('rounded-xl border border-gray-200 bg-white overflow-hidden', className)}>
+      <div className={cn('rounded-xl border border-gray-200 dark:border-gray-700 bg-white overflow-hidden', className)}>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 {columns.map((col, i) => (
                   <th key={i} className="px-4 py-3">
@@ -111,7 +111,7 @@ export default function DataTable<T extends Record<string, any>>({
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-gray-100">
+                <tr key={i} className="border-b border-gray-100 dark:border-gray-700">
                   {columns.map((_, j) => (
                     <td key={j} className="px-4 py-3">
                       <Skeleton className="h-4 w-32" />
@@ -127,10 +127,10 @@ export default function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <div className={cn('rounded-xl border border-gray-200 bg-white overflow-hidden', className)}>
+    <div className={cn('rounded-xl border border-gray-200 dark:border-gray-700 bg-white overflow-hidden', className)}>
       {/* Header avec recherche */}
       {searchable && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <Input
             placeholder={searchPlaceholder}
             value={search}
@@ -144,13 +144,13 @@ export default function DataTable<T extends Record<string, any>>({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
                   className={cn(
-                    'px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider',
+                    'px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider',
                     column.sortable && 'cursor-pointer hover:bg-gray-100 select-none',
                     column.className
                   )}
@@ -163,7 +163,7 @@ export default function DataTable<T extends Record<string, any>>({
                       <ArrowUpDown
                         className={cn(
                           'w-3.5 h-3.5 transition-colors',
-                          sortKey === column.key ? 'text-primary-600' : 'text-gray-400'
+                          sortKey === column.key ? 'text-primary-600' : 'text-gray-400 dark:text-gray-500'
                         )}
                       />
                     )}
@@ -176,7 +176,7 @@ export default function DataTable<T extends Record<string, any>>({
             {paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center">
-                  <p className="text-sm text-gray-500">{emptyMessage}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{emptyMessage}</p>
                 </td>
               </tr>
             ) : (
@@ -185,14 +185,14 @@ export default function DataTable<T extends Record<string, any>>({
                   key={rowIndex}
                   className={cn(
                     'transition-colors',
-                    onRowClick && 'cursor-pointer hover:bg-gray-50'
+                    onRowClick && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'
                   )}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={cn('px-4 py-3 text-sm text-gray-900', column.className)}
+                      className={cn('px-4 py-3 text-sm text-gray-900 dark:text-gray-50', column.className)}
                     >
                       {column.render
                         ? column.render(row[column.key], row)

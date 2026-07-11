@@ -256,7 +256,7 @@ export default function LoginPage() {
                   {...register('password')}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 transition-colors">
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -304,7 +304,7 @@ export default function LoginPage() {
               <div className="mt-2 p-3 bg-white border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl space-y-1 max-h-64 overflow-y-auto">
                 {DEMO_ACCOUNTS.map(({ role, email, password, color }) => (
                   <button key={email} onClick={() => fillDemo(email, password)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:bg-gray-800 transition-colors text-left group">
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left group">
                     <div className={`w-7 h-7 ${color} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm`}>
                       <span className="text-white text-[10px] font-black">{role[0]}</span>
                     </div>

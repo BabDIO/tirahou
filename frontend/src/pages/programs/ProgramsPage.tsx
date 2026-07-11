@@ -485,7 +485,7 @@ function TeacherAssignForm({ ec, onDone }: { ec: MaquetteEC; onDone: () => void 
       {isLoading ? <Spinner /> : (
         <div className="max-h-64 overflow-y-auto space-y-1 border border-gray-200 dark:border-gray-700 rounded-xl p-2">
           {teachers?.results?.map(t => (
-            <label key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:bg-gray-800 cursor-pointer text-sm">
+            <label key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-sm">
               <input type="checkbox" checked={selected.includes(t.user.id)}
                 onChange={e => setSelected(prev => e.target.checked ? [...prev, t.user.id] : prev.filter(id => id !== t.user.id))} />
               {t.user.full_name}

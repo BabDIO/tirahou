@@ -107,7 +107,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
       {/* Compte */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Compte utilisateur</h3>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Compte utilisateur</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Prénom *" placeholder="Jean" error={errors.first_name}
             value={form.first_name} onChange={e => set('first_name', e.target.value)} />
@@ -124,7 +124,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
 
       {/* Profil */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Profil académique</h3>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Profil académique</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select label="Genre *" error={errors.gender} options={[
             { value: 'M', label: 'Masculin' }, { value: 'F', label: 'Féminin' }, { value: 'A', label: 'Autre' }
@@ -135,7 +135,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
           <Input label="N° pièce d'identité" value={form.national_id} onChange={e => set('national_id', e.target.value)} />
           <div>
             <label className="label">Niveau</label>
-            <select className="input bg-white" value={form.current_level} onChange={e => set('current_level', Number(e.target.value))}>
+            <select className="input bg-white dark:bg-slate-900" value={form.current_level} onChange={e => set('current_level', Number(e.target.value))}>
               {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>Niveau {n}</option>)}
             </select>
           </div>
@@ -148,7 +148,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
 
       {/* Bac */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Baccalauréat</h3>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Baccalauréat</h3>
         <div className="grid grid-cols-2 gap-4">
           <Input label="Année" type="number" placeholder="2023"
             value={form.baccalaureate_year} onChange={e => set('baccalaureate_year', e.target.value)} />
@@ -159,7 +159,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
 
       {/* Contact urgence */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Contact d'urgence</h3>
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Contact d'urgence</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input label="Nom" value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} />
           <Input label="Téléphone" value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} />
@@ -167,7 +167,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-3 pt-2 border-t border-gray-100 sticky bottom-0 bg-white pb-1">
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700 sticky bottom-0 bg-white pb-1">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={create.isPending} icon={<UserPlus className="w-4 h-4" />}>
           Créer l'étudiant

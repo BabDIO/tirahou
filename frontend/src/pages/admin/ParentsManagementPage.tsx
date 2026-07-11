@@ -356,7 +356,7 @@ export default function ParentsManagementPage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -402,7 +402,7 @@ export default function ParentsManagementPage() {
                                 setFormData({ ...formData, student: s.id, student_label: `${label} — ${s.student_id}` })
                                 setStudentQuery('')
                               }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                             >
                               {label} <span className="text-gray-400 dark:text-gray-500 text-xs">— {s.student_id}</span>
                             </button>

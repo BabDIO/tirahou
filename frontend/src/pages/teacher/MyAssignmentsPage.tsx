@@ -127,7 +127,7 @@ export default function MyAssignmentsPage() {
                 onChange={e => setFeedback(e.target.value)} placeholder="Commentaire pour l'étudiant..." />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setGradeModal(null)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+              <button onClick={() => setGradeModal(null)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
               <button onClick={() => gradeMut.mutate({ id: gradeModal.id, grade: parseFloat(gradeValue), feedback })}
                 disabled={!gradeValue || gradeMut.isPending}
                 className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">

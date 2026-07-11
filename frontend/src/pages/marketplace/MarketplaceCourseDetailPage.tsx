@@ -170,7 +170,7 @@ export default function MarketplaceCourseDetailPage() {
                 <div key={lesson.id} className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
                   <button
                     onClick={() => !lesson.is_locked && setOpenLessonId(isOpen ? null : lesson.id)}
-                    className={cn('w-full flex items-center gap-3 p-3 text-left transition-colors', !lesson.is_locked && 'hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800')}
+                    className={cn('w-full flex items-center gap-3 p-3 text-left transition-colors', !lesson.is_locked && 'hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-800')}
                   >
                     <div className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',

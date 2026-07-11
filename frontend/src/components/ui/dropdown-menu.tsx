@@ -161,7 +161,7 @@ interface DropdownMenuLabelProps {
 
 export function DropdownMenuLabel({ children, className }: DropdownMenuLabelProps) {
   return (
-    <div className={cn('px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide', className)}>
+    <div className={cn('px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide', className)}>
       {children}
     </div>
   )

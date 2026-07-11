@@ -265,7 +265,7 @@ export default function TeacherCoursesPage() {
             Permettre le téléchargement
           </label>
           <div className="flex gap-3 pt-2">
-            <button onClick={() => setShowUpload(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => setShowUpload(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
             <button onClick={handleUpload}
               disabled={!resourceForm.title || !resourceForm.module || uploadResourceMut.isPending}
               className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50">

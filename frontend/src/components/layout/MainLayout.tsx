@@ -72,7 +72,7 @@ const ADMIN_NAV = [
       { to: '/admin/users', icon: Users, label: 'Utilisateurs', color: 'text-red-400' },
       { to: '/scolarite/parents', icon: UserPlus, label: 'Parents & Tuteurs', color: 'text-cyan-400' },
       { to: '/admin/audit', icon: Shield, label: 'Journal d\'audit', color: 'text-slate-400' },
-      { to: '/admin/settings', icon: Settings, label: 'Paramètres', color: 'text-gray-400' },
+      { to: '/admin/settings', icon: Settings, label: 'Paramètres', color: 'text-gray-400 dark:text-gray-500' },
     ],
   },
 ]

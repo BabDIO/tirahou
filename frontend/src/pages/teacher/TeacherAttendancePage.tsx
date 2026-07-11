@@ -147,7 +147,7 @@ export default function TeacherAttendancePage() {
             ) : (
               <div className="space-y-1 max-h-96 overflow-y-auto">
                 {recordList.map((r: { id: string; student_name?: string; status: string; method: string; marked_at: string | null; minutes_late: number }) => (
-                  <div key={r.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:bg-gray-800 transition">
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                         r.status === 'present' ? 'bg-emerald-100' : r.status === 'absent' ? 'bg-red-100' : 'bg-amber-100'
@@ -199,7 +199,7 @@ export default function TeacherAttendancePage() {
             </select>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setShowCreateSheet(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => setShowCreateSheet(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
             <button onClick={() => createSheetMut.mutate({ session: sessionId })}
               disabled={!sessionId || createSheetMut.isPending}
               className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">

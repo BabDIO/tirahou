@@ -216,7 +216,7 @@ export default function ResponsableDashboardEnriched() {
               <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucune action en attente 🎉</p>
             )}
             {dashboardData.pending_actions.map((task, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-xl transition-colors">
+              <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5",
                   task.priority === 'haute' ? 'bg-red-100 text-red-600' :

@@ -93,7 +93,7 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-start justify-center p-4 pt-[20vh]" onClick={() => onOpenChange(false)}>
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Search className="w-5 h-5 text-gray-400" />
+          <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           <input
             ref={inputRef}
             type="text"
@@ -108,11 +108,11 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
 
         <div className="max-h-96 overflow-y-auto">
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-gray-400">Recherche...</div>
+            <div className="p-8 text-center text-sm text-gray-400 dark:text-gray-500">Recherche...</div>
           ) : allResults.length === 0 && debouncedSearch.length >= 2 ? (
-            <div className="p-8 text-center text-sm text-gray-400">Aucun résultat</div>
+            <div className="p-8 text-center text-sm text-gray-400 dark:text-gray-500">Aucun résultat</div>
           ) : allResults.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-400">
+            <div className="p-8 text-center text-sm text-gray-400 dark:text-gray-500">
               Commencez à taper pour rechercher (2 caractères minimum)
             </div>
           ) : (
@@ -124,11 +124,11 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
                     key={`${item.type}-${item.id}`}
                     onClick={() => handleSelect(item)}
                     className={cn(
-                      'w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-left',
+                      'w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-gray-700 transition text-left',
                       selected === idx && 'bg-blue-50 dark:bg-blue-900/30'
                     )}
                   >
-                    <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Icon className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{item.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.description}</p>
