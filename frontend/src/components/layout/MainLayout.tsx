@@ -10,6 +10,7 @@ import {
   ChevronDown, LogOut, Settings, Menu, BookMarked,
   UserCheck, Building2, Award, MessageSquare, ChevronRight,
   Search, HelpCircle, Zap, Library, Briefcase, Home, Shield, Gift, UserPlus,
+  Wallet as WalletIcon,
 } from 'lucide-react'
 import { Avatar, ThemeToggle } from '../ui'
 import GlobalSearch from '../search/GlobalSearch'
@@ -60,6 +61,7 @@ const ADMIN_NAV = [
     group: 'Pilotage',
     items: [
       { to: '/analytics', icon: BarChart3, label: 'Analytics', color: 'text-blue-400' },
+      { to: '/admin/gamification', icon: Award, label: 'Badges & Récompenses', color: 'text-fuchsia-400' },
       { to: '/communication', icon: MessageSquare, label: 'Communication', color: 'text-rose-400' },
     ],
   },
@@ -181,6 +183,7 @@ const ETUDIANT_NAV = [
       { to: '/my-documents', icon: FileText, label: 'Mes Documents', color: 'text-indigo-400' },
       { to: '/my-finance', icon: CreditCard, label: 'Mes Paiements', color: 'text-green-400' },
       { to: '/my-attendance-student', icon: UserCheck, label: 'Mon Assiduité', color: 'text-lime-400' },
+      { to: '/my-wallet', icon: WalletIcon, label: 'Mon Portefeuille', color: 'text-fuchsia-400' },
     ],
   },
   {
@@ -232,6 +235,7 @@ const RESPONSABLE_NAV = [
     group: 'Pilotage',
     items: [
       { to: '/analytics', icon: BarChart3, label: 'Analytics', color: 'text-blue-400' },
+      { to: '/admin/gamification', icon: Award, label: 'Badges & Récompenses', color: 'text-fuchsia-400' },
       { to: '/communication', icon: MessageSquare, label: 'Communication', color: 'text-rose-400' },
     ],
   },
@@ -282,6 +286,8 @@ const breadcrumbMap: Record<string, string> = {
   '/scolarite/documents': 'Vérification Documents',
   '/scolarite/generated-docs': 'Documents Académiques',
   '/scolarite/parents': 'Parents & Tuteurs',
+  '/my-wallet': 'Mon Portefeuille',
+  '/admin/gamification': 'Badges & Récompenses',
   '/finance/journal': 'Journal de Caisse',
   '/finance/scholarships': 'Bourses & Exonérations',
   '/responsable/programs': 'Pilotage Pédagogique',

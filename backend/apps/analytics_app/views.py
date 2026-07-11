@@ -89,6 +89,35 @@ class WalletViewSet(viewsets.ReadOnlyModelViewSet):
         wallet, _ = Wallet.objects.get_or_create(student=request.user.student_profile)
         return Response(WalletSerializer(wallet).data)
 
+    @action(detail=False, methods=['post'])
+    def credit(self, request):
+        """Créditer/débiter le portefeuille d'un étudiant (usage administratif) — crée le portefeuille s'il n'existe pas encore."""
+        from apps.people.models import Student
+        student_id = request.data.get('student')
+        tx_type = request.data.get('type', 'reward')
+        amount = request.data.get('amount')
+        description = request.data.get('description', '')
+        if not student_id or not amount:
+            return Response({'detail': 'student et amount sont requis.'}, status=400)
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return Response({'detail': 'Étudiant introuvable.'}, status=404)
+
+        wallet, _ = Wallet.objects.get_or_create(student=student)
+        amount = abs(float(amount))
+        transaction = WalletTransaction.objects.create(
+            wallet=wallet, type=tx_type, amount=amount, description=description,
+        )
+        if tx_type in ('credit', 'reward'):
+            wallet.balance += transaction.amount
+            wallet.total_earned += transaction.amount
+        else:
+            wallet.balance -= transaction.amount
+            wallet.total_spent += transaction.amount
+        wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
+        return Response(WalletSerializer(wallet).data, status=201)
+
 
 class WalletTransactionViewSet(viewsets.ModelViewSet):
     """Crédite/débite un portefeuille — usage administratif (attribution de points)."""

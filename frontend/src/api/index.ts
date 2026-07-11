@@ -405,6 +405,9 @@ export const analyticsApi = {
   getStudentBadges: (params?: object) => api.get('/analytics/student-badges/', { params }),
   awardBadge: (data: object) => api.post('/analytics/student-badges/', data),
   getMyWallet: () => api.get('/analytics/wallets/me/'),
+  getWallets: (params?: object) => api.get('/analytics/wallets/', { params }),
+  creditWallet: (data: { student: string; type: string; amount: number; description: string }) =>
+    api.post('/analytics/wallets/credit/', data),
 }
 
 // ── Bibliothèque ──────────────────────────────────────────────────────────────

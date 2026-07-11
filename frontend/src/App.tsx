@@ -43,6 +43,7 @@ import MySchedulePage from './pages/student/MySchedulePage'
 import MyAttendancePage from './pages/student/MyAttendancePage'
 import MyVirtualClassesPage from './pages/student/MyVirtualClassesPage'
 import MyInternshipPage from './pages/student/MyInternshipPage'
+import MyWalletPage from './pages/student/MyWalletPage'
 import MyCoursesPage from './pages/student/MyCoursesPage'
 import CourseDetailPage from './pages/student/CourseDetailPage'
 // Pages enseignant
@@ -57,6 +58,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminAuditPage from './pages/admin/AdminAuditPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import ParentsManagementPage from './pages/admin/ParentsManagementPage'
+import GamificationPage from './pages/admin/GamificationPage'
 // Pages scolarité
 import ScolariteDocumentsPage from './pages/scolarite/ScolariteDocumentsPage'
 import ScolariteGeneratedDocsPage from './pages/scolarite/ScolariteGeneratedDocsPage'
@@ -146,6 +148,7 @@ export default function App() {
               {/* ── ANALYTICS — Admin + Responsable pédagogique ── */}
               <Route element={<ProtectedRoute allowedRoles={[...ADMIN, 'responsable_pedagogique', 'chef_departement']} />}>
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/admin/gamification" element={<GamificationPage />} />
               </Route>
 
               {/* ── ADMIN + RESPONSABLE ── */}
@@ -212,6 +215,7 @@ export default function App() {
                 <Route path="/my-attendance-student" element={<MyAttendancePage />} />
                 <Route path="/my-virtual-classes" element={<MyVirtualClassesPage />} />
                 <Route path="/my-internship" element={<MyInternshipPage />} />
+                <Route path="/my-wallet" element={<MyWalletPage />} />
               </Route>
 
             </Route>
