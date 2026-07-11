@@ -2,16 +2,23 @@ from rest_framework import serializers
 from .models import (
     CourseSpace, CourseModule, CourseResource, Assignment,
     AssignmentSubmission, Quiz, Question, QuestionChoice,
-    QuizAttempt, StudentAnswer, StudentProgress,
+    QuizAttempt, StudentAnswer, StudentProgress, ResourceCompletion,
 )
 
 
 class CourseResourceSerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
+    is_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = CourseResource
         fields = '__all__'
+
+    def get_is_completed(self, obj):
+        request = self.context.get('request')
+        if not request or not hasattr(request.user, 'student_profile'):
+            return False
+        return ResourceCompletion.objects.filter(student=request.user.student_profile, resource=obj).exists()
 
 
 class CourseModuleSerializer(serializers.ModelSerializer):
@@ -90,10 +97,11 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
     selected_choices = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     question_text = serializers.CharField(source='question.text', read_only=True)
     question_type = serializers.CharField(source='question.type', read_only=True)
+    question_points = serializers.DecimalField(source='question.points', read_only=True, max_digits=5, decimal_places=2)
 
     class Meta:
         model = StudentAnswer
-        fields = ['id', 'attempt', 'question', 'question_text', 'question_type',
+        fields = ['id', 'attempt', 'question', 'question_text', 'question_type', 'question_points',
                   'selected_choices', 'text_answer', 'is_correct', 'points_earned']
         read_only_fields = ['is_correct', 'points_earned']
 
@@ -103,6 +111,7 @@ class QuizAttemptDetailSerializer(serializers.ModelSerializer):
     quiz_title = serializers.CharField(source='quiz.title', read_only=True)
     max_grade = serializers.DecimalField(source='quiz.max_grade', read_only=True, max_digits=5, decimal_places=2)
     time_remaining_seconds = serializers.IntegerField(read_only=True)
+    student_name = serializers.CharField(source='student.user.get_full_name', read_only=True)
 
     class Meta:
         model = QuizAttempt

@@ -82,6 +82,15 @@ export default function CourseDetailPage() {
     setOpenModules(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
   }
 
+  const markCompleteMut = useMutation({
+    mutationFn: (resourceId: string) => api.post(`/course-resources/${resourceId}/mark_complete/`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['course-space', id] })
+      qc.invalidateQueries({ queryKey: ['my-progress', id] })
+    },
+    onError: () => toast.error('Erreur lors de la mise à jour de la progression'),
+  })
+
   if (isLoading) return <Spinner text="Chargement du cours..." />
   if (!space) return <Alert type="error">Cours introuvable.</Alert>
 
@@ -131,7 +140,7 @@ export default function CourseDetailPage() {
           <Empty icon={<BookOpen className="w-8 h-8" />} message="Aucun module disponible" description="L'enseignant n'a pas encore publié de contenu." />
         ) : (
           <div className="space-y-3">
-            {modules.map((mod: { id: string; title: string; description: string; order: number; is_published: boolean; resources?: { id: string; title: string; type: string; file: string | null; external_url: string; is_downloadable: boolean }[] }) => (
+            {modules.map((mod: { id: string; title: string; description: string; order: number; is_published: boolean; resources?: { id: string; title: string; type: string; file: string | null; external_url: string; is_downloadable: boolean; is_completed: boolean }[] }) => (
               <Card key={mod.id} noPadding>
                 <button onClick={() => toggleModule(mod.id)}
                   className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition rounded-2xl text-left">
@@ -155,7 +164,7 @@ export default function CourseDetailPage() {
                     {!mod.resources?.length ? (
                       <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-3">Aucune ressource dans ce module</p>
                     ) : mod.resources.map(r => (
-                      <div key={r.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 transition">
+                      <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl transition ${r.is_completed ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                         <span className="flex-shrink-0">{TYPE_ICON[r.type] ?? <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500" />}</span>
                         <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">{r.title}</span>
                         {r.file && r.is_downloadable && (
@@ -169,6 +178,19 @@ export default function CourseDetailPage() {
                             className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium">
                             <Link2 className="w-3.5 h-3.5" /> Ouvrir
                           </a>
+                        )}
+                        {r.is_completed ? (
+                          <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium flex-shrink-0">
+                            <CheckCircle className="w-3.5 h-3.5" /> Terminé
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => markCompleteMut.mutate(r.id)}
+                            disabled={markCompleteMut.isPending}
+                            className="text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-600 font-medium flex-shrink-0 transition-colors"
+                          >
+                            Marquer terminé
+                          </button>
                         )}
                       </div>
                     ))}

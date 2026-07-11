@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Upload, Plus, Eye, Users, TrendingUp, FileText, Edit3 } from 'lucide-react'
-import { Card, Spinner, Badge, Empty, Modal, Progress } from '../../components/ui'
+import { BookOpen, Upload, Plus, Users, FileText, HelpCircle, CheckCircle2 } from 'lucide-react'
+import { Card, Spinner, Badge, Empty, Modal, Progress, Button, Input } from '../../components/ui'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 
@@ -27,6 +27,14 @@ export default function TeacherCoursesPage() {
     queryFn: () => api.get('/student-progress/', { params: { course_space: selectedSpace } }).then(r => r.data),
     enabled: !!selectedSpace,
   })
+
+  const { data: quizzes } = useQuery({
+    queryKey: ['teacher-quizzes', selectedSpace],
+    queryFn: () => api.get('/quizzes/', { params: { course_space: selectedSpace } }).then(r => r.data),
+    enabled: !!selectedSpace,
+  })
+
+  const [gradingQuizId, setGradingQuizId] = useState<string | null>(null)
 
   const publishMut = useMutation({
     mutationFn: (id: string) => api.post(`/course-spaces/${id}/publish/`),
@@ -63,6 +71,7 @@ export default function TeacherCoursesPage() {
   const courses = data?.results ?? []
   const mods = modules?.results ?? []
   const progressList = progress?.results ?? []
+  const quizList = quizzes?.results ?? []
   const avgCompletion = progressList.length
     ? Math.round(progressList.reduce((s: number, p: { completion_rate: number }) => s + p.completion_rate, 0) / progressList.length)
     : 0
@@ -192,6 +201,27 @@ export default function TeacherCoursesPage() {
                 ))}
               </div>
 
+              {/* Quiz */}
+              {quizList.length > 0 && (
+                <Card title="Quiz" subtitle="Correction des réponses libres">
+                  <div className="space-y-2">
+                    {quizList.map((q: { id: string; title: string; is_published: boolean }) => (
+                      <button
+                        key={q.id}
+                        onClick={() => setGradingQuizId(q.id)}
+                        className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="w-4 h-4 text-primary-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{q.title}</span>
+                        </div>
+                        <Badge label={q.is_published ? 'Publié' : 'Brouillon'} className={q.is_published ? 'badge-green' : 'badge-gray'} />
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
               {/* Top progression étudiants */}
               {progressList.length > 0 && (
                 <Card title="Progression des étudiants" subtitle="Top 10">
@@ -274,6 +304,106 @@ export default function TeacherCoursesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal correction quiz */}
+      <Modal open={!!gradingQuizId} onClose={() => setGradingQuizId(null)} title="Correction des réponses libres" size="lg">
+        {gradingQuizId && <QuizGrading quizId={gradingQuizId} />}
+      </Modal>
+    </div>
+  )
+}
+
+interface FreeTextAnswer {
+  id: string
+  question_text: string
+  question_type: string
+  question_points: string
+  text_answer: string
+  points_earned: string | null
+}
+
+function QuizGrading({ quizId }: { quizId: string }) {
+  const qc = useQueryClient()
+  const [drafts, setDrafts] = useState<Record<string, string>>({})
+
+  const { data: attempts, isLoading } = useQuery({
+    queryKey: ['quiz-attempts-grading', quizId],
+    queryFn: () => api.get('/quiz-attempts/', { params: { quiz: quizId, status: 'soumis' } }).then(r => r.data.results ?? r.data),
+  })
+
+  const { data: details, isLoading: loadingDetails } = useQuery({
+    queryKey: ['quiz-attempts-detail', quizId, attempts?.map((a: { id: string }) => a.id).join(',')],
+    queryFn: async () => {
+      const results = await Promise.all(
+        (attempts ?? []).map((a: { id: string }) => api.get(`/quiz-attempts/${a.id}/`).then(r => r.data))
+      )
+      return results
+    },
+    enabled: !!attempts && attempts.length > 0,
+  })
+
+  const gradeMut = useMutation({
+    mutationFn: ({ attemptId, answerId, points }: { attemptId: string; answerId: string; points: number }) =>
+      api.post(`/quiz-attempts/${attemptId}/grade-answer/`, { answer_id: answerId, points_earned: points }),
+    onSuccess: () => {
+      toast.success('Réponse corrigée')
+      qc.invalidateQueries({ queryKey: ['quiz-attempts-detail', quizId] })
+    },
+    onError: () => toast.error('Erreur lors de la correction'),
+  })
+
+  if (isLoading || loadingDetails) return <Spinner text="Chargement des copies..." />
+  if (!attempts || attempts.length === 0) {
+    return <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Aucune copie soumise pour ce quiz.</p>
+  }
+
+  return (
+    <div className="space-y-5 max-h-[70vh] overflow-y-auto">
+      {(details ?? []).map((attempt: { id: string; student: string; student_name?: string; answers: FreeTextAnswer[] }) => {
+        const freeTextAnswers = attempt.answers.filter(
+          (a) => (a.question_type === 'reponse_courte' || a.question_type === 'reponse_longue')
+        )
+        if (freeTextAnswers.length === 0) return null
+        return (
+          <div key={attempt.id} className="border border-gray-100 dark:border-gray-700 rounded-xl p-4">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-3">{attempt.student_name ?? 'Étudiant'}</p>
+            <div className="space-y-3">
+              {freeTextAnswers.map((ans) => {
+                const isGraded = ans.points_earned !== null
+                const draftKey = `${attempt.id}-${ans.id}`
+                return (
+                  <div key={ans.id} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{ans.question_text}</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-50 mb-3 whitespace-pre-line">{ans.text_answer || '— (sans réponse) —'}</p>
+                    <div className="flex items-center gap-2">
+                      {isGraded ? (
+                        <Badge label={`${ans.points_earned}/${ans.question_points} pts — corrigé`} className="badge-green" />
+                      ) : (
+                        <>
+                          <Input
+                            type="number" min="0" max={ans.question_points} step="0.5"
+                            placeholder={`/ ${ans.question_points} pts`}
+                            className="w-28"
+                            value={drafts[draftKey] ?? ''}
+                            onChange={(e) => setDrafts((d) => ({ ...d, [draftKey]: e.target.value }))}
+                          />
+                          <Button
+                            size="sm" icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                            disabled={!drafts[draftKey] || gradeMut.isPending}
+                            onClick={() => gradeMut.mutate({ attemptId: attempt.id, answerId: ans.id, points: Number(drafts[draftKey]) })}
+                          >
+                            Valider
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
