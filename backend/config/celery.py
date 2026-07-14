@@ -5,8 +5,13 @@ import os
 from celery import Celery
 from celery.schedules import crontab
 
-# Set the default Django settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+# config/__init__.py importe ce module sans condition, donc ce setdefault
+# s'exécute avant celui de n'importe quel autre entrypoint qui importe le
+# paquet "config" en premier (notamment config.wsgi, utilisé par gunicorn en
+# production) -- il doit donc pointer vers des settings sûrs (DEBUG=False)
+# par défaut. manage.py n'est pas affecté : son propre setdefault('config.settings')
+# s'exécute avant que le paquet config ne soit importé.
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings_production')
 
 app = Celery('tirahou')
 

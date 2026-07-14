@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -6,7 +7,19 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 
 API_V1 = 'api/v1/'
 
+
+def api_root(request):
+    return JsonResponse({
+        'name': 'TIRAHOU API',
+        'status': 'ok',
+        'docs': request.build_absolute_uri('/api/docs/'),
+        'schema': request.build_absolute_uri('/api/schema/'),
+        'api': request.build_absolute_uri('/api/v1/'),
+    })
+
+
 urlpatterns = [
+    path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
 
     # Documentation API
