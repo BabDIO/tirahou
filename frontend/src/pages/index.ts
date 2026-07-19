@@ -12,7 +12,6 @@ export { default as SessionExpiredPage } from './SessionExpiredPage'
 // Pages de statut
 export { default as LoadingPage } from './LoadingPage'
 export { default as MaintenancePage } from './MaintenancePage'
-export { default as ComingSoonPage } from './ComingSoonPage'
 
 // Page principale
 export { default as LandingPage } from './LandingPage'

@@ -14,13 +14,16 @@ export default function TeacherCourses() {
   const [courses, setCourses] = useState<CourseSpace[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const { data } = await api.get('/course-spaces/')
       setCourses(data?.results ?? data ?? [])
+      setError(false)
     } catch {
       setCourses([])
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -46,7 +49,9 @@ export default function TeacherCourses() {
     >
       <Text style={styles.title}>Mes Cours</Text>
 
-      {courses.length === 0 ? (
+      {error ? (
+        <EmptyState label="Erreur de chargement de vos cours. Tirez vers le bas pour réessayer." />
+      ) : courses.length === 0 ? (
         <EmptyState label="Aucun cours assigné." />
       ) : (
         courses.map((c) => (

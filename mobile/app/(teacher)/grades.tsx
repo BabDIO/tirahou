@@ -46,6 +46,7 @@ export default function TeacherGrades() {
   const [loading, setLoading] = useState(true)
   const [loadingTable, setLoadingTable] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [tableError, setTableError] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -80,8 +81,10 @@ export default function TeacherGrades() {
       })
       setEntries(map)
       setStats(statsRes.data ?? null)
+      setTableError(false)
     } catch {
       setStudents([])
+      setTableError(true)
     } finally {
       setLoadingTable(false)
     }
@@ -158,6 +161,8 @@ export default function TeacherGrades() {
         <EmptyState label="Sélectionnez un EC et une session pour commencer la saisie." />
       ) : loadingTable ? (
         <Loading label="Chargement des étudiants..." />
+      ) : tableError ? (
+        <EmptyState label="Erreur de chargement. Resélectionnez l'EC et la session pour réessayer." />
       ) : students.length === 0 ? (
         <EmptyState label="Aucun étudiant inscrit à cet EC pour cette session." />
       ) : (

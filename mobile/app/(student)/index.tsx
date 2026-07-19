@@ -27,6 +27,7 @@ export default function StudentHome() {
   const [upcoming, setUpcoming] = useState<ScheduledSession[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -41,8 +42,11 @@ export default function StudentHome() {
           .filter((s) => new Date(s.start_datetime) >= new Date() && s.status !== 'annule')
           .slice(0, 3)
       )
+      setError(false)
     } catch {
-      // Le fond de page reste utilisable même si le dashboard échoue à charger
+      // Le fond de page reste utilisable même si le dashboard échoue à charger,
+      // mais on le signale pour ne pas laisser croire à des stats à zéro réelles.
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -71,6 +75,14 @@ export default function StudentHome() {
     >
       <Text style={styles.greeting}>{greeting},</Text>
       <Text style={styles.name}>{user?.first_name ?? user?.full_name}</Text>
+
+      {error && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600' }}>
+            Certaines données n'ont pas pu être chargées. Tirez vers le bas pour réessayer.
+          </Text>
+        </Card>
+      )}
 
       <View style={styles.statsGrid}>
         <StatTile label="Cours suivis" value={stats.courses_count} />
