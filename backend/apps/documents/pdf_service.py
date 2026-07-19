@@ -7,6 +7,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.platypus import Image as RLImage
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -16,7 +17,23 @@ LIGHT_BLUE = colors.HexColor('#dbeafe')
 GRAY = colors.HexColor('#6b7280')
 LIGHT_GRAY = colors.HexColor('#f9fafb')
 SUCCESS = colors.HexColor('#059669')
+WARNING = colors.HexColor('#d97706')
 DANGER = colors.HexColor('#dc2626')
+
+
+def verify_url(verification_code: str) -> str:
+    """Lien de vérification embarqué dans le QR code de chaque document."""
+    base = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+    return f'{base}/verify/{verification_code}'
+
+
+def format_fcfa(amount) -> str:
+    """Formate un montant avec séparateur de milliers (espace, convention FR) — ex: '350 000 FCFA'."""
+    try:
+        value = float(amount or 0)
+    except (TypeError, ValueError):
+        value = 0
+    return f"{value:,.0f}".replace(',', ' ') + ' FCFA'
 
 
 def generate_qr_code(data: str) -> io.BytesIO:
@@ -30,7 +47,7 @@ def generate_qr_code(data: str) -> io.BytesIO:
     return buf
 
 
-def _header_footer(canvas, doc, university_name, doc_title, verification_code):
+def _header_footer(canvas, doc, university_name, doc_title, ref_value='', ref_label='Code'):
     canvas.saveState()
     w, h = A4
 
@@ -55,8 +72,9 @@ def _header_footer(canvas, doc, university_name, doc_title, verification_code):
     canvas.line(2*cm, 2*cm, w - 2*cm, 2*cm)
     canvas.setFont('Helvetica', 7)
     canvas.setFillColor(GRAY)
-    canvas.drawString(2*cm, 1.5*cm, f'Document généré par SIGUVH · {timezone.now().strftime("%d/%m/%Y %H:%M")}')
-    canvas.drawRightString(w - 2*cm, 1.5*cm, f'Code: {verification_code}')
+    canvas.drawString(2*cm, 1.5*cm, f'Document généré par TIRAHOU · {timezone.now().strftime("%d/%m/%Y %H:%M")}')
+    if ref_value:
+        canvas.drawRightString(w - 2*cm, 1.5*cm, f'{ref_label}: {ref_value}')
     canvas.drawCentredString(w / 2, 1.5*cm, f'Page {doc.page}')
 
     canvas.restoreState()
@@ -129,14 +147,14 @@ def generate_certificat_scolarite(student, enrollment, university_name, verifica
     story.append(Spacer(1, 30))
 
     # QR Code
-    verify_url = f'http://siguvh.edu/verify/{verification_code}'
-    qr_buf = generate_qr_code(verify_url)
+    verify_link = verify_url(verification_code)
+    qr_buf = generate_qr_code(verify_link)
     qr_img = RLImage(qr_buf, width=3*cm, height=3*cm)
 
     qr_table = Table([[qr_img, Paragraph(
         f'<b>Code de vérification</b><br/>'
         f'<font size="14" color="#2563eb"><b>{verification_code}</b></font><br/>'
-        f'<font size="8" color="#6b7280">{verify_url}</font>',
+        f'<font size="8" color="#6b7280">{verify_link}</font>',
         ParagraphStyle('qr', fontSize=10, leading=16)
     )]], colWidths=[4*cm, 13*cm])
     qr_table.setStyle(TableStyle([
@@ -328,13 +346,13 @@ def generate_fiche_inscription(student, enrollment, university_name, verificatio
     story.append(table)
     story.append(Spacer(1, 18))
 
-    verify_url = f'http://siguvh.edu/verify/{verification_code}'
-    qr_buf = generate_qr_code(verify_url)
+    verify_link = verify_url(verification_code)
+    qr_buf = generate_qr_code(verify_link)
     qr_img = RLImage(qr_buf, width=3*cm, height=3*cm)
     qr_table = Table([[qr_img, Paragraph(
         f"<b>Vérification</b><br/>"
         f"<font size='14' color='#2563eb'><b>{verification_code}</b></font><br/>"
-        f"<font size='8' color='#6b7280'>{verify_url}</font>",
+        f"<font size='8' color='#6b7280'>{verify_link}</font>",
         ParagraphStyle('qr', fontSize=10, leading=16),
     )]], colWidths=[4*cm, 13*cm])
     qr_table.setStyle(TableStyle([
@@ -348,7 +366,7 @@ def generate_fiche_inscription(student, enrollment, university_name, verificatio
     story.append(qr_table)
     story.append(Spacer(1, 18))
     story.append(Paragraph(
-        "Fiche générée par le système SIGUVH. Toute falsification est passible de sanctions.",
+        "Fiche générée par le système TIRAHOU. Toute falsification est passible de sanctions.",
         body_style,
     ))
 
@@ -361,64 +379,202 @@ def generate_fiche_inscription(student, enrollment, university_name, verificatio
     return buf
 
 
+VIOLET = colors.HexColor('#7c3aed')
+
+
+def _gradient_rect(c, x, y, w, h, radius, color_start=PRIMARY, color_end=VIOLET, horizontal=True):
+    """Rectangle (coins arrondis) rempli d'un dégradé — bandeaux de la carte étudiant."""
+    c.saveState()
+    p = c.beginPath()
+    p.roundRect(x, y, w, h, radius)
+    c.clipPath(p, stroke=0, fill=0)
+    if horizontal:
+        c.linearGradient(x, y, x + w, y, [color_start, color_end], [0, 1])
+    else:
+        c.linearGradient(x, y + h, x, y, [color_start, color_end], [0, 1])
+    c.restoreState()
+
+
+def _card_logo_badge(c, x, y, size):
+    """Pastille de marque (carré arrondi blanc, lettre T colorée) — mini logo TIRAHOU."""
+    c.saveState()
+    c.setFillColor(colors.white)
+    c.roundRect(x, y, size, size, size * 0.28, stroke=0, fill=1)
+    c.setFillColor(PRIMARY)
+    c.setFont('Helvetica-Bold', (size / cm) * 18)
+    c.drawCentredString(x + size / 2, y + size * 0.32, 'T')
+    c.restoreState()
+
+
+def _fit_text(c, text, font_name, font_size, max_width):
+    """Tronque `text` (avec ellipse) pour qu'il tienne dans `max_width` points."""
+    if c.stringWidth(text, font_name, font_size) <= max_width:
+        return text
+    ellipsis = '…'
+    while text and c.stringWidth(text + ellipsis, font_name, font_size) > max_width:
+        text = text[:-1]
+    return (text + ellipsis) if text else ellipsis
+
+
+def _card_watermark(c, card_w, card_h, text='TIRAHOU'):
+    """Filigrane discret en fond de carte (aspect infalsifiable)."""
+    c.saveState()
+    c.setFillColor(PRIMARY)
+    c.setFillAlpha(0.06)
+    c.setFont('Helvetica-Bold', 34)
+    c.translate(card_w / 2, card_h * 0.42)
+    c.rotate(18)
+    c.drawCentredString(0, 0, text)
+    c.restoreState()
+
+
+def _card_qr_block(c, card_w, x_right, y, size, verification_code, caption='Scanner pour vérifier'):
+    """Bloc QR code encadré, avec légende et code — recto et verso."""
+    box_pad = 0.12 * cm
+    box_x, box_y = x_right - size - box_pad, y - box_pad
+    box_w, box_h = size + 2 * box_pad, size + 2 * box_pad
+    c.setFillColor(colors.white)
+    c.setStrokeColor(colors.HexColor('#e5e7eb'))
+    c.roundRect(box_x, box_y, box_w, box_h, 0.08 * cm, stroke=1, fill=1)
+    verify_link = verify_url(verification_code)
+    qr_buf = generate_qr_code(verify_link)
+    RLImage(qr_buf, width=size, height=size).drawOn(c, x_right - size, y)
+    c.setFont('Helvetica', 5)
+    c.setFillColor(GRAY)
+    c.drawCentredString(x_right - size / 2, y - 0.32 * cm, caption)
+    c.setFont('Helvetica-Bold', 5.5)
+    c.setFillColor(DARK)
+    c.drawCentredString(x_right - size / 2, y - 0.58 * cm, verification_code)
+
+
 def generate_carte_etudiant(student, enrollment, university_name, verification_code):
-    """Génère une carte d'étudiant PDF (format carte simple)."""
+    """Génère une carte d'étudiant PDF (format ID-1 standard, recto + verso)."""
     buf = io.BytesIO()
 
     from reportlab.pdfgen import canvas
-    card_w, card_h = (9.0*cm, 5.6*cm)
+    card_w, card_h = (8.6*cm, 5.4*cm)
     c = canvas.Canvas(buf, pagesize=(card_w, card_h))
+    radius = 0.22 * cm
+    header_h = 1.55 * cm
 
-    # Fond
+    # ═══════════════════════════════════════════ RECTO ═══════════════════════
+    # Fond carte (coins arrondis, léger contour)
     c.setFillColor(colors.white)
-    c.rect(0, 0, card_w, card_h, fill=1, stroke=0)
+    c.roundRect(0, 0, card_w, card_h, radius, stroke=0, fill=1)
+    c.setStrokeColor(colors.HexColor('#e5e7eb'))
+    c.setLineWidth(0.75)
+    c.roundRect(0.05*cm, 0.05*cm, card_w-0.1*cm, card_h-0.1*cm, radius, stroke=1, fill=0)
+
+    _card_watermark(c, card_w, card_h)
+
+    # Bandeau d'en-tête dégradé
+    _gradient_rect(c, 0, card_h - header_h, card_w, header_h, radius)
+    _card_logo_badge(c, 0.3*cm, card_h - 1.2*cm, 0.62*cm)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 7.5)
+    uni_label = _fit_text(c, university_name, 'Helvetica-Bold', 7.5, card_w - 1.1*cm - 0.3*cm)
+    c.drawString(1.1*cm, card_h - 0.65*cm, uni_label)
+    c.setFont('Helvetica-Bold', 11)
+    c.drawString(1.1*cm, card_h - 1.15*cm, "CARTE D'ÉTUDIANT")
+
+    # Photo (encadrée, coins arrondis)
+    photo_x, photo_y = 0.4*cm, 1.05*cm
+    photo_w, photo_h = 2.0*cm, 2.5*cm
+    c.setFillColor(colors.white)
     c.setStrokeColor(PRIMARY)
-    c.setLineWidth(2)
-    c.rect(0.2*cm, 0.2*cm, card_w-0.4*cm, card_h-0.4*cm, fill=0, stroke=1)
-
-    # Header
-    c.setFont('Helvetica-Bold', 10)
-    c.setFillColor(DARK)
-    c.drawString(0.6*cm, card_h - 0.9*cm, university_name[:28])
-    c.setFont('Helvetica', 8)
-    c.setFillColor(GRAY)
-    c.drawString(0.6*cm, card_h - 1.35*cm, "CARTE D'ÉTUDIANT")
-
-    # Photo (optionnelle)
-    photo_x, photo_y = 0.6*cm, card_h - 4.9*cm
-    photo_w, photo_h = 2.2*cm, 2.8*cm
+    c.setLineWidth(1.1)
+    c.roundRect(photo_x - 0.06*cm, photo_y - 0.06*cm, photo_w + 0.12*cm, photo_h + 0.12*cm, 0.1*cm, stroke=1, fill=1)
     try:
         if student.photo and hasattr(student.photo, 'path'):
-            c.drawImage(student.photo.path, photo_x, photo_y, width=photo_w, height=photo_h, preserveAspectRatio=True, mask='auto')
+            c.drawImage(student.photo.path, photo_x, photo_y, width=photo_w, height=photo_h,
+                        preserveAspectRatio=True, anchor='c', mask='auto')
         else:
-            raise Exception("no photo")
+            raise FileNotFoundError("no photo")
     except Exception:
-        c.setStrokeColor(colors.HexColor('#e5e7eb'))
         c.setFillColor(LIGHT_GRAY)
-        c.rect(photo_x, photo_y, photo_w, photo_h, fill=1, stroke=1)
+        c.rect(photo_x, photo_y, photo_w, photo_h, fill=1, stroke=0)
         c.setFillColor(GRAY)
         c.setFont('Helvetica', 6)
         c.drawCentredString(photo_x + photo_w/2, photo_y + photo_h/2, "PHOTO")
 
-    # Infos
-    c.setFillColor(colors.black)
-    c.setFont('Helvetica-Bold', 8)
-    c.drawString(3.1*cm, card_h - 2.1*cm, student.user.get_full_name()[:28])
-    c.setFont('Helvetica', 7)
-    c.setFillColor(GRAY)
-    c.drawString(3.1*cm, card_h - 2.55*cm, f"Matricule: {student.student_id}")
-    c.drawString(3.1*cm, card_h - 2.95*cm, f"Programme: {enrollment.program.name[:22]}")
-    c.drawString(3.1*cm, card_h - 3.35*cm, f"Année: {enrollment.academic_year.label}")
-    c.drawString(3.1*cm, card_h - 3.75*cm, f"Niveau: L{student.current_level}")
+    # Bloc d'informations
+    info_x = photo_x + photo_w + 0.4*cm
+    y = card_h - header_h - 0.4*cm
+    c.setFillColor(DARK)
+    c.setFont('Helvetica-Bold', 9.5)
+    c.drawString(info_x, y, student.user.get_full_name()[:26])
+    y -= 0.5*cm
 
-    # QR
-    verify_url = f'http://siguvh.edu/verify/{verification_code}'
-    qr_buf = generate_qr_code(verify_url)
-    qr_img = RLImage(qr_buf, width=1.8*cm, height=1.8*cm)
-    qr_img.drawOn(c, card_w - 2.5*cm, 0.6*cm)
+    def field(label, value):
+        nonlocal y
+        c.setFont('Helvetica-Bold', 5.5)
+        c.setFillColor(PRIMARY)
+        c.drawString(info_x, y, label.upper())
+        c.setFont('Helvetica', 7.5)
+        c.setFillColor(colors.black)
+        c.drawString(info_x, y - 0.28*cm, value)
+        y -= 0.66*cm
+
+    field('Matricule', student.student_id)
+    field('Programme', enrollment.program.name[:24])
+    field('Niveau · Année', f"Licence {student.current_level} · {enrollment.academic_year.label}")
+
+    if enrollment.academic_year.end_date:
+        c.setFont('Helvetica-Oblique', 5.5)
+        c.setFillColor(GRAY)
+        c.drawString(info_x, 0.35*cm, f"Valable jusqu'au {enrollment.academic_year.end_date.strftime('%d/%m/%Y')}")
+
+    _card_qr_block(c, card_w, card_w - 0.35*cm, 0.75*cm, 1.55*cm, verification_code)
+
+    # Liseré d'accent en pied de carte
+    _gradient_rect(c, 0, 0, card_w, 0.1*cm, 0)
+
+    c.showPage()
+
+    # ═══════════════════════════════════════════ VERSO ═══════════════════════
+    c.setFillColor(colors.white)
+    c.roundRect(0, 0, card_w, card_h, radius, stroke=0, fill=1)
+    c.setStrokeColor(colors.HexColor('#e5e7eb'))
+    c.setLineWidth(0.75)
+    c.roundRect(0.05*cm, 0.05*cm, card_w-0.1*cm, card_h-0.1*cm, radius, stroke=1, fill=0)
+
+    back_header_h = 0.95*cm
+    _gradient_rect(c, 0, card_h - back_header_h, card_w, back_header_h, radius)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 8)
+    c.drawCentredString(card_w/2, card_h - 0.42*cm, 'TIRAHOU')
     c.setFont('Helvetica', 5.5)
+    c.drawCentredString(card_w/2, card_h - 0.72*cm, 'Système Intégré de Gestion Universitaire')
+
+    rules = [
+        "Cette carte est strictement personnelle, non transférable et doit être présentée",
+        "à toute demande d'un membre du personnel habilité de l'établissement.",
+        "En cas de perte ou de vol, le signaler immédiatement au service de la scolarité.",
+    ]
+    ry = card_h - back_header_h - 0.35*cm
+    c.setFont('Helvetica', 6)
     c.setFillColor(GRAY)
-    c.drawRightString(card_w - 0.6*cm, 0.4*cm, verification_code)
+    for line in rules:
+        c.drawString(0.4*cm, ry, line)
+        ry -= 0.32*cm
+
+    # Zones de signature
+    sig_y, sig_w, sig_h = 1.55*cm, 2.85*cm, 1.0*cm
+    for i, label in enumerate(["Signature de l'étudiant", "Cachet de l'établissement"]):
+        sx = 0.4*cm + i * (sig_w + 0.3*cm)
+        c.setStrokeColor(colors.HexColor('#d1d5db'))
+        c.setLineWidth(0.6)
+        c.roundRect(sx, sig_y, sig_w, sig_h, 0.08*cm, stroke=1, fill=0)
+        c.setFont('Helvetica', 5.2)
+        c.setFillColor(GRAY)
+        c.drawCentredString(sx + sig_w/2, sig_y - 0.28*cm, label)
+
+    _card_qr_block(c, card_w, card_w - 0.35*cm, 0.75*cm, 1.1*cm, verification_code, caption='Vérification')
+    c.setFont('Helvetica', 5)
+    c.setFillColor(GRAY)
+    c.drawString(0.4*cm, 0.4*cm, f"Émise le {timezone.now().strftime('%d/%m/%Y')}")
+
+    _gradient_rect(c, 0, 0, card_w, 0.1*cm, 0)
 
     c.showPage()
     c.save()
@@ -476,8 +632,8 @@ def generate_convocation(recipient_name, event_title, event_date, event_location
         story.append(Paragraph(extra_notes, body_style))
     story.append(Spacer(1, 30))
 
-    verify_url = f'http://siguvh.edu/verify/{verification_code}'
-    qr_buf = generate_qr_code(verify_url)
+    verify_link = verify_url(verification_code)
+    qr_buf = generate_qr_code(verify_link)
     qr_img = RLImage(qr_buf, width=3*cm, height=3*cm)
     qr_table = Table([[qr_img, Paragraph(
         f'<b>Code de vérification</b><br/>'
@@ -543,8 +699,8 @@ def generate_diplome(student, program, academic_year, university_name, verificat
         Spacer(1, 40),
     ]
 
-    verify_url = f'http://siguvh.edu/verify/{verification_code}'
-    qr_buf = generate_qr_code(verify_url)
+    verify_link = verify_url(verification_code)
+    qr_buf = generate_qr_code(verify_link)
     qr_img = RLImage(qr_buf, width=2.8*cm, height=2.8*cm)
     footer_table = Table([[
         qr_img,
@@ -566,6 +722,319 @@ def generate_diplome(student, program, academic_year, university_name, verificat
         story,
         onFirstPage=lambda c, d: _header_footer(c, d, university_name, doc_label, verification_code),
         onLaterPages=lambda c, d: _header_footer(c, d, university_name, doc_label, verification_code),
+    )
+    buf.seek(0)
+    return buf
+
+
+def generate_pv_deliberation(rows, semester_label, session_label, university_name):
+    """
+    Génère un PV de délibération PDF (liste des résultats semestriels d'une
+    session, avec décision par étudiant et zones de signature du jury).
+    `rows` : itérable d'objets SemesterResult (student, average, credits_obtained,
+    total_credits, decision).
+    """
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm,
+        topMargin=3.5*cm, bottomMargin=3*cm,
+    )
+
+    title_style = ParagraphStyle('title', fontSize=16, fontName='Helvetica-Bold',
+                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=4)
+    sub_style = ParagraphStyle('sub', fontSize=11, fontName='Helvetica', textColor=GRAY,
+                                alignment=TA_CENTER, spaceAfter=16)
+    section_style = ParagraphStyle('section', fontSize=10, fontName='Helvetica',
+                                    textColor=GRAY, spaceAfter=8)
+
+    rows = list(rows)
+    story = [
+        Paragraph('PROCÈS-VERBAL DE DÉLIBÉRATION', title_style),
+        Paragraph(' · '.join(x for x in [semester_label, session_label] if x) or 'Tous semestres', sub_style),
+        HRFlowable(width='100%', thickness=1, color=LIGHT_BLUE, spaceAfter=12),
+        Paragraph(
+            f"Généré le {timezone.now().strftime('%d/%m/%Y à %H:%M')} · {len(rows)} étudiant(s)",
+            section_style
+        ),
+    ]
+
+    headers = ['Matricule', 'Étudiant', 'Moyenne', 'Crédits', 'Décision']
+    table_data = [headers]
+    for r in rows:
+        avg_str = f"{float(r.average):.2f}/20" if r.average is not None else '—'
+        credits_str = f"{r.credits_obtained}/{r.total_credits}" if r.total_credits is not None else '—'
+        full_name = r.student.user.get_full_name() if getattr(r.student, 'user', None) else str(r.student)
+        table_data.append([r.student.student_id, full_name[:35], avg_str, credits_str, (r.decision or '—').upper()])
+
+    results_table = Table(table_data, colWidths=[3*cm, 6.5*cm, 2.5*cm, 2.5*cm, 2.5*cm], repeatRows=1)
+    row_styles = [
+        ('BACKGROUND', (0, 0), (-1, 0), DARK),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 8.5),
+        ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+    ]
+    for i in range(1, len(table_data)):
+        bg = colors.white if i % 2 == 0 else LIGHT_GRAY
+        row_styles.append(('BACKGROUND', (0, i), (-1, i), bg))
+        decision = (rows[i-1].decision or '').lower()
+        dec_color = SUCCESS if decision in ('valide', 'compense', 'admis') else DANGER if decision else GRAY
+        row_styles.append(('TEXTCOLOR', (4, i), (4, i), dec_color))
+        row_styles.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))
+    results_table.setStyle(TableStyle(row_styles))
+    story.append(results_table)
+    story.append(Spacer(1, 30))
+
+    # Zones de signature du jury
+    sig_style = ParagraphStyle('sig', fontSize=9, fontName='Helvetica', textColor=GRAY, alignment=TA_CENTER)
+    sig_table = Table(
+        [[HRFlowable(width='90%', thickness=0.75, color=colors.HexColor('#9ca3af'), hAlign='CENTER')] * 2,
+         [Paragraph('Le Président du Jury', sig_style), Paragraph('Les Membres du Jury', sig_style)]],
+        colWidths=[8.5*cm, 8.5*cm],
+    )
+    sig_table.setStyle(TableStyle([('TOPPADDING', (0, 1), (-1, 1), 4)]))
+    story.append(sig_table)
+
+    doc.build(
+        story,
+        onFirstPage=lambda c, d: _header_footer(c, d, university_name, 'PV de Délibération'),
+        onLaterPages=lambda c, d: _header_footer(c, d, university_name, 'PV de Délibération'),
+    )
+    buf.seek(0)
+    return buf
+
+
+STATUS_COLOR = {
+    'payee': SUCCESS, 'valide': SUCCESS,
+    'partiellement_payee': WARNING, 'en_attente': WARNING,
+    'emise': GRAY, 'brouillon': GRAY,
+    'annulee': DANGER, 'rejete': DANGER, 'rembourse': DANGER,
+}
+
+
+def generate_facture(invoice, items, university_name):
+    """Génère une facture PDF (même design system que les autres documents officiels)."""
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm,
+        topMargin=3.5*cm, bottomMargin=3*cm,
+    )
+
+    title_style = ParagraphStyle('title', fontSize=16, fontName='Helvetica-Bold',
+                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=4)
+    sub_style = ParagraphStyle('sub', fontSize=12, fontName='Helvetica', textColor=GRAY,
+                                alignment=TA_CENTER, spaceAfter=16)
+    section_style = ParagraphStyle('section', fontSize=11, fontName='Helvetica-Bold',
+                                    textColor=PRIMARY, spaceBefore=16, spaceAfter=8)
+
+    status_color = STATUS_COLOR.get(invoice.status, GRAY)
+    status_label = invoice.get_status_display()
+
+    story = [
+        Paragraph('FACTURE', title_style),
+        Paragraph(invoice.invoice_number, sub_style),
+        HRFlowable(width='100%', thickness=1, color=LIGHT_BLUE, spaceAfter=16),
+        Paragraph('Informations', section_style),
+    ]
+
+    info_data = [
+        ['Étudiant', invoice.student.user.get_full_name(), 'Matricule', invoice.student.student_id],
+        ['Année académique', invoice.academic_year.label,
+         'Échéance', invoice.due_date.strftime('%d/%m/%Y') if invoice.due_date else '—'],
+    ]
+    info_table = Table(info_data, colWidths=[3.2*cm, 6.8*cm, 3*cm, 4*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), GRAY),
+        ('TEXTCOLOR', (2, 0), (2, -1), GRAY),
+        ('BACKGROUND', (0, 0), (-1, -1), LIGHT_GRAY),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+    ]))
+    story.append(info_table)
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(
+        f'<font color="#{status_color.hexval()[2:]}"><b>Statut : {status_label}</b></font>',
+        ParagraphStyle('status', fontSize=10, fontName='Helvetica')
+    ))
+    story.append(Spacer(1, 16))
+
+    # Lignes de facturation
+    story.append(Paragraph('Détail', section_style))
+    headers = ['Libellé', 'Montant']
+    table_data = [headers]
+    for it in items:
+        table_data.append([it.label, format_fcfa(it.amount)])
+    if not items:
+        table_data.append(['— (aucune ligne) —', ''])
+
+    items_table = Table(table_data, colWidths=[13*cm, 4*cm])
+    item_styles = [
+        ('BACKGROUND', (0, 0), (-1, 0), DARK),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+    ]
+    for i in range(1, len(table_data)):
+        bg = colors.white if i % 2 == 0 else LIGHT_GRAY
+        item_styles.append(('BACKGROUND', (0, i), (-1, i), bg))
+    items_table.setStyle(TableStyle(item_styles))
+    story.append(items_table)
+    story.append(Spacer(1, 20))
+
+    # Totaux
+    summary_data = [
+        ['Total', format_fcfa(invoice.total_amount)],
+        ['Remise', format_fcfa(invoice.discount_amount)],
+        ['Payé', format_fcfa(invoice.paid_amount)],
+        ['Reste à payer', format_fcfa(invoice.remaining_amount)],
+    ]
+    summary_table = Table(summary_data, colWidths=[13*cm, 4*cm])
+    summary_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -2), 'Helvetica'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTSIZE', (0, -1), (-1, -1), 11),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('TEXTCOLOR', (0, 0), (0, -1), GRAY),
+        ('TEXTCOLOR', (1, -1), (1, -1), PRIMARY),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0f9ff')),
+        ('LINEABOVE', (0, -1), (-1, -1), 0.75, colors.HexColor('#bfdbfe')),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#bfdbfe')),
+    ]))
+    story.append(summary_table)
+
+    doc.build(
+        story,
+        onFirstPage=lambda c, d: _header_footer(c, d, university_name, 'Facture', invoice.invoice_number, 'Facture'),
+        onLaterPages=lambda c, d: _header_footer(c, d, university_name, 'Facture', invoice.invoice_number, 'Facture'),
+    )
+    buf.seek(0)
+    return buf
+
+
+def generate_recu_paiement(payment, invoice, university_name):
+    """Génère un reçu (quittance) de paiement PDF (même design system que les autres documents officiels)."""
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm,
+        topMargin=3.5*cm, bottomMargin=3*cm,
+    )
+
+    title_style = ParagraphStyle('title', fontSize=16, fontName='Helvetica-Bold',
+                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=4)
+    sub_style = ParagraphStyle('sub', fontSize=12, fontName='Helvetica', textColor=GRAY,
+                                alignment=TA_CENTER, spaceAfter=16)
+    section_style = ParagraphStyle('section', fontSize=11, fontName='Helvetica-Bold',
+                                    textColor=PRIMARY, spaceBefore=16, spaceAfter=8)
+    body_style = ParagraphStyle('body', fontSize=10, fontName='Helvetica', leading=16, spaceAfter=8)
+
+    student = invoice.student
+    status_color = STATUS_COLOR.get(payment.status, GRAY)
+
+    story = [
+        Paragraph('REÇU DE PAIEMENT', title_style),
+        Paragraph(payment.receipt_number or '—', sub_style),
+        HRFlowable(width='100%', thickness=1, color=LIGHT_BLUE, spaceAfter=16),
+        Paragraph('Informations', section_style),
+    ]
+
+    info_data = [
+        ['Étudiant', student.user.get_full_name(), 'Matricule', student.student_id],
+        ['Facture', invoice.invoice_number, 'Année académique', invoice.academic_year.label],
+        ['Date de paiement', (payment.paid_at or timezone.now()).strftime('%d/%m/%Y %H:%M'),
+         'Mode', payment.get_method_display()],
+    ]
+    info_table = Table(info_data, colWidths=[3.5*cm, 6.5*cm, 3.5*cm, 3.5*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), GRAY),
+        ('TEXTCOLOR', (2, 0), (2, -1), GRAY),
+        ('BACKGROUND', (0, 0), (-1, -1), LIGHT_GRAY),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+    ]))
+    story.append(info_table)
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(
+        f'<font color="#{status_color.hexval()[2:]}"><b>Statut du paiement : {payment.get_status_display()}</b></font>',
+        ParagraphStyle('status', fontSize=10, fontName='Helvetica')
+    ))
+    story.append(Spacer(1, 16))
+
+    # Montant payé (mis en avant)
+    amount_table = Table([['Montant reçu', format_fcfa(payment.amount)]], colWidths=[13*cm, 4*cm])
+    amount_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (0, 0), 11),
+        ('FONTSIZE', (1, 0), (1, 0), 14),
+        ('TEXTCOLOR', (0, 0), (0, 0), GRAY),
+        ('TEXTCOLOR', (1, 0), (1, 0), SUCCESS),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0fdf4')),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#bbf7d0')),
+    ]))
+    story.append(amount_table)
+    story.append(Spacer(1, 20))
+
+    # Récapitulatif facture
+    story.append(Paragraph('Récapitulatif de la facture', section_style))
+    summary_data = [
+        ['Total facture', format_fcfa(invoice.total_amount),
+         'Remise', format_fcfa(invoice.discount_amount)],
+        ['Total payé à ce jour', format_fcfa(invoice.paid_amount),
+         'Reste à payer', format_fcfa(invoice.remaining_amount)],
+    ]
+    summary_table = Table(summary_data, colWidths=[4.5*cm, 4*cm, 4*cm, 4*cm])
+    summary_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), GRAY),
+        ('TEXTCOLOR', (2, 0), (2, -1), GRAY),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+        ('BACKGROUND', (0, 0), (-1, -1), LIGHT_GRAY),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+    ]))
+    story.append(summary_table)
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("Ce reçu fait foi de paiement et doit être conservé par l'étudiant.", body_style))
+
+    doc.build(
+        story,
+        onFirstPage=lambda c, d: _header_footer(c, d, university_name, 'Reçu de Paiement', payment.receipt_number, 'Reçu'),
+        onLaterPages=lambda c, d: _header_footer(c, d, university_name, 'Reçu de Paiement', payment.receipt_number, 'Reçu'),
     )
     buf.seek(0)
     return buf

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.api',
     'apps.library',
     'apps.marketplace',
+    'apps.chatbot',
 ]
 
 MIDDLEWARE = [
@@ -119,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # ── Internationalisation ──────────────────────────────────────────────────────
 LANGUAGE_CODE = 'fr-fr'
-TIME_ZONE = 'Africa/Abidjan'
+TIME_ZONE = 'Africa/Bamako'
 USE_I18N = True
 USE_TZ = True
 
@@ -213,6 +214,10 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
     'http://localhost:3000,http://localhost:5173'
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
+
+# URL publique du frontend — utilisée pour construire les liens de vérification
+# de documents (QR codes) intégrés aux PDF générés (apps/documents/pdf_service.py).
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
@@ -366,6 +371,9 @@ TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
 # Anti-plagiat — Compilatio (apps/internships/plagiarism.py)
 PLAGIARISM_API_KEY = os.environ.get('PLAGIARISM_API_KEY', '')
 PLAGIARISM_API_URL = os.environ.get('PLAGIARISM_API_URL', 'https://api.compilatio.net')
+
+# Assistant IA — Claude / Anthropic (apps/chatbot/claude_service.py)
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
 # SSO / Annuaire externe — LDAP (nécessite `pip install django-auth-ldap`)
 LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI', '')

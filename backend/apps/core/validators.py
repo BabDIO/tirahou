@@ -1,5 +1,5 @@
 """
-Services de validation métier centralisés — SIGUVH
+Services de validation métier centralisés — TIRAHOU
 Règles LMD, inscriptions, paiements, notes
 """
 from django.core.exceptions import ValidationError

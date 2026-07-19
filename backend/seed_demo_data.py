@@ -83,24 +83,24 @@ print(f"OK Utilisateurs crs (admin: admin@tirahou.edu / Admin@2024)")
 from apps.academic.models import University, Faculty, Department, AcademicYear, LMDRegulation
 
 univ, _ = University.objects.get_or_create(
-    acronym='UVHCI',
+    acronym='UVHM',
     defaults={
-        'name': 'Université Virtuelle Hybride de Côte d\'Ivoire',
-        'address': 'Abidjan, Plateau, Côte d\'Ivoire',
-        'website': 'https://uvhci.edu.ci',
-        'email': 'contact@uvhci.edu.ci',
-        'phone': '+225 27 20 00 00 00',
+        'name': 'Université Virtuelle Hybride du Mali',
+        'address': 'ACI 2000, Hamdallaye, Bamako, Mali',
+        'website': 'https://uvhm.edu.ml',
+        'email': 'contact@uvhm.edu.ml',
+        'phone': '+223 20 22 00 00',
         'rector': admin_user,
     }
 )
 
 fac_info, _ = Faculty.objects.get_or_create(
     acronym='UFR-INFO',
-    defaults={'university': univ, 'name': 'UFR Informatique & Numérique', 'email': 'info@uvhci.edu.ci', 'dean': resp_user}
+    defaults={'university': univ, 'name': 'UFR Informatique & Numérique', 'email': 'info@uvhm.edu.ml', 'dean': resp_user}
 )
 fac_gestion, _ = Faculty.objects.get_or_create(
     acronym='UFR-GESTION',
-    defaults={'university': univ, 'name': 'UFR Sciences de Gestion', 'email': 'gestion@uvhci.edu.ci'}
+    defaults={'university': univ, 'name': 'UFR Sciences de Gestion', 'email': 'gestion@uvhm.edu.ml'}
 )
 
 dept_gl, _ = Department.objects.get_or_create(
@@ -137,7 +137,7 @@ year, _ = AcademicYear.objects.get_or_create(
 )
 
 reg_licence, _ = LMDRegulation.objects.get_or_create(
-    name='Règlement Licence UVHCI',
+    name='Règlement Licence UVHM',
     defaults={
         'cycle': 'licence', 'university': univ, 'effective_year': year,
         'credits_per_semester': 30, 'total_credits': 180,
@@ -146,7 +146,7 @@ reg_licence, _ = LMDRegulation.objects.get_or_create(
     }
 )
 reg_master, _ = LMDRegulation.objects.get_or_create(
-    name='Règlement Master UVHCI',
+    name='Règlement Master UVHM',
     defaults={
         'cycle': 'master', 'university': univ, 'effective_year': year,
         'credits_per_semester': 30, 'total_credits': 120,
@@ -232,9 +232,9 @@ def make_student(user, student_id, program, status='inscrit', level=3, bac_serie
         'student_id': student_id,
         'gender': random.choice(['M', 'F']),
         'birth_date': date(2001, random.randint(1,12), random.randint(1,28)),
-        'birth_place': random.choice(['Abidjan','Bouaké','Yamoussoukro','Daloa','San-Pédro']),
-        'nationality': 'Ivoirienne',
-        'address': f'{random.randint(1,200)} Rue des Étudiants, Abidjan',
+        'birth_place': random.choice(['Bamako','Sikasso','Mopti','Kayes','Ségou']),
+        'nationality': 'Malienne',
+        'address': f'{random.randint(1,200)} Rue des Étudiants, Bamako',
         'current_program': program,
         'current_year': year,
         'current_level': level,
@@ -243,7 +243,7 @@ def make_student(user, student_id, program, status='inscrit', level=3, bac_serie
         'baccalaureate_series': bac_series,
         'baccalaureate_mention': random.choice(['Passable','Assez Bien','Bien']),
         'emergency_contact_name': 'Parent ' + user.last_name,
-        'emergency_contact_phone': f'+225 07 {random.randint(10,99)} {random.randint(10,99)} {random.randint(10,99)} {random.randint(10,99)}',
+        'emergency_contact_phone': f'+223 76 {random.randint(10,99)} {random.randint(10,99)} {random.randint(10,99)}',
     })
     return s
 
@@ -262,7 +262,7 @@ def make_teacher(user, tid, grade='maitre_assistant'):
         'status': 'permanent',
         'department': dept_gl,
         'specialities': 'Génie Logiciel, Architecture, IA',
-        'bio': f'Enseignant spécialisé en informatique à UVHCI.',
+        'bio': f'Enseignant spécialisé en informatique à UVHM.',
         'office': f'Bâtiment A - Bureau {random.randint(100,350)}',
         'weekly_hours_quota': 8,
     })
@@ -289,7 +289,7 @@ def make_application(user, program, status='converti', score=None):
             'submitted_at': timezone.now() - timedelta(days=60),
             'last_diploma': 'Baccalauréat',
             'last_diploma_year': 2021,
-            'last_institution': 'Lycée Moderne d\'Abidjan',
+            'last_institution': 'Lycée Askia Mohamed de Bamako',
             'average_grade': Decimal(str(score or round(random.uniform(12, 17), 2))),
             'motivation_letter': 'Je souhaite intégrer ce programme pour développer mes compétences en informatique.',
             'application_fee_paid': True,
@@ -813,7 +813,7 @@ livres = [
     ('Deep Learning', 'Ian Goodfellow', 'livre', 'Intelligence Artificielle', 2016, 'ISBN 978-0-26-203561-3', 2),
     ('Introduction to Algorithms', 'Cormen et al.', 'livre', 'Algorithmique', 2009, 'ISBN 978-0-26-203293-3', 4),
     ('The Pragmatic Programmer', 'Hunt & Thomas', 'livre', 'Développement Logiciel', 2019, 'ISBN 978-0-13-595705-9', 3),
-    ('Système Intégré de Gestion Universitaire — TIRAHOU', 'Auteur UVHCI', 'memoire', 'Génie Logiciel', 2025, '', 1),
+    ('Système Intégré de Gestion Universitaire — TIRAHOU', 'Auteur UVHM', 'memoire', 'Génie Logiciel', 2025, '', 1),
     ('Machine Learning avec Python', 'Aurélien Géron', 'livre', 'Intelligence Artificielle', 2022, 'ISBN 978-2-80-730524-7', 2),
     ('PostgreSQL Administration', 'Greg Smith', 'livre', 'Bases de Données', 2020, 'ISBN 978-1-78-951533-0', 2),
     ('React Design Patterns', 'Carlos Santana Roldán', 'livre', 'Développement Web', 2021, '', 3),
@@ -863,10 +863,10 @@ Internship.objects.get_or_create(
     student=etu1, academic_year=year,
     defaults={
         'supervisor': enseignant1,
-        'company_name': 'Orange Côte d\'Ivoire',
-        'company_address': 'Abidjan, Zone 4',
-        'company_supervisor': 'M. Koffi DIOMANDE',
-        'company_supervisor_email': 'k.diomande@orange.ci',
+        'company_name': 'Orange Mali',
+        'company_address': 'Bamako, Hamdallaye ACI 2000',
+        'company_supervisor': 'M. Amadou TRAORÉ',
+        'company_supervisor_email': 'a.traore@orange.ml',
         'subject': 'Développement d\'une plateforme de gestion des ressources humaines avec Django REST',
         'description': 'Développement fullstack d\'une application RH intégrée.',
         'start_date': date(2025, 3, 3),

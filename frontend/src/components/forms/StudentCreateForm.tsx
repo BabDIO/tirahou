@@ -24,7 +24,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [form, setForm] = useState<FormData>({
     email: '', first_name: '', last_name: '', phone: '', password: '',
-    gender: 'M', birth_date: '', birth_place: '', nationality: 'Ivoirienne',
+    gender: 'M', birth_date: '', birth_place: '', nationality: 'Malienne',
     national_id: '', current_program: '', current_level: 1,
     baccalaureate_year: '', baccalaureate_series: '',
     emergency_contact_name: '', emergency_contact_phone: '', emergency_contact_relation: '',
@@ -131,7 +131,7 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
           ]} value={form.gender} onChange={e => set('gender', e.target.value)} />
           <Input label="Nationalité" value={form.nationality} onChange={e => set('nationality', e.target.value)} />
           <Input label="Date de naissance" type="date" value={form.birth_date} onChange={e => set('birth_date', e.target.value)} />
-          <Input label="Lieu de naissance" placeholder="Abidjan" value={form.birth_place} onChange={e => set('birth_place', e.target.value)} />
+          <Input label="Lieu de naissance" placeholder="Bamako" value={form.birth_place} onChange={e => set('birth_place', e.target.value)} />
           <Input label="N° pièce d'identité" value={form.national_id} onChange={e => set('national_id', e.target.value)} />
           <div>
             <label className="label">Niveau</label>

@@ -12,6 +12,13 @@ from .serializers import (
 )
 from apps.accounts.permissions import HasModulePermission
 
+
+def _get_university_name():
+    from apps.academic.models import University
+    uni = University.objects.filter(is_active=True).first()
+    return uni.name if uni else 'Université Virtuelle Hybride'
+
+
 def _recompute_invoice_totals(invoice: Invoice) -> None:
     """
     Recalcule total_amount à partir des items si présents.
@@ -208,84 +215,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         """
         Télécharge la facture en PDF.
         """
+        from apps.documents.pdf_service import generate_facture
+
         invoice = self.get_object()
         items = list(invoice.items.all())
 
-        import io
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.units import cm
-        from reportlab.pdfgen import canvas
+        pdf_buf = generate_facture(invoice, items, _get_university_name())
 
-        buf = io.BytesIO()
-        c = canvas.Canvas(buf, pagesize=A4)
-        w, h = A4
-
-        c.setFont('Helvetica-Bold', 16)
-        c.drawString(2*cm, h - 2.5*cm, 'FACTURE')
-        c.setFont('Helvetica', 10)
-        c.drawRightString(w - 2*cm, h - 2.5*cm, invoice.invoice_number)
-
-        y = h - 3.5*cm
-        c.setFont('Helvetica', 9)
-        c.drawString(2*cm, y, f"Étudiant: {invoice.student.user.get_full_name()} ({invoice.student.student_id})")
-        y -= 12
-        c.drawString(2*cm, y, f"Année académique: {invoice.academic_year.label}")
-        y -= 12
-        if invoice.due_date:
-            c.drawString(2*cm, y, f"Échéance: {invoice.due_date.strftime('%d/%m/%Y')}")
-            y -= 12
-        c.drawString(2*cm, y, f"Statut: {invoice.get_status_display()}")
-        y -= 18
-
-        # Table header
-        c.setFont('Helvetica-Bold', 9)
-        c.drawString(2*cm, y, "Libellé")
-        c.drawRightString(w - 3*cm, y, "Montant")
-        y -= 10
-        c.line(2*cm, y, w - 2*cm, y)
-        y -= 14
-
-        c.setFont('Helvetica', 9)
-        if not items:
-            c.drawString(2*cm, y, "— (Aucune ligne) —")
-            y -= 14
-        else:
-            for it in items:
-                if y < 4*cm:
-                    c.showPage()
-                    y = h - 2.5*cm
-                    c.setFont('Helvetica-Bold', 9)
-                    c.drawString(2*cm, y, "Libellé")
-                    c.drawRightString(w - 3*cm, y, "Montant")
-                    y -= 10
-                    c.line(2*cm, y, w - 2*cm, y)
-                    y -= 14
-                    c.setFont('Helvetica', 9)
-                c.drawString(2*cm, y, (it.label or '')[:70])
-                c.drawRightString(w - 3*cm, y, f"{it.amount} FCFA")
-                y -= 14
-
-        y -= 8
-        c.line(2*cm, y, w - 2*cm, y)
-        y -= 18
-
-        # Totals
-        c.setFont('Helvetica-Bold', 10)
-        c.drawRightString(w - 3*cm, y, f"Total: {invoice.total_amount} FCFA")
-        y -= 14
-        c.setFont('Helvetica', 10)
-        c.drawRightString(w - 3*cm, y, f"Payé: {invoice.paid_amount} FCFA")
-        y -= 14
-        c.drawRightString(w - 3*cm, y, f"Remise: {invoice.discount_amount} FCFA")
-        y -= 14
-        c.setFont('Helvetica-Bold', 11)
-        c.drawRightString(w - 3*cm, y, f"Reste: {invoice.remaining_amount} FCFA")
-
-        c.showPage()
-        c.save()
-        buf.seek(0)
-
-        resp = HttpResponse(buf.getvalue(), content_type='application/pdf')
+        resp = HttpResponse(pdf_buf.read(), content_type='application/pdf')
         resp['Content-Disposition'] = f'attachment; filename="{invoice.invoice_number}.pdf"'
         return resp
 
@@ -476,64 +413,14 @@ class PaymentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='receipt_pdf')
     def receipt_pdf(self, request, pk=None):
         """Télécharger un reçu (quittance) PDF pour un paiement."""
+        from apps.documents.pdf_service import generate_recu_paiement
+
         payment = self.get_object()
         invoice = payment.invoice
-        student = invoice.student
 
-        import io
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.units import cm
-        from reportlab.pdfgen import canvas
+        pdf_buf = generate_recu_paiement(payment, invoice, _get_university_name())
 
-        buf = io.BytesIO()
-        c = canvas.Canvas(buf, pagesize=A4)
-        w, h = A4
-
-        c.setFont('Helvetica-Bold', 16)
-        c.drawString(2*cm, h - 2.5*cm, 'REÇU DE PAIEMENT')
-        c.setFont('Helvetica', 10)
-        c.drawRightString(w - 2*cm, h - 2.5*cm, payment.receipt_number or '')
-
-        y = h - 3.6*cm
-        c.setFont('Helvetica', 9)
-        c.drawString(2*cm, y, f"Facture: {invoice.invoice_number}")
-        y -= 12
-        c.drawString(2*cm, y, f"Étudiant: {student.user.get_full_name()} ({student.student_id})")
-        y -= 12
-        c.drawString(2*cm, y, f"Année académique: {invoice.academic_year.label}")
-        y -= 12
-        c.drawString(2*cm, y, f"Date: {(payment.paid_at or timezone.now()).strftime('%d/%m/%Y %H:%M')}")
-        y -= 18
-
-        c.setFont('Helvetica-Bold', 10)
-        c.drawString(2*cm, y, "Détails du paiement")
-        y -= 14
-        c.setFont('Helvetica', 10)
-        c.drawString(2*cm, y, f"Montant: {payment.amount} FCFA")
-        y -= 12
-        c.drawString(2*cm, y, f"Mode: {payment.get_method_display()}")
-        y -= 12
-        c.drawString(2*cm, y, f"Statut: {payment.get_status_display()}")
-        y -= 20
-
-        c.setFont('Helvetica-Bold', 10)
-        c.drawString(2*cm, y, "Récapitulatif facture")
-        y -= 14
-        c.setFont('Helvetica', 10)
-        c.drawString(2*cm, y, f"Total: {invoice.total_amount} FCFA")
-        y -= 12
-        c.drawString(2*cm, y, f"Payé: {invoice.paid_amount} FCFA")
-        y -= 12
-        c.drawString(2*cm, y, f"Remise: {invoice.discount_amount} FCFA")
-        y -= 12
-        c.setFont('Helvetica-Bold', 11)
-        c.drawString(2*cm, y, f"Reste: {invoice.remaining_amount} FCFA")
-
-        c.showPage()
-        c.save()
-        buf.seek(0)
-
-        resp = HttpResponse(buf.getvalue(), content_type='application/pdf')
+        resp = HttpResponse(pdf_buf.read(), content_type='application/pdf')
         filename = f"{payment.receipt_number or 'recu'}.pdf"
         resp['Content-Disposition'] = f'attachment; filename="{filename}"'
         return resp

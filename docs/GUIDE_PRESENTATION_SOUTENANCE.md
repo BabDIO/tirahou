@@ -112,14 +112,14 @@ Système ERP universitaire complet couvrant tout le cycle de vie étudiant, adap
 - Besoin de digitalisation
 
 **Statistiques à citer** :
-- "Plusieurs centaines de milliers d'étudiants dans les universités ivoiriennes"
+- "Plusieurs centaines de milliers d'étudiants dans les universités maliennes"
 - "Processus encore largement manuels : Excel, Word, papier"
 - "Absence d'interconnexion entre services (scolarité, finance, pédagogie)"
 
 **Ce que vous dites** :
 > "Le contexte de ce travail est celui de la transformation numérique de l'enseignement 
 > supérieur en Afrique. Avec l'adoption du système LMD et la croissance des effectifs, 
-> les universités ivoiriennes font face à une fragmentation des outils de gestion. 
+> les universités maliennes font face à une fragmentation des outils de gestion. 
 > Les inscriptions se font sur Excel, les notes sur Word, la comptabilité sur des logiciels 
 > déconnectés. Cette situation crée des inefficacités majeures."
 
@@ -130,7 +130,7 @@ Système ERP universitaire complet couvrant tout le cycle de vie étudiant, adap
 
 **Question centrale** :
 > "Comment concevoir un système d'information universitaire intégré, couvrant tout le cycle 
-> de vie étudiant, adapté au système LMD et aux spécificités du contexte ivoirien ?"
+> de vie étudiant, adapté au système LMD et aux spécificités du contexte malien ?"
 
 **Sous-questions** :
 1. Comment modéliser la structure académique LMD de manière générique ?
@@ -184,7 +184,7 @@ du cycle de vie étudiant, de la candidature à la diplomation.
 
 **Lacunes identifiées** :
 - ❌ Absence de gestion native du système LMD francophone
-- ❌ Inadaptation à la réglementation ivoirienne (FCFA, calendrier)
+- ❌ Inadaptation à la réglementation malienne (FCFA, calendrier)
 - ❌ Coûts de licence ou complexité de déploiement
 - ❌ Interfaces non localisées pour le contexte africain
 
@@ -593,7 +593,7 @@ Risque = {
 
 
 **Contributions sociales** :
-- Outil adapté au contexte ivoirien (FCFA, LMD, réglementation)
+- Outil adapté au contexte malien (FCFA, LMD, réglementation)
 - Potentiel d'adoption par des établissements locaux
 - Réduction des inégalités d'accès à l'information
 - Modernisation de l'administration universitaire
@@ -603,7 +603,7 @@ Risque = {
 > modélisation générique du LMD et une architecture modulaire évolutive. Sur le plan 
 > technique, j'ai livré une solution complète, documentée, testée et open source. Sur le 
 > plan social, TIRAHOU peut contribuer à la transformation numérique de l'enseignement 
-> supérieur en Côte d'Ivoire."
+> supérieur au Mali."
 
 ---
 
@@ -670,13 +670,13 @@ Risque = {
 
 ✅ Validation fonctionnelle et technique complète
 ✅ Analytics prédictif pour la détection du décrochage
-✅ Solution adaptée au système LMD et au contexte ivoirien
+✅ Solution adaptée au système LMD et au contexte malien
 
 **Message de clôture** :
 > "TIRAHOU démontre qu'il est possible de développer localement des solutions 
 > technologiques de niveau international, adaptées aux besoins réels de nos 
 > établissements. Ce projet peut servir de base pour la transformation numérique 
-> de l'enseignement supérieur en Côte d'Ivoire."
+> de l'enseignement supérieur au Mali."
 
 **Ce que vous dites** :
 > "En conclusion, TIRAHOU répond à la problématique posée : concevoir un système 

@@ -1,5 +1,5 @@
 """
-Tests unitaires SIGUVH — Modules critiques
+Tests unitaires TIRAHOU — Modules critiques
 Couvre: Auth, Étudiants, Programmes, Finance, Notes
 """
 from decimal import Decimal
@@ -152,7 +152,7 @@ class StudentTests(APITestCase):
             user=self.student_user,
             student_id='ETU-TEST-001',
             gender='M',
-            nationality='Ivoirienne',
+            nationality='Malienne',
             current_program=self.data['prog'],
             current_year=self.data['year'],
             status='inscrit',
@@ -195,7 +195,7 @@ class FinanceTests(APITestCase):
         self.student_user = create_student_user()
         self.student = Student.objects.create(
             user=self.student_user, student_id='ETU-FIN-001',
-            gender='F', nationality='Ivoirienne',
+            gender='F', nationality='Malienne',
         )
         self.fee_type = FeeType.objects.create(
             name='Frais inscription', category='inscription',
@@ -255,7 +255,7 @@ class EvaluationTests(APITestCase):
         self.student_user = create_student_user()
         self.student = Student.objects.create(
             user=self.student_user, student_id='ETU-EVAL-001',
-            gender='M', nationality='Ivoirienne',
+            gender='M', nationality='Malienne',
         )
         self.session = ExamSession.objects.create(
             semester=self.data['sem'],

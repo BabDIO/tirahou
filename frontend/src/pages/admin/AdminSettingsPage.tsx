@@ -347,7 +347,7 @@ export default function AdminSettingsPage() {
                     { label: 'Backend', value: 'Django 5.2 + DRF' },
                     { label: 'Frontend', value: 'React 19 + TypeScript' },
                     { label: 'Base de données', value: 'PostgreSQL 16' },
-                    { label: 'Fuseau horaire', value: 'Africa/Abidjan (GMT+0)' },
+                    { label: 'Fuseau horaire', value: 'Africa/Bamako (GMT+0)' },
                     { label: 'Langue', value: 'Français (fr-FR)' },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">

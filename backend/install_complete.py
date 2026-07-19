@@ -86,7 +86,7 @@ def create_superuser_if_needed():
     if not User.objects.filter(is_superuser=True).exists():
         print("👤 Création d'un superutilisateur...")
         run_command(
-            'python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\'admin\', \'admin@siguvh.edu\', \'admin123\') if not User.objects.filter(username=\'admin\').exists() else None"',
+            'python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\'admin\', \'admin@tirahou.edu\', \'admin123\') if not User.objects.filter(username=\'admin\').exists() else None"',
             "Création superutilisateur"
         )
 

@@ -13,6 +13,12 @@ from .serializers import (
 from apps.accounts.permissions import HasModulePermission
 
 
+def _get_university_name():
+    from apps.academic.models import University
+    uni = University.objects.filter(is_active=True).first()
+    return uni.name if uni else 'Université Virtuelle Hybride'
+
+
 class UEResultViewSet(viewsets.ModelViewSet):
     queryset = UEResult.objects.all().select_related('student', 'ue', 'exam_session')
     serializer_class = UEResultSerializer
@@ -184,9 +190,12 @@ class SemesterResultViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='pv')
     def pv(self, request):
         """
-        Génère un PV de délibération simple (PDF).
+        Génère un PV de délibération (PDF).
         Filtres optionnels via query params: semester, exam_session.
         """
+        from apps.documents.pdf_service import generate_pv_deliberation
+        from apps.programs.models import Semester
+
         semester_id = request.query_params.get('semester')
         exam_session_id = request.query_params.get('exam_session')
         if exam_session_id == 'current':
@@ -203,75 +212,14 @@ class SemesterResultViewSet(viewsets.ModelViewSet):
 
         qs = qs.order_by('student__student_id')[:500]
 
-        # Génération PDF minimale (ReportLab)
-        import io
-        from reportlab.lib.pagesizes import A4
-        from reportlab.pdfgen import canvas
+        semester = Semester.objects.filter(id=semester_id).first() if semester_id else None
+        exam_session = ExamSession.objects.select_related('academic_year').filter(id=exam_session_id).first() if exam_session_id else None
+        semester_label = semester.label if semester else ''
+        session_label = f"{exam_session.get_session_type_display()} ({exam_session.academic_year.label})" if exam_session else ''
 
-        buf = io.BytesIO()
-        c = canvas.Canvas(buf, pagesize=A4)
-        width, height = A4
+        pdf_buf = generate_pv_deliberation(qs, semester_label, session_label, _get_university_name())
 
-        title = "PROCÈS-VERBAL DE DÉLIBÉRATION"
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(50, height - 60, title)
-
-        c.setFont("Helvetica", 9)
-        meta_y = height - 80
-        if semester_id:
-            c.drawString(50, meta_y, f"Semestre: {semester_id}")
-            meta_y -= 12
-        if exam_session_id:
-            c.drawString(50, meta_y, f"Session: {exam_session_id}")
-            meta_y -= 12
-        c.drawString(50, meta_y, f"Généré le: {timezone.now().strftime('%d/%m/%Y %H:%M')}")
-
-        y = meta_y - 30
-        c.setFont("Helvetica-Bold", 9)
-        c.drawString(50, y, "Matricule")
-        c.drawString(140, y, "Nom")
-        c.drawString(360, y, "Moyenne")
-        c.drawString(430, y, "Crédits")
-        c.drawString(500, y, "Décision")
-        y -= 12
-        c.setLineWidth(0.5)
-        c.line(50, y, width - 50, y)
-        y -= 12
-
-        c.setFont("Helvetica", 9)
-        for r in qs:
-            if y < 80:
-                c.showPage()
-                y = height - 60
-                c.setFont("Helvetica-Bold", 9)
-                c.drawString(50, y, "Matricule")
-                c.drawString(140, y, "Nom")
-                c.drawString(360, y, "Moyenne")
-                c.drawString(430, y, "Crédits")
-                c.drawString(500, y, "Décision")
-                y -= 12
-                c.line(50, y, width - 50, y)
-                y -= 12
-                c.setFont("Helvetica", 9)
-
-            student = r.student
-            full_name = getattr(student, 'user', None).get_full_name() if getattr(student, 'user', None) else str(student)
-            avg = f"{float(r.average):.2f}" if r.average is not None else "—"
-            credits = f"{r.credits_obtained}/{r.total_credits}" if r.total_credits is not None else "—"
-            decision = (r.decision or "—").upper()
-
-            c.drawString(50, y, str(student.student_id))
-            c.drawString(140, y, (full_name or "")[:35])
-            c.drawRightString(400, y, avg)
-            c.drawRightString(480, y, credits)
-            c.drawString(500, y, decision[:12])
-            y -= 14
-
-        c.showPage()
-        c.save()
-        buf.seek(0)
-
-        resp = HttpResponse(buf.getvalue(), content_type='application/pdf')
+        resp = HttpResponse(pdf_buf.read(), content_type='application/pdf')
         resp['Content-Disposition'] = 'attachment; filename="pv_deliberation.pdf"'
         return resp
 

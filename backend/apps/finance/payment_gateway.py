@@ -1,8 +1,8 @@
 """
 Intégration paiement mobile money (8.12 / E7).
 
-Adaptateur CinetPay (agrégateur utilisé en Côte d'Ivoire pour Orange Money,
-MTN Mobile Money, Moov Money, Wave). Aucune fausse simulation : sans
+Adaptateur CinetPay (agrégateur utilisé au Mali pour Orange Money,
+Moov Money, Wave). Aucune fausse simulation : sans
 `CINETPAY_API_KEY`/`CINETPAY_SITE_ID` configurés, `is_configured()` renvoie
 False et l'appelant doit proposer un paiement en caisse à la place — le
 code de l'appel API réel est prêt, il ne manque que les identifiants

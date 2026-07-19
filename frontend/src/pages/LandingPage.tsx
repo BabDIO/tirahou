@@ -372,7 +372,7 @@ export default function LandingPage() {
               <span>·</span>
               <span>Django 5.2 + React 19</span>
               <span>·</span>
-              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Côte d'Ivoire</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Mali</span>
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ class Student(BaseModel):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     birth_date = models.DateField(null=True, blank=True)
     birth_place = models.CharField(max_length=100, blank=True)
-    nationality = models.CharField(max_length=100, default='Ivoirienne')
+    nationality = models.CharField(max_length=100, default='Malienne')
     address = models.TextField(blank=True)
     emergency_contact_name = models.CharField(max_length=200, blank=True)
     emergency_contact_phone = models.CharField(max_length=20, blank=True)
@@ -135,7 +135,7 @@ class ParentGuardian(BaseModel):
     phone_secondary = models.CharField(max_length=20, blank=True, verbose_name="Téléphone secondaire")
     address = models.TextField(blank=True, verbose_name="Adresse")
     city = models.CharField(max_length=100, blank=True, verbose_name="Ville")
-    country = models.CharField(max_length=100, default="Côte d'Ivoire", verbose_name="Pays")
+    country = models.CharField(max_length=100, default="Mali", verbose_name="Pays")
     
     # Informations professionnelles
     profession = models.CharField(max_length=100, blank=True, verbose_name="Profession")
