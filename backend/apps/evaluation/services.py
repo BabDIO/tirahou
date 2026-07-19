@@ -246,7 +246,7 @@ class ResultService:
                     status__in=['validee', 'publiee']
                 ).select_related('ec')
                 transcript['semesters'].append({
-                    'semester': sr.semester.name,
+                    'semester': sr.semester.label,
                     'average': float(sr.average) if sr.average else 0,
                     'gpa': float(sr.gpa) if sr.gpa else 0,
                     'credits_obtained': sr.credits_obtained,

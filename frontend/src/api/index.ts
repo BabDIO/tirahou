@@ -5,6 +5,7 @@ import type {
   Application, AdminEnrollment, Invoice, Payment,
   Grade, SemesterResult, CourseSpace, ScheduledSession,
   Notification, DashboardData, AcademicYear, Faculty, Department,
+  ChatConversation, ChatMessage,
 } from '../types'
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -473,4 +474,16 @@ export const libraryApi = {
     api.post(`/reading-lists/${listId}/add_document/`, { document_id: documentId }),
   removeFromReadingList: (listId: string, documentId: string) =>
     api.post(`/reading-lists/${listId}/remove_document/`, { document_id: documentId }),
+}
+
+// ── Assistant IA (chatbot) ───────────────────────────────────────────────────
+export const chatbotApi = {
+  getConversations: () => api.get<PaginatedResponse<ChatConversation>>('/chatbot/conversations/'),
+  createConversation: () => api.post<ChatConversation>('/chatbot/conversations/', {}),
+  deleteConversation: (id: string) => api.delete(`/chatbot/conversations/${id}/`),
+  sendMessage: (conversationId: string, content: string) =>
+    api.post<{ user_message: ChatMessage; assistant_message: ChatMessage }>(
+      `/chatbot/conversations/${conversationId}/messages/`,
+      { content }
+    ),
 }

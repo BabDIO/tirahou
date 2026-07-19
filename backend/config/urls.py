@@ -83,6 +83,9 @@ urlpatterns = [
     # Marketplace de cours
     path(API_V1 + 'marketplace/', include('apps.marketplace.urls')),
 
+    # Assistant IA (chatbot)
+    path(API_V1 + 'chatbot/', include('apps.chatbot.urls')),
+
     # API Utilitaires (health, info, stats)
     path(API_V1, include('apps.api.urls')),
 

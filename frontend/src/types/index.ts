@@ -762,6 +762,24 @@ export interface LibraryDocument {
   created_at: string
 }
 
+// ── Assistant IA (chatbot) ───────────────────────────────────────────────────
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  tools_used: string[]
+  created_at: string
+}
+
+export interface ChatConversation {
+  id: string
+  title: string
+  created_at: string
+  updated_at: string
+  messages: ChatMessage[]
+  last_message: string
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 export interface PaginatedResponse<T> {
   count: number

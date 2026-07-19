@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Avatar, ThemeToggle } from '../ui'
 import GlobalSearch from '../search/GlobalSearch'
+import ChatWidget from '../chatbot/ChatWidget'
 import { useQuery } from '@tanstack/react-query'
 import { communicationApi } from '../../api'
 import { Link } from 'react-router-dom'
@@ -535,6 +536,7 @@ export default function MainLayout() {
         </main>
       </div>
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+      <ChatWidget />
     </div>
   )
 }
