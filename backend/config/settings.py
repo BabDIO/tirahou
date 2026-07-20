@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'apps.core.middleware.PostgresRLSTransactionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -172,7 +173,7 @@ _LOGIN_THROTTLE = '120/minute' if DEBUG else '5/minute'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'apps.accounts.authentication.RLSAwareJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -374,6 +375,12 @@ PLAGIARISM_API_URL = os.environ.get('PLAGIARISM_API_URL', 'https://api.compilati
 
 # Assistant IA — Claude / Anthropic (apps/chatbot/claude_service.py)
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+
+# Poids du score prédictif de réussite (apps/analytics_app/advanced_analytics.py).
+# Laisser vide pour utiliser les poids par défaut (DEFAULT_PREDICTION_WEIGHTS) ;
+# renseigner après une calibration (`python manage.py calibrate_predictions`)
+# validée sur des données réelles de production.
+PREDICTION_WEIGHTS = {}
 
 # SSO / Annuaire externe — LDAP (nécessite `pip install django-auth-ldap`)
 LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI', '')
