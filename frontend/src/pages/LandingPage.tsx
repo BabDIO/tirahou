@@ -45,24 +45,24 @@ const TECH_STACK = [
 ]
 
 const ROLES = [
-  { name: 'Super Admin',        desc: 'Accès total au système',       color: 'bg-red-100 text-red-700 border-red-200' },
-  { name: 'Scolarité',          desc: 'Inscriptions & documents',     color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  { name: 'Finance',            desc: 'Paiements & facturation',      color: 'bg-green-100 text-green-700 border-green-200' },
-  { name: 'Resp. Pédagogique',  desc: 'Programmes & résultats',      color: 'bg-violet-100 text-violet-700 border-violet-200' },
-  { name: 'Enseignant',         desc: 'Cours & évaluations',          color: 'bg-cyan-100 text-cyan-700 border-cyan-200' },
-  { name: 'Étudiant',           desc: 'Espace personnel complet',     color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  { name: 'Bibliothécaire',     desc: 'Fonds documentaire',           color: 'bg-amber-100 text-amber-700 border-amber-200' },
-  { name: 'Tuteur',             desc: 'Encadrements & mémoires',     color: 'bg-teal-100 text-teal-700 border-teal-200' },
+  { name: 'Super Admin',        desc: 'Accès total au système',       color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900' },
+  { name: 'Scolarité',          desc: 'Inscriptions & documents',     color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900' },
+  { name: 'Finance',            desc: 'Paiements & facturation',      color: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-900' },
+  { name: 'Resp. Pédagogique',  desc: 'Programmes & résultats',      color: 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-900' },
+  { name: 'Enseignant',         desc: 'Cours & évaluations',          color: 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-900' },
+  { name: 'Étudiant',           desc: 'Espace personnel complet',     color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900' },
+  { name: 'Bibliothécaire',     desc: 'Fonds documentaire',           color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900' },
+  { name: 'Tuteur',             desc: 'Encadrements & mémoires',     color: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-900' },
 ]
 
 export default function LandingPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 font-sans overflow-x-hidden">
 
       {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-700 shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -130,7 +130,7 @@ export default function LandingPage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <button onClick={() => navigate('/login')}
-                className="flex items-center gap-2.5 bg-white text-gray-900 dark:text-gray-50 font-bold px-8 py-4 rounded-2xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/10 active:scale-95 text-sm w-full sm:w-auto justify-center">
+                className="flex items-center gap-2.5 bg-white text-gray-900 font-bold px-8 py-4 rounded-2xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/10 active:scale-95 text-sm w-full sm:w-auto justify-center">
                 <Zap className="w-4 h-4 text-blue-600" />
                 Accéder à TIRAHOU
                 <ArrowRight className="w-4 h-4" />
@@ -163,7 +163,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Modules rapides ── */}
-      <section id="modules" className="py-16 bg-white">
+      <section id="modules" className="py-16 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-8">
             19 modules intégrés — couverture 100% du cycle de vie étudiant
@@ -171,8 +171,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {MODULES_GRID.map(({ icon: Icon, label, color }) => (
               <div key={label}
-                className="flex flex-col items-center gap-2.5 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-white hover:shadow-md transition-all cursor-default group">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-200">
+                className="flex flex-col items-center gap-2.5 p-4 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all cursor-default group">
+                <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-200">
                   <Icon className={`w-5 h-5 ${color}`} />
                 </div>
                 <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 text-center leading-tight">{label}</span>
@@ -183,10 +183,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ── */}
-      <section id="fonctionnalités" className="py-24 bg-gray-50 dark:bg-gray-800">
+      <section id="fonctionnalités" className="py-24 bg-gray-50 dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Fonctionnalités</span>
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Fonctionnalités</span>
             <h2 className="text-4xl font-black text-gray-900 dark:text-gray-50 mt-3 mb-4 tracking-tight">
               Tout ce dont votre université a besoin
             </h2>
@@ -198,9 +198,9 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {FEATURES.map(({ icon: Icon, title, desc, bg, iconColor }) => (
               <div key={title}
-                className="bg-white p-6 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-blue-100 hover:shadow-xl transition-all group cursor-default">
-                <div className={`w-12 h-12 ${bg} rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200`}>
-                  <Icon className={`w-6 h-6 ${iconColor}`} />
+                className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 hover:border-blue-100 dark:hover:border-blue-900 hover:shadow-xl transition-all group cursor-default">
+                <div className={`w-12 h-12 ${bg} dark:bg-white/10 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200`}>
+                  <Icon className={`w-6 h-6 ${iconColor} dark:brightness-125`} />
                 </div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-50 mb-2 text-sm">{title}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{desc}</p>
@@ -211,11 +211,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── Rôles ── */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Gestion des accès</span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Gestion des accès</span>
               <h2 className="text-4xl font-black text-gray-900 dark:text-gray-50 mt-3 mb-4 tracking-tight">
                 Un espace dédié<br />pour chaque acteur
               </h2>
@@ -231,8 +231,8 @@ export default function LandingPage() {
                   'Journal d\'audit de toutes les actions',
                 ].map(item => (
                   <div key={item} className="flex items-center gap-3">
-                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    <div className="w-5 h-5 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{item}</span>
                   </div>
@@ -320,10 +320,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA Final ── */}
-      <section className="py-24 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-violet-50 pointer-events-none" />
+      <section className="py-24 bg-white dark:bg-slate-950 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-blue-950/30 dark:via-slate-950 dark:to-violet-950/30 pointer-events-none" />
         <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-4 py-1.5 text-xs font-bold mb-6 border border-blue-200">
+          <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 rounded-full px-4 py-1.5 text-xs font-bold mb-6 border border-blue-200 dark:border-blue-900">
             <Star className="w-3.5 h-3.5" /> Projet de soutenance — Master Informatique · 2024-2025
           </div>
           <h2 className="text-5xl font-black text-gray-900 dark:text-gray-50 mb-5 tracking-tight">
@@ -343,7 +343,7 @@ export default function LandingPage() {
               Accéder à TIRAHOU
               <ArrowRight className="w-5 h-5" />
             </button>
-            <button onClick={() => window.open('http://localhost:8000/api/docs/', '_blank')}
+            <button onClick={() => window.open(`${(import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace(/\/api\/v1\/?$/, '')}/api/docs/`, '_blank')}
               className="flex items-center gap-2 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-bold px-8 py-4 rounded-2xl transition-all text-base w-full sm:w-auto justify-center">
               <Globe className="w-4 h-4" /> API Swagger
             </button>
