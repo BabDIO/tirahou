@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
+import { useRouter } from 'expo-router'
 
 export const colors = {
   primary: '#2563eb',
@@ -86,6 +87,17 @@ export function Badge({ label, tone = 'default' }: { label: string; tone?: 'defa
   )
 }
 
+export function MenuLink({ href, icon, label }: { href: string; icon: string; label: string }) {
+  const router = useRouter()
+  return (
+    <Pressable onPress={() => router.push(href as never)} style={({ pressed }) => [styles.menuLink, pressed && { opacity: 0.7 }]}>
+      <Text style={styles.menuLinkIcon}>{icon}</Text>
+      <Text style={styles.menuLinkLabel}>{label}</Text>
+      <Text style={styles.menuLinkChevron}>›</Text>
+    </Pressable>
+  )
+}
+
 export function StatTile({ label, value, tone = 'default' }: { label: string; value: string | number; tone?: 'default' | 'success' | 'danger' | 'warning' }) {
   const toneColor = { default: colors.primary, success: colors.success, danger: colors.danger, warning: colors.warning }[tone]
   return (
@@ -128,4 +140,12 @@ const styles = StyleSheet.create({
   statTile: { flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center', gap: 4, minWidth: '45%' },
   statValue: { fontSize: 22, fontWeight: '800' },
   statLabel: { fontSize: 12, color: colors.textMuted, textAlign: 'center' },
+  menuLink: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.card, borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: colors.border, marginBottom: 10,
+  },
+  menuLinkIcon: { fontSize: 18 },
+  menuLinkLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
+  menuLinkChevron: { fontSize: 18, color: colors.textMuted },
 })

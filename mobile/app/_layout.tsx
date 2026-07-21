@@ -33,6 +33,9 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="(student)" />
             <Stack.Screen name="(teacher)" />
+            <Stack.Screen name="notifications" options={{ presentation: 'card' }} />
+            <Stack.Screen name="library" options={{ presentation: 'card' }} />
+            <Stack.Screen name="finance" options={{ presentation: 'card' }} />
           </Stack>
         )}
       </SafeAreaProvider>

@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAuthStore } from '../../store/authStore'
-import { Button, Card, colors } from '../../components/ui'
+import { Button, Card, MenuLink, SectionTitle, colors } from '../../components/ui'
 
 export default function TeacherProfile() {
   const router = useRouter()
@@ -26,6 +26,11 @@ export default function TeacherProfile() {
         <Text style={styles.roleLabel}>Enseignant</Text>
       </Card>
 
+      <SectionTitle>Services</SectionTitle>
+      <MenuLink href="/notifications" icon="🔔" label="Notifications" />
+      <MenuLink href="/library" icon="📚" label="Bibliothèque" />
+
+      <View style={{ height: 8 }} />
       <Button title="Se déconnecter" onPress={onLogout} variant="danger" />
     </ScrollView>
   )
