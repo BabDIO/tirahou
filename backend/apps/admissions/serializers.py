@@ -20,7 +20,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = '__all__'
-        read_only_fields = ['application_number', 'submitted_at']
+        read_only_fields = ['application_number', 'submitted_at', 'applicant']
 
     def get_applicant_name(self, obj):
         return obj.applicant.get_full_name()

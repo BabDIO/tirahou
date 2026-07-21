@@ -20,6 +20,7 @@ import TeachersPage from './pages/teachers/TeachersPage'
 import ProgramsPage from './pages/programs/ProgramsPage'
 import AcademicPage from './pages/academic/AcademicPage'
 import AdmissionsPage from './pages/admissions/AdmissionsPage'
+import MyApplicationsPage from './pages/admissions/MyApplicationsPage'
 import EnrollmentPage from './pages/enrollment/EnrollmentPage'
 import FinancePage from './pages/finance/FinancePage'
 import DocumentsPage from './pages/documents/DocumentsPage'
@@ -126,6 +127,11 @@ export default function App() {
               {/* Bibliothèque — tous */}
               <Route element={<ProtectedRoute allowedRoles={[...ALL]} />}>
                 <Route path="/library" element={<LibraryPage />} />
+              </Route>
+
+              {/* Candidatures — tous (n'importe quel compte peut déposer une candidature) */}
+              <Route element={<ProtectedRoute allowedRoles={[...ALL]} />}>
+                <Route path="/my-applications" element={<MyApplicationsPage />} />
               </Route>
 
               {/* Marketplace de cours — tous */}

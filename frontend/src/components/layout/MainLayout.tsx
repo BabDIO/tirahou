@@ -184,6 +184,7 @@ const ETUDIANT_NAV = [
   {
     group: 'Scolarité',
     items: [
+      { to: '/my-applications', icon: ClipboardList, label: 'Mes Candidatures', color: 'text-pink-400' },
       { to: '/my-enrollment', icon: GraduationCap, label: 'Mon Inscription', color: 'text-violet-400' },
       { to: '/my-grades', icon: Award, label: 'Mes Notes', color: 'text-yellow-400' },
       { to: '/my-documents', icon: FileText, label: 'Mes Documents', color: 'text-indigo-400' },
@@ -284,6 +285,7 @@ const breadcrumbMap: Record<string, string> = {
   '/attendance': 'Présences', '/scheduling': 'Emploi du Temps', '/analytics': 'Analytics',
   '/communication': 'Communication', '/notifications': 'Notifications',
   '/internships': 'Stages & Mémoires', '/library': 'Bibliothèque Numérique',
+  '/my-applications': 'Mes Candidatures',
   '/my-enrollment': 'Mon Inscription', '/my-grades': 'Mes Notes',
   '/my-documents': 'Mes Documents', '/my-finance': 'Mes Paiements',
   '/my-courses': 'Mes Cours', '/my-grades-teacher': 'Notes & Évaluations',

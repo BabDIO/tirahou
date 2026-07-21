@@ -5,6 +5,17 @@ from django.utils import timezone
 from .models import Application, ApplicationDocument, AdmissionDecision
 from .serializers import ApplicationSerializer, ApplicationDocumentSerializer, AdmissionDecisionSerializer
 
+# Rôles habilités à traiter les candidatures de tous les postulants (mêmes
+# rôles que ceux autorisés côté frontend sur la page /admissions). Tout
+# autre utilisateur authentifié ne peut voir/agir que sur ses propres
+# candidatures — nécessaire puisque n'importe quel compte peut légitimement
+# déposer une candidature (voir ApplicationViewSet.perform_create).
+ADMISSIONS_STAFF_ROLES = ['super_admin', 'admin_institutionnel', 'admin_scolarite']
+
+
+def _is_admissions_staff(user):
+    return user.is_superuser or user.roles.filter(name__in=ADMISSIONS_STAFF_ROLES).exists()
+
 
 class ApplicationViewSet(viewsets.ModelViewSet):
     queryset = Application.objects.all().select_related('applicant', 'program', 'academic_year').order_by('id')
@@ -13,12 +24,22 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'program', 'academic_year']
     search_fields = ['application_number', 'applicant__first_name', 'applicant__last_name']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Application.objects.none()
+        qs = Application.objects.all().select_related('applicant', 'program', 'academic_year')
+        if _is_admissions_staff(self.request.user):
+            return qs.order_by('id')
+        return qs.filter(applicant=self.request.user).order_by('id')
+
     def perform_create(self, serializer):
         serializer.save(applicant=self.request.user)
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
         app = self.get_object()
+        if app.applicant != request.user:
+            return Response({'detail': "Vous ne pouvez soumettre que votre propre candidature."}, status=status.HTTP_403_FORBIDDEN)
         if app.status != 'brouillon':
             return Response({'detail': 'Candidature déjà soumise.'}, status=status.HTTP_400_BAD_REQUEST)
         app.status = 'soumise'
@@ -28,6 +49,8 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def start_review(self, request, pk=None):
+        if not _is_admissions_staff(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         app = self.get_object()
         app.status = 'en_instruction'
         app.reviewed_by = request.user
@@ -36,6 +59,8 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def decide(self, request, pk=None):
+        if not _is_admissions_staff(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         app = self.get_object()
         serializer = AdmissionDecisionSerializer(data=request.data)
         if serializer.is_valid():
@@ -61,6 +86,8 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         Les candidats peuvent ensuite consulter leur résultat via
         `check_admission_result` (endpoint public par numéro de dossier).
         """
+        if not _is_admissions_staff(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         program_id = request.data.get('program')
         academic_year_id = request.data.get('academic_year')
         if not program_id or not academic_year_id:
@@ -137,8 +164,18 @@ class ApplicationDocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['application', 'doc_type', 'status']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ApplicationDocument.objects.none()
+        qs = ApplicationDocument.objects.all().select_related('application__applicant')
+        if _is_admissions_staff(self.request.user):
+            return qs.order_by('id')
+        return qs.filter(application__applicant=self.request.user).order_by('id')
+
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
+        if not _is_admissions_staff(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         doc = self.get_object()
         doc.status = 'valide'
         doc.verified_by = request.user
@@ -148,6 +185,8 @@ class ApplicationDocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
+        if not _is_admissions_staff(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         doc = self.get_object()
         doc.status = 'rejete'
         doc.rejection_reason = request.data.get('reason', '')

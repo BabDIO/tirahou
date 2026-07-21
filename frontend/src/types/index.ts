@@ -245,6 +245,9 @@ export interface Application {
   score: number | null
   rank: number | null
   last_diploma: string
+  last_diploma_year: number | null
+  last_institution: string
+  average_grade: number | null
   motivation_letter: string
   review_notes: string
 }
