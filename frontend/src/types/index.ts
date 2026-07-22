@@ -250,14 +250,17 @@ export interface Application {
   average_grade: number | null
   motivation_letter: string
   review_notes: string
+  documents: ApplicationDocument[]
 }
 
 export interface ApplicationDocument {
   id: string
   application: string
   doc_type: string
+  doc_type_display: string
   file: string
   status: string
+  status_display: string
   rejection_reason: string
 }
 

@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileText, Download, QrCode, Plus, Upload, Eye, Shield } from 'lucide-react'
 import { Card, Spinner, Badge, Empty, Modal, Alert } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
 import { getDocumentStatus } from '../../lib/statusHelpers'
 import { DOCUMENT_TYPES } from '../../lib/constants'
+import { documentsApi } from '../../api'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
+
+interface DocCategory { id: string; name: string }
 
 interface GeneratedDoc {
   id: string; doc_type: string; title: string; status: string
@@ -25,6 +28,11 @@ export default function MyDocumentsPage() {
   const [showRequest, setShowRequest] = useState(false)
   const [showQR, setShowQR] = useState<GeneratedDoc | null>(null)
   const [docType, setDocType] = useState('certificat_scolarite')
+  const [showUpload, setShowUpload] = useState(false)
+  const [uploadTitle, setUploadTitle] = useState('')
+  const [uploadCategory, setUploadCategory] = useState('')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: generatedData, isLoading: loadGen } = useQuery({
     queryKey: ['my-generated-docs'],
@@ -36,10 +44,32 @@ export default function MyDocumentsPage() {
     queryFn: () => api.get('/documents/student-documents/').then(r => r.data),
   })
 
+  const { data: categoriesData } = useQuery({
+    queryKey: ['document-categories'],
+    queryFn: () => documentsApi.getCategories().then(r => r.data),
+  })
+
   const requestMut = useMutation({
     mutationFn: (type: string) => api.post('/documents/generated-documents/', { doc_type: type }),
     onSuccess: () => { toast.success('Demande soumise — la scolarité va générer votre document'); setShowRequest(false); qc.invalidateQueries({ queryKey: ['my-generated-docs'] }) },
     onError: () => toast.error('Erreur lors de la demande'),
+  })
+
+  const resetUpload = () => {
+    setShowUpload(false); setUploadTitle(''); setUploadCategory(''); setUploadFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const uploadMut = useMutation({
+    mutationFn: () => {
+      const fd = new FormData()
+      fd.append('title', uploadTitle)
+      fd.append('category', uploadCategory)
+      fd.append('file', uploadFile as File)
+      return documentsApi.uploadStudentDocument(fd)
+    },
+    onSuccess: () => { toast.success('Pièce déposée — en attente de vérification'); resetUpload(); qc.invalidateQueries({ queryKey: ['my-student-docs'] }) },
+    onError: () => toast.error("Erreur lors du dépôt du document"),
   })
 
   const generatedDocs: GeneratedDoc[] = generatedData?.results ?? []
@@ -126,10 +156,17 @@ export default function MyDocumentsPage() {
 
       {/* Pièces justificatives */}
       {tab === 'uploaded' && (
-        loadUp ? <Spinner /> : !uploadedDocs.length ? (
-          <Empty icon={<Upload className="w-8 h-8" />} message="Aucune pièce déposée"
-            description="Déposez vos pièces justificatives pour compléter votre dossier." />
-        ) : (
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <button onClick={() => setShowUpload(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 text-sm font-semibold transition">
+              <Upload className="w-4 h-4" /> Déposer une pièce
+            </button>
+          </div>
+          {loadUp ? <Spinner /> : !uploadedDocs.length ? (
+            <Empty icon={<Upload className="w-8 h-8" />} message="Aucune pièce déposée"
+              description="Déposez vos pièces justificatives pour compléter votre dossier." />
+          ) : (
           <div className="space-y-3">
             {uploadedDocs.map(doc => (
               <Card key={doc.id} hover>
@@ -157,7 +194,8 @@ export default function MyDocumentsPage() {
               </Card>
             ))}
           </div>
-        )
+          )}
+        </div>
       )}
 
       {/* Modal demande */}
@@ -205,6 +243,40 @@ export default function MyDocumentsPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal dépôt de pièce */}
+      <Modal open={showUpload} onClose={resetUpload} title="Déposer une pièce justificative" size="sm">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Titre *</label>
+            <input className="input" placeholder="Ex : Acte de naissance" value={uploadTitle}
+              onChange={e => setUploadTitle(e.target.value)} />
+          </div>
+          <div>
+            <label className="label">Catégorie *</label>
+            <select className="input" value={uploadCategory} onChange={e => setUploadCategory(e.target.value)}>
+              <option value="">Sélectionnez...</option>
+              {(categoriesData?.results ?? categoriesData ?? []).map((c: DocCategory) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Fichier *</label>
+            <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="input"
+              onChange={e => setUploadFile(e.target.files?.[0] ?? null)} />
+          </div>
+          <Alert type="info">Votre pièce sera examinée par le service de scolarité avant validation.</Alert>
+          <div className="flex gap-3">
+            <button onClick={resetUpload}
+              className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>
+            <button onClick={() => uploadMut.mutate()} disabled={uploadMut.isPending || !uploadTitle || !uploadCategory || !uploadFile}
+              className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition disabled:opacity-50">
+              {uploadMut.isPending ? 'Envoi...' : 'Déposer'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

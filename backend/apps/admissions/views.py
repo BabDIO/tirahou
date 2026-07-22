@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 from .models import Application, ApplicationDocument, AdmissionDecision
 from .serializers import ApplicationSerializer, ApplicationDocumentSerializer, AdmissionDecisionSerializer
@@ -171,6 +172,12 @@ class ApplicationDocumentViewSet(viewsets.ModelViewSet):
         if _is_admissions_staff(self.request.user):
             return qs.order_by('id')
         return qs.filter(application__applicant=self.request.user).order_by('id')
+
+    def perform_create(self, serializer):
+        application = serializer.validated_data.get('application')
+        if application and application.applicant != self.request.user and not _is_admissions_staff(self.request.user):
+            raise PermissionDenied("Vous ne pouvez déposer un document que sur votre propre candidature.")
+        serializer.save()
 
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):

@@ -13,6 +13,12 @@ class CourseResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseResource
         fields = '__all__'
+        # is_active en lecture seule : cree via multipart/form-data (upload de
+        # fichier) — un BooleanField absent du formulaire est interprete par
+        # DRF comme "decoche" (False) plutot que "non fourni", ce qui rendrait
+        # toute ressource deposee invisible immediatement (voir meme correctif
+        # sur LibraryDocumentSerializer).
+        read_only_fields = ['is_active']
 
     def get_is_completed(self, obj):
         request = self.context.get('request')

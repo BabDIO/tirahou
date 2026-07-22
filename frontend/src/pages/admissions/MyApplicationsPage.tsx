@@ -1,10 +1,27 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FileText, Plus, Send } from 'lucide-react'
+import { FileText, Paperclip, Plus, Send, Upload } from 'lucide-react'
 import { admissionsApi, programsApi, academicApi } from '../../api'
 import { Badge, Button, Card, Empty, Input, Modal, Select, Spinner, Textarea } from '../../components/ui'
 import { useToast } from '../../hooks/useToast'
-import type { AcademicYear, Application, Program } from '../../types'
+import type { AcademicYear, Application, ApplicationDocument, Program } from '../../types'
+
+const DOC_TYPES: { value: string; label: string }[] = [
+  { value: 'cni', label: "Carte Nationale d'Identité" },
+  { value: 'passeport', label: 'Passeport' },
+  { value: 'diplome', label: 'Diplôme' },
+  { value: 'releve_notes', label: 'Relevé de notes' },
+  { value: 'lettre_motivation', label: 'Lettre de motivation' },
+  { value: 'cv', label: 'Curriculum Vitae' },
+  { value: 'photo', label: "Photo d'identité" },
+  { value: 'autre', label: 'Autre' },
+]
+
+const DOC_STATUS_BADGE: Record<string, string> = {
+  en_attente: 'badge-amber',
+  valide: 'badge-green',
+  rejete: 'badge-red',
+}
 
 const STATUS_BADGE: Record<string, string> = {
   brouillon: 'badge-gray',
@@ -37,6 +54,10 @@ export default function MyApplicationsPage() {
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [docAppId, setDocAppId] = useState<string | null>(null)
+  const [docType, setDocType] = useState('cni')
+  const [docFile, setDocFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: applications, isLoading } = useQuery({
     queryKey: ['my-applications'],
@@ -91,6 +112,25 @@ export default function MyApplicationsPage() {
     onError: () => toast.error('Erreur lors de la soumission.'),
   })
 
+  const uploadDoc = useMutation({
+    mutationFn: () => {
+      const fd = new FormData()
+      fd.append('application', docAppId as string)
+      fd.append('doc_type', docType)
+      fd.append('file', docFile as File)
+      return admissionsApi.uploadDocument(fd)
+    },
+    onSuccess: () => {
+      toast.success('Document ajouté à votre candidature.')
+      setDocAppId(null)
+      setDocFile(null)
+      setDocType('cni')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      queryClient.invalidateQueries({ queryKey: ['my-applications'] })
+    },
+    onError: () => toast.error("Erreur lors de l'envoi du document."),
+  })
+
   if (isLoading) return <Spinner text="Chargement de vos candidatures..." />
 
   return (
@@ -133,17 +173,39 @@ export default function MyApplicationsPage() {
               {app.motivation_letter && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{app.motivation_letter}</p>
               )}
-              {app.status === 'brouillon' && (
+              {(app.documents ?? []).length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {app.documents.map((doc: ApplicationDocument) => (
+                    <div key={doc.id} className="flex items-center justify-between gap-2 text-xs bg-gray-50 dark:bg-gray-800/60 rounded-lg px-2.5 py-1.5">
+                      <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 truncate">
+                        <Paperclip className="w-3 h-3 flex-shrink-0" />{doc.doc_type_display}
+                      </span>
+                      <Badge label={doc.status_display} className={DOC_STATUS_BADGE[doc.status] ?? 'badge-gray'} />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                {app.status === 'brouillon' && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={<Send className="w-3.5 h-3.5" />}
+                    loading={submit.isPending}
+                    onClick={() => submit.mutate(app.id)}
+                  >
+                    Soumettre ma candidature
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="secondary"
-                  icon={<Send className="w-3.5 h-3.5" />}
-                  loading={submit.isPending}
-                  onClick={() => submit.mutate(app.id)}
+                  icon={<Upload className="w-3.5 h-3.5" />}
+                  onClick={() => setDocAppId(app.id)}
                 >
-                  Soumettre ma candidature
+                  Ajouter une pièce jointe
                 </Button>
-              )}
+              </div>
             </Card>
           ))}
         </div>
@@ -218,6 +280,43 @@ export default function MyApplicationsPage() {
             value={form.motivation_letter}
             onChange={(e) => setForm({ ...form, motivation_letter: e.target.value })}
           />
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!docAppId}
+        onClose={() => { setDocAppId(null); setDocFile(null); setDocType('cni'); if (fileInputRef.current) fileInputRef.current.value = '' }}
+        title="Ajouter une pièce jointe"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setDocAppId(null)}>Annuler</Button>
+            <Button
+              loading={uploadDoc.isPending}
+              disabled={!docFile}
+              onClick={() => uploadDoc.mutate()}
+            >
+              Envoyer
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <Select label="Type de document" value={docType} onChange={(e) => setDocType(e.target.value)}>
+            {DOC_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </Select>
+          <div>
+            <label className="label">Fichier *</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="input"
+              onChange={(e) => setDocFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
         </div>
       </Modal>
     </div>

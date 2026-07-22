@@ -9,7 +9,12 @@ class LibraryDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = LibraryDocument
         fields = '__all__'
-        read_only_fields = ['download_count', 'view_count', 'uploaded_by']
+        # is_active en lecture seule : sur un vrai multipart/form-data (upload de
+        # fichier), un BooleanField absent du formulaire est interprété par DRF
+        # comme "décoché" (False) plutôt que "non fourni" — sans ce read_only,
+        # tout document créé via le formulaire d'ajout devenait invisible
+        # instantanément (is_active=False alors que le modèle défaut à True).
+        read_only_fields = ['download_count', 'view_count', 'uploaded_by', 'is_active']
 
     def get_file_url(self, obj):
         if obj.file:

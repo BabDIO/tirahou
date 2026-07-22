@@ -15,6 +15,12 @@ class StudentDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentDocument
         fields = '__all__'
+        # is_active en lecture seule : upload via multipart/form-data — meme
+        # piege que LibraryDocumentSerializer (voir ce fichier pour le detail).
+        # student/status/verified_* en lecture seule : sinon un etudiant peut
+        # deposer un document au nom d'un autre etudiant, ou s'auto-valider
+        # directement a la creation (voir perform_create de la vue).
+        read_only_fields = ['is_active', 'student', 'status', 'verified_by', 'verified_at', 'rejection_reason']
 
 
 class GeneratedDocumentSerializer(serializers.ModelSerializer):

@@ -9,6 +9,15 @@ class ApplicationDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationDocument
         fields = '__all__'
+        # is_active en lecture seule : upload via multipart/form-data — un
+        # BooleanField absent du formulaire est interprete par DRF comme
+        # "decoche" (False) plutot que "non fourni" (meme piege que
+        # LibraryDocumentSerializer / CourseResourceSerializer).
+        # status/verified_* en lecture seule : sinon un candidat peut
+        # s'auto-valider son propre document a la creation (le controle
+        # d'appartenance de `application` se fait dans la vue, cf.
+        # ApplicationDocumentViewSet.perform_create).
+        read_only_fields = ['is_active', 'status', 'verified_by', 'verified_at']
 
 
 class ApplicationSerializer(serializers.ModelSerializer):

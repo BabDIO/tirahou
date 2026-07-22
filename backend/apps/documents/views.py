@@ -35,6 +35,7 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         file = self.request.FILES.get('file')
         serializer.save(
+            student=self.request.user.student_profile,
             uploaded_by=self.request.user,
             file_size=file.size if file else 0,
             mime_type=file.content_type if file else '',
