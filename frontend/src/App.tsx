@@ -78,7 +78,6 @@ import ResponsableGroupsPage from './pages/responsable/ResponsableGroupsPage'
 import GradesValidationPage from './pages/responsable/GradesValidationPage'
 // Pages bibliothécaire
 import BibliothecairePage from './pages/bibliothecaire/BibliothecairePage'
-import TestPage from './pages/TestPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,7 +107,6 @@ export default function App() {
             {/* ── Public ── */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/test" element={<TestPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/verify" element={<VerifyDocumentPage />} />
             <Route path="/verify/:code" element={<VerifyDocumentPage />} />
