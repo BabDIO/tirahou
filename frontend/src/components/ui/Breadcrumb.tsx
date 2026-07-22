@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/contexts/ThemeContext'
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string
   path?: string
 }
@@ -15,7 +15,7 @@ interface BreadcrumbProps {
 
 export default function Breadcrumb({ items, autoGenerate = true }: BreadcrumbProps) {
   const location = useLocation()
-  const { actualTheme } = useTheme()
+  const { effectiveTheme } = useTheme()
 
   // Génération automatique des breadcrumbs depuis l'URL
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
@@ -85,7 +85,7 @@ export default function Breadcrumb({ items, autoGenerate = true }: BreadcrumbPro
             className={`
               flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
               transition-colors duration-200
-              ${actualTheme === 'dark'
+              ${effectiveTheme === 'dark'
                 ? 'text-slate-400 hover:text-white hover:bg-slate-800'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100'
               }
@@ -109,14 +109,14 @@ export default function Breadcrumb({ items, autoGenerate = true }: BreadcrumbPro
             >
               <ChevronRight
                 className={`w-4 h-4 ${
-                  actualTheme === 'dark' ? 'text-slate-600' : 'text-gray-400 dark:text-gray-500'
+                  effectiveTheme === 'dark' ? 'text-slate-600' : 'text-gray-400 dark:text-gray-500'
                 }`}
               />
               {isLast || !item.path ? (
                 <span
                   className={`
                     px-3 py-1.5 rounded-lg text-sm font-semibold
-                    ${actualTheme === 'dark'
+                    ${effectiveTheme === 'dark'
                       ? 'text-white bg-slate-800'
                       : 'text-gray-900 dark:text-gray-50 bg-gray-100'
                     }
@@ -131,7 +131,7 @@ export default function Breadcrumb({ items, autoGenerate = true }: BreadcrumbPro
                   className={`
                     px-3 py-1.5 rounded-lg text-sm font-medium
                     transition-colors duration-200
-                    ${actualTheme === 'dark'
+                    ${effectiveTheme === 'dark'
                       ? 'text-slate-400 hover:text-white hover:bg-slate-800'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100'
                     }

@@ -164,12 +164,13 @@ interface CardProps {
   className?: string
   title?: string
   subtitle?: string
+  icon?: ReactNode
   action?: ReactNode
   noPadding?: boolean
   hover?: boolean
   onClick?: () => void
 }
-export const Card = ({ children, className, title, subtitle, action, noPadding, hover, onClick }: CardProps) => (
+export const Card = ({ children, className, title, subtitle, icon, action, noPadding, hover, onClick }: CardProps) => (
   <div
     className={cn('card', hover && 'card-hover', noPadding ? '' : 'p-6', onClick && 'cursor-pointer', className)}
     onClick={onClick}
@@ -188,9 +189,12 @@ export const Card = ({ children, className, title, subtitle, action, noPadding, 
   >
     {(title || action) && (
       <div className={cn('flex items-start justify-between gap-4', !noPadding && 'mb-5')}>
-        <div>
-          {title && <h3 className="section-title dark:text-slate-200">{title}</h3>}
-          {subtitle && <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">{subtitle}</p>}
+        <div className="flex items-center gap-2">
+          {icon && <span className="text-gray-400 dark:text-slate-400 flex-shrink-0">{icon}</span>}
+          <div>
+            {title && <h3 className="section-title dark:text-slate-200">{title}</h3>}
+            {subtitle && <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">{subtitle}</p>}
+          </div>
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
       </div>

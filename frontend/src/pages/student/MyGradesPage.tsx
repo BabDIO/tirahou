@@ -104,7 +104,7 @@ export default function MyGradesPage() {
         title="Mes Notes"
         description="Consultez vos résultats et suivez votre progression"
         breadcrumbs={[
-          { label: 'Accueil', href: '/dashboard' },
+          { label: 'Accueil', path: '/dashboard' },
           { label: 'Mes Notes' }
         ]}
       />

@@ -19,7 +19,7 @@ export default function Tooltip({
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
-  const { actualTheme } = useTheme()
+  const { effectiveTheme } = useTheme()
 
   const handleMouseEnter = () => {
     const id = setTimeout(() => setIsVisible(true), delay)
@@ -69,7 +69,7 @@ export default function Tooltip({
               className={`
                 px-3 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap
                 max-w-xs
-                ${actualTheme === 'dark'
+                ${effectiveTheme === 'dark'
                   ? 'bg-slate-900 text-white border border-slate-700'
                   : 'bg-gray-900 text-white'
                 }
@@ -81,7 +81,7 @@ export default function Tooltip({
                 className={`
                   absolute w-0 h-0 border-4
                   ${arrowClasses[position]}
-                  ${actualTheme === 'dark' ? 'text-slate-900' : 'text-gray-900 dark:text-gray-50'}
+                  ${effectiveTheme === 'dark' ? 'text-slate-900' : 'text-gray-900 dark:text-gray-50'}
                 `}
               />
             </div>

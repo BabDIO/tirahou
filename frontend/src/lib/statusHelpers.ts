@@ -114,7 +114,6 @@ export const getStatusBadgeClass = (status: string): string => {
     refusee: 'badge-red',
     liste_attente: 'badge-orange',
     // Inscriptions
-    en_cours: 'badge-yellow',
     confirmee: 'badge-green',
     annulee: 'badge-red',
   }

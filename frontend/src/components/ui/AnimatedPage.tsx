@@ -1,12 +1,12 @@
 import { ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 
 interface AnimatedPageProps {
   children: ReactNode
   className?: string
 }
 
-const pageVariants = {
+const pageVariants: Variants = {
   initial: {
     opacity: 0,
     y: 20,
