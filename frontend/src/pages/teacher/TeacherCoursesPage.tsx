@@ -226,8 +226,8 @@ export default function TeacherCoursesPage() {
               {progressList.length > 0 && (
                 <Card title="Progression des étudiants" subtitle="Top 10">
                   <div className="space-y-2">
-                    {progressList.slice(0, 10).map((p: { student_name?: string; completion_rate: number }) => (
-                      <div key={Math.random()} className="flex items-center gap-3">
+                    {progressList.slice(0, 10).map((p: { student_name?: string; completion_rate: number }, index: number) => (
+                      <div key={p.student_name ?? index} className="flex items-center gap-3">
                         <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                           <Users className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                         </div>
