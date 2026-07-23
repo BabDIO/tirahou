@@ -12,6 +12,20 @@ from .serializers import (
 )
 
 
+# Rôles habilités à envoyer une notification manuelle à N'IMPORTE QUEL
+# utilisateur (contrairement aux notifications système, qui ciblent déjà
+# le bon destinataire). Sans ce contrôle, n'importe quel compte authentifié
+# pouvait pousser un faux message (phishing, usurpation) à n'importe qui.
+NOTIFICATION_SENDER_ROLES = [
+    'super_admin', 'admin_institutionnel', 'admin_scolarite',
+    'responsable_pedagogique', 'chef_departement',
+]
+
+
+def _can_send_notification(user):
+    return user.is_superuser or user.roles.filter(name__in=NOTIFICATION_SENDER_ROLES).exists()
+
+
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Notification.objects.none()
     serializer_class = NotificationSerializer
@@ -52,7 +66,10 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     def send_notification(self, request):
         """AMÉLIORATION: Envoyer une notification avec priorité et métadonnées"""
         from apps.accounts.models import User
-        
+
+        if not _can_send_notification(request.user):
+            return Response({'error': 'Permission refusée.'}, status=403)
+
         recipient_id = request.data.get('recipient_id')
         title = request.data.get('title')
         message = request.data.get('message')
