@@ -18,6 +18,7 @@ import ChatWidget from '../chatbot/ChatWidget'
 import { useQuery } from '@tanstack/react-query'
 import { communicationApi } from '../../api'
 import { Link } from 'react-router-dom'
+import { useNotificationSocket } from '../../hooks/useNotificationSocket'
 
 // ── Navigation par rôle ───────────────────────────────────────────────────────
 const ADMIN_NAV = [
@@ -341,6 +342,7 @@ export default function MainLayout() {
   const { isAdmin, isScolarite, isFinancier, isEnseignant, isEtudiant, isResponsable, isBibliothecaire, roles } = useRole()
   const navigate = useNavigate()
   const location = useLocation()
+  useNotificationSocket()
 
   // Choisir la nav selon le rôle
   const navItems = (() => {
@@ -547,7 +549,10 @@ function NotificationBell() {
   const { data } = useQuery({
     queryKey: ['notifications-count'],
     queryFn: () => communicationApi.getNotifications({ is_read: false }).then(r => r.data),
-    refetchInterval: 30000, // Rafraîchir toutes les 30s
+    // Filet de sécurité : le WebSocket (useNotificationSocket) pousse les
+    // mises à jour en temps réel, ce polling ne sert qu'en cas de socket
+    // indisponible (réseau restrictif, proxy sans upgrade WebSocket...).
+    refetchInterval: 120000,
   })
   const unread = data?.count ?? 0
 

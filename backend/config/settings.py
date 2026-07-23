@@ -14,6 +14,9 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
+    # 'daphne' doit précéder staticfiles pour que `runserver` serve en ASGI
+    # (nécessaire pour les WebSockets de notifications temps réel).
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -21,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third-party
+    'channels',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -164,8 +168,26 @@ try:
     }
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
+    _REDIS_AVAILABLE = True
 except Exception:
-    pass
+    _REDIS_AVAILABLE = False
+
+# ── Channels (WebSocket temps réel) ───────────────────────────────────────────
+ASGI_APPLICATION = 'config.asgi.application'
+
+if _REDIS_AVAILABLE:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
+        }
+    }
+else:
+    # Pas de Redis (dev local sans serveur Redis) : couche en mémoire — ne
+    # fonctionne qu'avec un seul worker/process, suffisant en développement.
+    CHANNEL_LAYERS = {
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    }
 
 # ── DRF ──────────────────────────────────────────────────────────────────────
 # En développement, seuil login plus haut pour tests multi-rôles / démo (sinon 429 après ~5 comptes / IP).

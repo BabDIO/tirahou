@@ -51,7 +51,7 @@ class NotificationService:
             is_sent=True,
             sent_at=timezone.now()
         )
-        
+
         # Envoyer par email si demandé
         if channel in ['email', 'both']:
             NotificationService._send_email(notification)
