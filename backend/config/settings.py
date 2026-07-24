@@ -137,6 +137,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Voir config/test_runner.py : `python manage.py test` sans argument ne
+# trouve aucun test dans cet environnement sans ce runner personnalisé.
+TEST_RUNNER = 'config.test_runner.TirahouTestRunner'
+
 # ── Cache Redis ───────────────────────────────────────────────────────────────
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 

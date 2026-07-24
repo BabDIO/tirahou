@@ -20,10 +20,19 @@ from apps.evaluation.models import ExamSession, Grade
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def create_admin_user():
-    return User.objects.create_superuser(
+    # is_superuser (Django/PermissionsMixin) et le Role métier 'super_admin'
+    # sont deux choses distinctes dans ce projet : is_superuser fait passer
+    # les permissions DRF de base et User.has_permission(), mais plusieurs
+    # get_queryset() (ex: CourseSpaceViewSet) ne vérifient QUE user.roles,
+    # pas is_superuser — un vrai compte admin (voir create_test_users.py)
+    # a toujours les deux, donc le fixture de test doit faire pareil.
+    user = User.objects.create_superuser(
         email='admin@test.edu', username='admin',
         first_name='Admin', last_name='Test', password='Test@1234'
     )
+    role, _ = Role.objects.get_or_create(name='super_admin')
+    user.roles.add(role)
+    return user
 
 
 def create_student_user():
@@ -75,12 +84,17 @@ class AuthTests(APITestCase):
         self.assertIn('refresh', res.data)
 
     def test_login_wrong_password(self):
+        # CustomTokenObtainSerializer.validate() lève volontairement une
+        # ValidationError (400), pas AuthenticationFailed (401) : les
+        # tentatives échouées doivent être comptabilisées et un compte
+        # verrouillé après trop d'essais (voir failed_login_attempts) —
+        # le frontend traite déjà 400 et 401 de façon identique.
         res = self.client.post(self.login_url, {'email': 'admin@test.edu', 'password': 'wrong'})
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_login_unknown_email(self):
         res = self.client.post(self.login_url, {'email': 'unknown@test.edu', 'password': 'Test@1234'})
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_me_authenticated(self):
         self.client.force_authenticate(user=self.user)
