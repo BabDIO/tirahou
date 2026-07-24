@@ -1,3 +1,6 @@
+"""
+Marketplace de cours : contenu pédagogique vendu/acheté entre utilisateurs, indépendant du LMS institutionnel (apps.lms).
+"""
 from django.apps import AppConfig
 
 

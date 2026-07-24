@@ -75,6 +75,10 @@ def send_message(user, history, user_text):
     messages = [{'role': m['role'], 'content': m['content']} for m in history]
     messages.append({'role': 'user', 'content': user_text})
 
+    # Boucle agentique manuelle : tant que Claude répond stop_reason='tool_use',
+    # on exécute l'outil demandé et on renvoie le résultat comme un nouveau
+    # message 'user' (format attendu par l'API Messages), jusqu'à une vraie
+    # réponse texte ou MAX_TOOL_ITERATIONS (garde-fou anti-boucle infinie).
     tools_used = []
     for _ in range(MAX_TOOL_ITERATIONS):
         kwargs = dict(

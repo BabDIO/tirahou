@@ -31,8 +31,14 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="login" />
+            {/* (student) et (teacher) sont des route groups Expo Router avec
+                leur propre <Tabs> (voir app/(student)/_layout.tsx) — chacun
+                a son propre jeu d'onglets bas d'écran. */}
             <Stack.Screen name="(student)" />
             <Stack.Screen name="(teacher)" />
+            {/* Écrans secondaires poussés depuis le menu "Services" du profil,
+                volontairement HORS des <Tabs> pour ne pas surcharger la barre
+                d'onglets — navigation par router.push(), pas par tab. */}
             <Stack.Screen name="notifications" options={{ presentation: 'card' }} />
             <Stack.Screen name="library" options={{ presentation: 'card' }} />
             <Stack.Screen name="finance" options={{ presentation: 'card' }} />

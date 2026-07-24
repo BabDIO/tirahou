@@ -85,6 +85,12 @@ const queryClient = new QueryClient({
   },
 })
 
+// Groupes de rôles utilisés par <RoleBasedRoute allowedRoles={...}> ci-dessous
+// pour cacher/rediriger les routes côté frontend uniquement — le vrai
+// contrôle d'accès reste fait par le backend (get_queryset() filtré par
+// rôle, HasModulePermission) ; ces listes ne sont qu'un raccourci d'UX,
+// jamais une garantie de sécurité. super_admin/admin_institutionnel sont
+// inclus dans presque tous les groupes par convention (accès total).
 const ADMIN = ['super_admin', 'admin_institutionnel'] as const
 const SCOLARITE = ['super_admin', 'admin_institutionnel', 'admin_scolarite'] as const
 const FINANCE = ['super_admin', 'admin_institutionnel', 'admin_financier'] as const

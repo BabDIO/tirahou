@@ -1,3 +1,6 @@
+"""
+Bibliothèque : catalogue de documents, emprunts, réservations, notation, listes de lecture.
+"""
 from django.apps import AppConfig
 
 

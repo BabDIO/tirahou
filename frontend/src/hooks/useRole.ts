@@ -15,6 +15,12 @@ export type RoleName =
   | 'invite'
   | 'support_technique'
 
+// Dérive des booléens/flags UI (afficher un bouton, masquer un menu...) à
+// partir des rôles de l'utilisateur connecté. Pure commodité côté client —
+// aucune de ces valeurs ne doit être traitée comme une autorisation réelle :
+// le backend revalide tout indépendamment (get_queryset() filtré par rôle,
+// HasModulePermission). Un `can.manageX` à true qui n'a pas d'équivalent
+// backend ne fait qu'afficher un bouton qui échouera en 403 au clic.
 export function useRole() {
   const { user } = useAuthStore()
   const roles: RoleName[] = (user?.roles?.map(r => r.name) ?? []) as RoleName[]

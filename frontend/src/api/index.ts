@@ -1,3 +1,9 @@
+// Client API — un objet exporté par domaine métier (authApi, academicApi...),
+// chacun un ensemble de fonctions fines qui appellent `api` (axios configuré
+// dans lib/axios.ts, avec injection du token JWT et refresh automatique).
+// Les chemins d'URL ici doivent rester synchronisés avec les urls.py Django
+// correspondants (voir backend/apps/*/urls.py) — aucune génération
+// automatique du client depuis le schéma OpenAPI pour l'instant.
 import api from '../lib/axios'
 import type {
   LoginCredentials, AuthTokens, User,

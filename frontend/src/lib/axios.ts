@@ -15,6 +15,13 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 })
 
 // ── Response interceptor : refresh token auto ────────────────────────────────
+// Si plusieurs requêtes échouent en 401 en même temps (cas fréquent : une
+// page qui déclenche 3-4 appels API en parallèle au montage), on ne veut
+// PAS déclencher 3-4 refresh simultanés — le backend fait tourner (SimpleJWT
+// ROTATE_REFRESH_TOKENS) et le premier refresh invaliderait déjà le refresh
+// token utilisé par les suivants. `isRefreshing` sert donc de verrou : le
+// premier 401 lance le refresh, les suivants sont mis en file d'attente
+// (failedQueue) et rejoués avec le nouveau token une fois le refresh terminé.
 let isRefreshing = false
 let failedQueue: { resolve: (v: string) => void; reject: (e: unknown) => void }[] = []
 

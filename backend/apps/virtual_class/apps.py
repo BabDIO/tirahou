@@ -1,3 +1,6 @@
+"""
+Classes virtuelles hybrides, multi-fournisseurs (BigBlueButton, Jitsi, Zoom, Meet, Teams).
+"""
 from django.apps import AppConfig
 
 class UvirtualUclassConfig(AppConfig):

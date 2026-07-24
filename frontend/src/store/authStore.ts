@@ -26,6 +26,11 @@ export const useAuthStore = create<AuthStore>()(
       refreshToken: null,
       isAuthenticated: false,
       setAuth: (user, access, refresh) => {
+        // Écriture manuelle en plus du `persist` de zustand ci-dessous :
+        // lib/axios.ts lit ces clés directement (localStorage.getItem
+        // ('access_token')) pour éviter une dépendance sur la forme du
+        // store zustand (qui sérialise sous 'auth-storage' en JSON) dans
+        // l'intercepteur axios, exécuté en dehors de tout contexte React.
         localStorage.setItem('access_token', access)
         localStorage.setItem('refresh_token', refresh)
         set({

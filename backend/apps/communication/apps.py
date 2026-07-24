@@ -1,3 +1,6 @@
+"""
+Notifications (temps réel via WebSocket + email/SMS/push en repli), annonces, messagerie interne, forums. Voir consumers.py/signals.py pour le mécanisme de push temps réel.
+"""
 from django.apps import AppConfig
 
 class UcommunicationConfig(AppConfig):

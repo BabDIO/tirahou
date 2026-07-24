@@ -1,3 +1,6 @@
+"""
+Authentification JWT, utilisateurs, rôles et permissions (RBAC). Point d'entrée pour tout ce qui touche identité/sécurité — voir permissions.py pour le contrôle d'accès fin par module.
+"""
 from django.apps import AppConfig
 
 

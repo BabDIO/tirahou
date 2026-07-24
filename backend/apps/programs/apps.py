@@ -1,3 +1,6 @@
+"""
+Programmes/filières et leur découpage LMD : Unités d'Enseignement (UE) et Éléments Constitutifs (EC), crédits, coefficients.
+"""
 from django.apps import AppConfig
 
 class UprogramsConfig(AppConfig):

@@ -1,3 +1,6 @@
+"""
+Assistant IA (Claude) pour étudiants et enseignants — agent conversationnel avec accès en lecture aux données de l'utilisateur courant via function calling.
+"""
 from django.apps import AppConfig
 
 

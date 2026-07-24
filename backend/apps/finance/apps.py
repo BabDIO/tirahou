@@ -1,3 +1,6 @@
+"""
+Facturation, paiements (dont mobile money), bourses/exonérations, journal de caisse.
+"""
 from django.apps import AppConfig
 
 class UfinanceConfig(AppConfig):

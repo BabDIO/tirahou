@@ -38,6 +38,12 @@ function resolveRole(user: AuthUser | null): AppRole {
   return null
 }
 
+// Contrairement au store web (zustand/persist, synchrone via localStorage),
+// SecureStore est asynchrone — l'état ne peut donc pas être restauré au
+// moment même de la création du store. `hydrate()` est appelé une fois au
+// montage de RootLayout (app/_layout.tsx), qui affiche un écran de
+// chargement tant que `isHydrating` est vrai, pour éviter un flash de
+// l'écran de login avant que la session existante soit relue du stockage.
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isHydrating: true,

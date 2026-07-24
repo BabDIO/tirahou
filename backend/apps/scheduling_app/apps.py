@@ -1,3 +1,6 @@
+"""
+Emploi du temps : créneaux, salles, réservations, séances planifiées (présentiel/hybride).
+"""
 from django.apps import AppConfig
 
 class UschedulingUappConfig(AppConfig):
