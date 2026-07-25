@@ -6,12 +6,14 @@ import { StatusBar } from 'expo-status-bar'
 import { useAuthStore } from '../store/authStore'
 import { setOnAuthExpired } from '../lib/api'
 import { Loading } from '../components/ui'
+import { useNotificationSocket } from '../hooks/useNotificationSocket'
 
 export default function RootLayout() {
   const router = useRouter()
   const hydrate = useAuthStore((s) => s.hydrate)
   const isHydrating = useAuthStore((s) => s.isHydrating)
   const logout = useAuthStore((s) => s.logout)
+  useNotificationSocket()
 
   useEffect(() => {
     hydrate()
