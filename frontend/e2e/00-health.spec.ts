@@ -9,7 +9,11 @@ import { test, expect } from '@playwright/test';
 test.describe('🏥 Health Check', () => {
   
   test('Backend API devrait être accessible', async ({ request }) => {
-    const response = await request.get('http://localhost:8000/api/schema/');
+    // Surchargeable via E2E_API_BASE_URL pour tester contre un backend
+    // déployé (Render) plutôt que localhost — même logique que
+    // PLAYWRIGHT_TEST_BASE_URL dans playwright.config.ts pour le frontend.
+    const apiBase = process.env.E2E_API_BASE_URL || 'http://localhost:8000';
+    const response = await request.get(`${apiBase}/api/schema/`);
     expect(response.status()).toBe(200);
     
     const body = await response.text();

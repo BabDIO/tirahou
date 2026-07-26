@@ -31,8 +31,10 @@ export default defineConfig({
   ],
   
   use: {
-    // URL de base de l'application
-    baseURL: 'http://localhost:3000',
+    // URL de base de l'application — surchargeable via
+    // PLAYWRIGHT_TEST_BASE_URL pour lancer les mêmes tests contre un
+    // déploiement réel (preview Vercel, prod) sans éditer ce fichier.
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
     
     // Capture d'écran à chaque échec
     screenshot: 'only-on-failure',
