@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import ValidationError
 from .models import University, Faculty, Department, AcademicYear, LMDRegulation
 from .serializers import (
     UniversitySerializer, FacultySerializer, DepartmentSerializer,
@@ -19,6 +20,20 @@ class FacultyViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['university']
     search_fields = ['name', 'acronym']
+
+    def perform_create(self, serializer):
+        # university est en lecture seule côté serializer (voir
+        # FacultySerializer) : toujours assignée ici plutôt que fournie par
+        # le client. Même pattern que apps.finance.views._get_university_name()
+        # et les vues PDF pour récupérer "l'" établissement de cette app
+        # mono-établissement.
+        university = University.objects.filter(is_active=True).first()
+        if university is None:
+            raise ValidationError(
+                "Aucun établissement (University) n'existe encore — "
+                "il faut en créer un avant de pouvoir ajouter une faculté."
+            )
+        serializer.save(university=university)
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):

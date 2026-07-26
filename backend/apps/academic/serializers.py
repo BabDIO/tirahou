@@ -14,6 +14,12 @@ class FacultySerializer(serializers.ModelSerializer):
     class Meta:
         model = Faculty
         fields = '__all__'
+        # university en lecture seule : l'app est pensée pour un
+        # établissement unique (voir docs/NOTE_CONCEPTION_MULTI_TENANT.md),
+        # le formulaire de création ne le demande donc pas — sans ce
+        # read_only, le champ obligatoire bloquait toute création avec
+        # "Ce champ est obligatoire." (voir FacultyViewSet.perform_create).
+        read_only_fields = ['university']
 
 
 class DepartmentSerializer(serializers.ModelSerializer):

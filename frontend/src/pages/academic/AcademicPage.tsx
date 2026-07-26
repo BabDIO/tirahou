@@ -250,10 +250,19 @@ function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
     if (!form.label || !form.start_date || !form.end_date) { setError('Libellé et dates requis'); return }
     setLoading(true); setError('')
     try {
-      await api.post('/academic-years/', form)
+      // Les dates optionnelles laissées vides doivent être omises, pas
+      // envoyées en chaîne vide : DateField (contrairement à CharField)
+      // n'a pas d'allow_blank et rejette '' avec "La date n'a pas le bon
+      // format" — ce qui bloquait la création dès qu'une période
+      // (candidatures/inscriptions) n'était pas encore connue.
+      const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ''))
+      await api.post('/academic-years/', payload)
       onSuccess()
-    } catch { setError('Erreur lors de la création.') }
-    finally { setLoading(false) }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(err?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur lors de la création.')
+    } finally { setLoading(false) }
   }
 
   return (
@@ -315,8 +324,11 @@ function CreateFacultyForm({ onSuccess }: { onSuccess: () => void }) {
     if (!form.name || !form.acronym) { setError('Nom et acronyme requis'); return }
     setLoading(true); setError('')
     try { await api.post('/faculties/', form); onSuccess() }
-    catch { setError('Erreur lors de la création.') }
-    finally { setLoading(false) }
+    catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(err?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur lors de la création.')
+    } finally { setLoading(false) }
   }
 
   return (
@@ -357,8 +369,11 @@ function CreateDeptForm({ onSuccess }: { onSuccess: () => void }) {
     if (!form.name || !form.acronym || !form.faculty) { setError('Tous les champs sont requis'); return }
     setLoading(true); setError('')
     try { await api.post('/departments/', form); onSuccess() }
-    catch { setError('Erreur lors de la création.') }
-    finally { setLoading(false) }
+    catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(err?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur lors de la création.')
+    } finally { setLoading(false) }
   }
 
   return (
