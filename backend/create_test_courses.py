@@ -50,7 +50,12 @@ ue_data = [
 
 ues = []
 for data in ue_data:
+    # UE.semester est une ForeignKey obligatoire (unique_together avec code,
+    # pas de relation M2M) — doit donc faire partie du lookup get_or_create,
+    # pas seulement de defaults, sinon la création échoue avec une erreur
+    # NOT NULL sur semester_id.
     ue, created = UE.objects.get_or_create(
+        semester=semester,
         code=data['code'],
         defaults={
             'name': data['name'],
@@ -63,7 +68,6 @@ for data in ue_data:
             'passing_grade': 10.0
         }
     )
-    semester.ues.add(ue)
     ues.append(ue)
     print(f"✅ UE: {ue.code} - {ue.name}")
 

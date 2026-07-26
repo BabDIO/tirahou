@@ -14,9 +14,19 @@ docker compose up --build
 ```
 
 Au premier démarrage : Postgres s'initialise, le backend attend que la base
-soit prête (`healthcheck`) puis lance `migrate` automatiquement avant de
-démarrer le serveur de dev. Comptez 1 à 2 minutes la première fois
-(installation des dépendances Python/Node dans les images).
+soit prête (`healthcheck`) puis enchaîne automatiquement `migrate` →
+comptes de démo (`create_test_users.py`, un par rôle — voir
+`docs/COMPTES_TEST.md`) → données réalistes (`seed_demo_data.py` : structure
+académique, notes, finances, bibliothèque...) → contenu de cours
+(`create_test_courses.py`) avant de démarrer le serveur de dev. Comptez 1 à 2
+minutes la première fois (installation des dépendances Python/Node dans les
+images), puis quelques secondes de plus pour le seed initial.
+
+Les trois scripts de seed sont idempotents (`get_or_create`) : les rejouer à
+chaque redémarrage du conteneur ne crée jamais de doublons, ils se contentent
+de vérifier que les données de démo existent toujours. Pour désactiver le
+seed automatique (démarrage plus rapide, base vide), voir la ligne `command`
+commentée dans `docker-compose.yml`.
 
 Une fois démarré :
 - **Frontend** : http://localhost:3001 (mappé depuis le port 3000 du
@@ -50,8 +60,11 @@ docker compose logs -f backend
 # Ouvrir un shell Django dans le conteneur backend
 docker compose exec backend python manage.py shell
 
-# Créer les comptes de démo (mêmes comptes que docs/COMPTES_TEST.md)
+# Comptes de démo + données de test déjà créés automatiquement au démarrage
+# (voir "Démarrage" ci-dessus) — au besoin, les rejouer manuellement reste
+# possible et sans danger (idempotent) :
 docker compose exec backend python create_test_users.py
+docker compose exec backend python seed_demo_data.py
 
 # Se connecter à Postgres directement
 docker compose exec db psql -U tirahou -d tirahoudb

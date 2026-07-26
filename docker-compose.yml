@@ -31,7 +31,21 @@ services:
 
   backend:
     build: ./backend
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    # Seed automatique au démarrage — les 3 scripts sont idempotents
+    # (get_or_create), donc sans risque à rejouer à chaque redémarrage du
+    # conteneur : create_test_users (comptes de démo, un par rôle — voir
+    # docs/COMPTES_TEST.md) puis seed_demo_data (structure académique,
+    # étudiants/notes/finances réalistes) puis create_test_courses (espaces
+    # de cours + contenu LMS, dépend des programmes créés par seed_demo_data
+    # — d'où l'ordre). Pour désactiver le seed automatique, remplacer cette
+    # commande par la version courte commentée juste en dessous.
+    command: >
+      sh -c "python manage.py migrate &&
+             python create_test_users.py &&
+             python seed_demo_data.py &&
+             python manage.py shell < create_test_courses.py &&
+             python manage.py runserver 0.0.0.0:8000"
+    # command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -61,7 +75,7 @@ services:
     environment:
       # Vue du navigateur (hors réseau Docker), donc localhost et pas
       # "backend" — voir la note dans .env.example.
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8001/api/v1}
     volumes:
       - ./frontend:/app
       # Volume anonyme sur node_modules : évite que le bind mount ci-dessus

@@ -808,14 +808,17 @@ print(f"OK Notifications : {Notification.objects.count()} | Annonces : {Announce
 from apps.library.models import LibraryDocument, Borrowing
 
 livres = [
-    ('Clean Code', 'Robert C. Martin', 'livre', 'Génie Logiciel', 2008, 'ISBN 978-0-13-235088-4', 3),
-    ('Design Patterns : GoF', 'Gang of Four', 'livre', 'Architecture Logicielle', 1994, 'ISBN 978-0-20-163361-5', 2),
-    ('Deep Learning', 'Ian Goodfellow', 'livre', 'Intelligence Artificielle', 2016, 'ISBN 978-0-26-203561-3', 2),
-    ('Introduction to Algorithms', 'Cormen et al.', 'livre', 'Algorithmique', 2009, 'ISBN 978-0-26-203293-3', 4),
-    ('The Pragmatic Programmer', 'Hunt & Thomas', 'livre', 'Développement Logiciel', 2019, 'ISBN 978-0-13-595705-9', 3),
+    # isbn : LibraryDocument.isbn a max_length=20 — un "ISBN " en préfixe
+    # poussait ces valeurs à 22 caractères, accepté en silence par SQLite
+    # (dev local) mais rejeté par PostgreSQL (StringDataRightTruncation).
+    ('Clean Code', 'Robert C. Martin', 'livre', 'Génie Logiciel', 2008, '978-0-13-235088-4', 3),
+    ('Design Patterns : GoF', 'Gang of Four', 'livre', 'Architecture Logicielle', 1994, '978-0-20-163361-5', 2),
+    ('Deep Learning', 'Ian Goodfellow', 'livre', 'Intelligence Artificielle', 2016, '978-0-26-203561-3', 2),
+    ('Introduction to Algorithms', 'Cormen et al.', 'livre', 'Algorithmique', 2009, '978-0-26-203293-3', 4),
+    ('The Pragmatic Programmer', 'Hunt & Thomas', 'livre', 'Développement Logiciel', 2019, '978-0-13-595705-9', 3),
     ('Système Intégré de Gestion Universitaire — TIRAHOU', 'Auteur UVHM', 'memoire', 'Génie Logiciel', 2025, '', 1),
-    ('Machine Learning avec Python', 'Aurélien Géron', 'livre', 'Intelligence Artificielle', 2022, 'ISBN 978-2-80-730524-7', 2),
-    ('PostgreSQL Administration', 'Greg Smith', 'livre', 'Bases de Données', 2020, 'ISBN 978-1-78-951533-0', 2),
+    ('Machine Learning avec Python', 'Aurélien Géron', 'livre', 'Intelligence Artificielle', 2022, '978-2-80-730524-7', 2),
+    ('PostgreSQL Administration', 'Greg Smith', 'livre', 'Bases de Données', 2020, '978-1-78-951533-0', 2),
     ('React Design Patterns', 'Carlos Santana Roldán', 'livre', 'Développement Web', 2021, '', 3),
     ('Sécurité des Systèmes d\'Information', 'Solange Ghernaouti', 'livre', 'Sécurité Informatique', 2020, '', 2),
 ]
