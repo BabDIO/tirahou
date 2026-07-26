@@ -1,0 +1,77 @@
+# Environnement de développement LOCAL uniquement (db + backend + frontend
+# communiquant entre eux) — n'a AUCUN effet sur le déploiement en ligne.
+# Le backend en production tourne sur Render via Procfile/build.sh, le
+# frontend sur Vercel via vercel.json : ni l'un ni l'autre ne lit ce fichier.
+#
+# Usage : cp .env.example .env  (puis ajuster si besoin), puis
+#         docker compose up --build
+
+services:
+  db:
+    image: postgres:16
+    # Production (Render) tourne sur PostgreSQL 18 — 16 est utilisé ici car
+    # déjà vérifié compatible avec les migrations de ce projet. Monter la
+    # version si une parité stricte avec la prod est nécessaire.
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tirahoudb}
+      POSTGRES_USER: ${DB_USER:-tirahou}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme_local_only}
+    volumes:
+      - tirahou_db_data:/var/lib/postgresql/data
+    ports:
+      # Hôte 5433 -> conteneur 5432, pour ne pas entrer en conflit avec un
+      # Postgres déjà installé localement. La communication backend<->db
+      # passe par le réseau interne Docker (port 5432), pas par ce mapping.
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tirahou} -d ${DB_NAME:-tirahoudb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-tirahoudb}
+      DB_USER: ${DB_USER:-tirahou}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme_local_only}
+      SECRET_KEY: ${SECRET_KEY:-docker-dev-secret-key-change-if-you-want}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3001}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./backend:/app
+    ports:
+      # Hôte 8001 -> conteneur 8000 : évite tout conflit avec un autre
+      # serveur déjà lancé sur le port 8000 de la machine hôte.
+      - "8001:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      # Vue du navigateur (hors réseau Docker), donc localhost et pas
+      # "backend" — voir la note dans .env.example.
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+    volumes:
+      - ./frontend:/app
+      # Volume anonyme sur node_modules : évite que le bind mount ci-dessus
+      # n'écrase les dépendances installées dans l'image par celles (ou
+      # l'absence) du dossier hôte.
+      - /app/node_modules
+    ports:
+      # Hôte 3001 -> conteneur 3000 : évite tout conflit avec un autre
+      # serveur de dev déjà lancé sur le port 3000 de la machine hôte.
+      - "3001:3000"
+
+volumes:
+  tirahou_db_data:
