@@ -28,6 +28,8 @@ export default function TeacherProfile() {
 
       <SectionTitle>Services</SectionTitle>
       <MenuLink href="/notifications" icon="🔔" label="Notifications" />
+      <MenuLink href="/assignments" icon="📝" label="Devoirs" />
+      <MenuLink href="/virtual-classes" icon="🎥" label="Classes virtuelles" />
       <MenuLink href="/library" icon="📚" label="Bibliothèque" />
 
       <View style={{ height: 8 }} />

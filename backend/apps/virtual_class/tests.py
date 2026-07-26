@@ -6,6 +6,7 @@ from datetime import timedelta, date
 from apps.accounts.models import User, Role
 from apps.academic.models import University, Faculty, Department, AcademicYear, LMDRegulation
 from apps.programs.models import Program, Semester, UE
+from apps.people.models import Student, Teacher
 from apps.lms.models import CourseSpace
 from apps.virtual_class.models import VirtualClassSession, SessionParticipant
 
@@ -15,9 +16,16 @@ class VirtualClassAPITests(TestCase):
 		# users
 		self.instructor = User.objects.create(email='inst@example.com', username='inst', first_name='Inst', last_name='Tutor')
 		self.student = User.objects.create(email='stud@example.com', username='stud', first_name='Stud', last_name='Dent')
-		# give instructor a role or is_staff
+		# IsInstructorOrStaff (action start/end/cancel) vérifie is_staff/groups,
+		# mais VirtualClassSessionViewSet.get_queryset() (comme le reste de
+		# l'app) vérifie teacher_profile/student_profile/roles -- il faut les
+		# deux pour qu'un vrai compte enseignant/étudiant y accède, donc le
+		# fixture doit refléter les deux mécanismes plutôt que le seul
+		# raccourci is_staff.
 		self.instructor.is_staff = True
 		self.instructor.save()
+		Teacher.objects.create(user=self.instructor, teacher_id='ENS-TEST-001')
+		student_profile = Student.objects.create(user=self.student, student_id='ETU-TEST-001', gender='M')
 
 		# minimal academic/program objects
 		uni = University.objects.create(name='Uni', acronym='UNI')
@@ -31,7 +39,7 @@ class VirtualClassAPITests(TestCase):
 		# course space
 		cs = CourseSpace.objects.create(ue=ue, academic_year=ay, title='Course Space')
 		cs.teachers.add(self.instructor)
-		cs.enrolled_students.add() if False else None
+		cs.enrolled_students.add(student_profile)
 
 		# create a virtual session
 		self.session = VirtualClassSession.objects.create(

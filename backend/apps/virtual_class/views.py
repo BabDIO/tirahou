@@ -14,6 +14,26 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
     filterset_fields = ['course_space', 'status', 'mode', 'provider']
     ordering_fields = ['scheduled_start']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return VirtualClassSession.objects.none()
+        qs = VirtualClassSession.objects.all().select_related('course_space')
+        user = self.request.user
+        # Étudiant : sessions des cours auxquels il est inscrit.
+        if hasattr(user, 'student_profile'):
+            return qs.filter(course_space__enrolled_students=user.student_profile)
+        # Enseignant : sessions de ses propres cours (créées par lui ou de
+        # ses espaces de cours).
+        if hasattr(user, 'teacher_profile'):
+            from django.db.models import Q
+            return qs.filter(Q(course_space__teachers=user) | Q(created_by=user)).distinct()
+        # Personnel administratif/pédagogique : toutes les sessions.
+        if user.roles.filter(
+            name__in=('super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique')
+        ).exists():
+            return qs
+        return qs.none()
+
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
