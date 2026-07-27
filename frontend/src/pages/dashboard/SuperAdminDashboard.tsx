@@ -46,7 +46,15 @@ export default function SuperAdminDashboard() {
   const { data: systemStats, isLoading } = useQuery({
     queryKey: ['system-stats'],
     queryFn: () => api.get('/system-stats/').then(r => r.data),
-    initialData: MOCK_DATA
+    initialData: MOCK_DATA,
+    // initialData compte comme "déjà récupéré à l'instant" par défaut —
+    // combiné au staleTime global de 5 min (App.tsx), la vraie requête
+    // n'était jamais déclenchée pendant 5 minutes après le montage : le
+    // dashboard restait bloqué sur les zéros du mock tant que l'utilisateur
+    // ne rechargeait pas la page après ce délai. initialDataUpdatedAt: 0
+    // marque le mock comme immédiatement périmé pour forcer le vrai fetch
+    // en arrière-plan dès le montage, tout en affichant l'UI sans attendre.
+    initialDataUpdatedAt: 0,
   })
 
   const hour = new Date().getHours()

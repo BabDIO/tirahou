@@ -35,7 +35,11 @@ export default function ResponsableDashboardEnriched() {
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['responsable-dashboard'],
     queryFn: () => api.get<ResponsableData>('/responsable/dashboard/').then(r => r.data),
-    initialData: RESPONSABLE_DATA
+    initialData: RESPONSABLE_DATA,
+    // Sans ça, le staleTime global de 5 min (App.tsx) traite ce mock comme
+    // déjà à jour et retarde le vrai fetch d'autant — le dashboard restait
+    // bloqué sur des zéros. Voir SuperAdminDashboard.tsx pour le détail.
+    initialDataUpdatedAt: 0,
   })
 
   const hour = new Date().getHours()

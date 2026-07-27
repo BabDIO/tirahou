@@ -39,6 +39,10 @@ export default function StudentDashboard() {
     queryKey: ['student-dashboard'],
     queryFn: () => api.get('/student/dashboard/').then(r => r.data),
     initialData: EMPTY_STATS,
+    // Sans ça, le staleTime global de 5 min (App.tsx) traite ce mock comme
+    // déjà à jour et retarde le vrai fetch d'autant — le dashboard restait
+    // bloqué sur des zéros. Voir SuperAdminDashboard.tsx pour le détail.
+    initialDataUpdatedAt: 0,
   })
 
   const { data: sessions } = useQuery({
