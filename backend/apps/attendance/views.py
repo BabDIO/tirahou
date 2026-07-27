@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import AttendanceSheet, AttendanceRecord, AbsenceSummary
@@ -27,7 +28,15 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        session = serializer.validated_data.get('session')
+        user = self.request.user
+        # get_queryset() borne déjà la liste des séances qu'un enseignant
+        # peut voir/sélectionner à session__teacher=user côté frontend,
+        # mais rien n'empêchait un appel API direct de créer une feuille
+        # sur la séance d'un autre enseignant — vérifié explicitement ici.
+        if hasattr(user, 'teacher_profile') and session and session.teacher_id != user.id:
+            raise PermissionDenied("Vous ne pouvez créer une feuille de présence que pour vos propres séances.")
+        serializer.save(created_by=user)
 
     @action(detail=True, methods=['post'])
     def open(self, request, pk=None):
