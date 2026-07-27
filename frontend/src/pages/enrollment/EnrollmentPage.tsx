@@ -50,7 +50,10 @@ export default function EnrollmentPage() {
       toast.success('Inscription validée')
       setSelected(null)
     },
-    onError: () => toast.error('Erreur lors de la validation'),
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } } }
+      toast.error(e?.response?.data?.detail ?? 'Erreur lors de la validation')
+    },
   })
 
   const validatePaymentMutation = useMutation({
@@ -76,7 +79,7 @@ export default function EnrollmentPage() {
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Gestion des inscriptions administratives et pédagogiques</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>
-          Nouvelle inscription
+          {tab === 'peda' ? 'Nouvelle inscription pédagogique' : 'Nouvelle inscription'}
         </Button>
       </div>
 
@@ -168,18 +171,18 @@ export default function EnrollmentPage() {
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
                               onClick={() => setSelected(enrollment)}>Voir</Button>
-                            {enrollment.status === 'en_attente' && (
-                              <Button variant="secondary" size="sm" icon={<CheckCircle className="w-3.5 h-3.5" />}
-                                loading={validateMutation.isPending}
-                                onClick={() => validateMutation.mutate(enrollment.id)}>
-                                Valider
-                              </Button>
-                            )}
-                            {enrollment.status === 'validee' && !enrollment.payment_validated && (
+                            {enrollment.status === 'en_attente' && !enrollment.payment_validated && (
                               <Button size="sm" icon={<CreditCard className="w-3.5 h-3.5" />}
                                 loading={validatePaymentMutation.isPending}
                                 onClick={() => validatePaymentMutation.mutate(enrollment.id)}>
                                 Paiement ✓
+                              </Button>
+                            )}
+                            {enrollment.status === 'en_attente' && enrollment.payment_validated && (
+                              <Button variant="secondary" size="sm" icon={<CheckCircle className="w-3.5 h-3.5" />}
+                                loading={validateMutation.isPending}
+                                onClick={() => validateMutation.mutate(enrollment.id)}>
+                                Valider
                               </Button>
                             )}
                           </div>
@@ -248,11 +251,19 @@ export default function EnrollmentPage() {
       </Modal>
 
       {/* Create Modal */}
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle inscription" size="lg">
-        <EnrollmentCreateForm
-          onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['enrollments'] }) }}
-          onCancel={() => setCreateOpen(false)}
-        />
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)}
+        title={tab === 'peda' ? 'Nouvelle inscription pédagogique' : 'Nouvelle inscription'} size="lg">
+        {tab === 'peda' ? (
+          <PedaEnrollmentCreateForm
+            onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['peda-enrollments'] }) }}
+            onCancel={() => setCreateOpen(false)}
+          />
+        ) : (
+          <EnrollmentCreateForm
+            onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['enrollments'] }) }}
+            onCancel={() => setCreateOpen(false)}
+          />
+        )}
       </Modal>
     </div>
   )
@@ -393,6 +404,80 @@ function EnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; 
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<ClipboardCheck className="w-4 h-4" />}>
           Créer l'inscription
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+// Rien ne créait jamais de PedaEnrollment (ni le backend automatiquement à
+// la validation de l'inscription administrative, ni aucun formulaire
+// frontend) — l'endpoint POST /peda-enrollments/ existait mais n'était
+// appelé nulle part, rendant le choix d'UE par les étudiants inaccessible
+// en pratique. Ce formulaire comble ce vide.
+function PedaEnrollmentCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+  const toast = useToast()
+  const [adminEnrollmentId, setAdminEnrollmentId] = useState('')
+  const [semesterId, setSemesterId] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const { data: validatedEnrollments } = useQuery({
+    queryKey: ['admin-enrollments-validated'],
+    queryFn: () => enrollmentApi.getEnrollments({ status: 'validee', page_size: 100 }).then(r => r.data),
+  })
+
+  const selectedEnrollment = validatedEnrollments?.results?.find((e: AdminEnrollment) => e.id === adminEnrollmentId)
+
+  const { data: semesters } = useQuery({
+    queryKey: ['semesters-for-program', selectedEnrollment?.program],
+    queryFn: () => programsApi.getSemesters({ program: selectedEnrollment?.program, page_size: 100 }).then(r => r.data),
+    enabled: !!selectedEnrollment?.program,
+  })
+
+  const handleSubmit = async (ev: React.FormEvent) => {
+    ev.preventDefault()
+    if (!adminEnrollmentId || !semesterId) { toast.error('Inscription administrative et semestre requis'); return }
+    setLoading(true)
+    try {
+      await enrollmentApi.createPedaEnrollment({ admin_enrollment: adminEnrollmentId, semester: semesterId })
+      toast.success('Inscription pédagogique créée')
+      onSuccess()
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(e?.response?.data ?? {}).flat().join(' ')
+      toast.error(msgs || 'Erreur lors de la création')
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Alert type="info">
+        Seules les inscriptions administratives déjà <strong>validées</strong> sont proposées — l'inscription pédagogique (choix des UE) ne peut avoir lieu qu'une fois le dossier administratif confirmé.
+      </Alert>
+      <div>
+        <label className="label">Inscription administrative (validée) *</label>
+        <select className="input bg-white dark:bg-slate-900" value={adminEnrollmentId}
+          onChange={e => { setAdminEnrollmentId(e.target.value); setSemesterId('') }}>
+          <option value="">— Sélectionner —</option>
+          {validatedEnrollments?.results?.map((en: AdminEnrollment) => (
+            <option key={en.id} value={en.id}>{en.enrollment_number} — {en.student_name} — {en.program_name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Semestre *</label>
+        <select className="input bg-white dark:bg-slate-900" value={semesterId}
+          onChange={e => setSemesterId(e.target.value)} disabled={!adminEnrollmentId}>
+          <option value="">— Sélectionner —</option>
+          {semesters?.results?.map((s: { id: string; label: string }) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+        <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
+        <Button className="flex-1" type="submit" loading={loading} icon={<ClipboardCheck className="w-4 h-4" />}>
+          Créer l'inscription pédagogique
         </Button>
       </div>
     </form>
