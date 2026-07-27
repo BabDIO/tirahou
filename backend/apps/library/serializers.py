@@ -55,10 +55,16 @@ class DocumentRatingSerializer(serializers.ModelSerializer):
 
 class ReadingListSerializer(serializers.ModelSerializer):
     documents_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = ReadingList
         fields = '__all__'
+        # user en lecture seule : requis par le modèle mais jamais fourni
+        # par le formulaire (juste un nom de liste) — perform_create()
+        # l'assigne déjà depuis request.user, mais sans ce read_only la
+        # validation du serializer rejetait la requête avant même
+        # d'atteindre ce code, avec "Ce champ est obligatoire."
+        read_only_fields = ['user']
     
     def get_documents_count(self, obj):
         return obj.documents.count()
