@@ -1,16 +1,46 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import DocumentCategory, StudentDocument, GeneratedDocument
 from .serializers import DocumentCategorySerializer, StudentDocumentSerializer, GeneratedDocumentSerializer
 
+# Rôles habilités à valider/rejeter les documents déposés par les étudiants
+# (scolarité) — une pièce d'identité, un diplôme ou un relevé de notes ne
+# doit jamais pouvoir être auto-validé par la personne qui l'a déposé.
+DOCUMENT_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique',
+)
+
+
+def _is_document_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=DOCUMENT_MANAGER_ROLES).exists()
+
 
 class DocumentCategoryViewSet(viewsets.ModelViewSet):
     queryset = DocumentCategory.objects.filter(is_active=True)
     serializer_class = DocumentCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Aucun contrôle n'existait sur ce catalogue de référence (utilisé
+        # pour classer les documents officiels) — n'importe quel étudiant
+        # pouvait y ajouter une catégorie.
+        if not _is_document_manager(self.request.user):
+            raise PermissionDenied("Réservé à la scolarité.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _is_document_manager(self.request.user):
+            raise PermissionDenied("Réservé à la scolarité.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_document_manager(self.request.user):
+            raise PermissionDenied("Réservé à la scolarité.")
+        instance.delete()
 
 
 class StudentDocumentViewSet(viewsets.ModelViewSet):
@@ -43,6 +73,11 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
+        # Faille corrigée : rien n'empêchait auparavant un étudiant de
+        # valider LUI-MÊME le document qu'il venait de déposer (identité,
+        # diplôme, relevé de notes...). Confirmé en direct sur la prod.
+        if not _is_document_manager(request.user):
+            return Response({'detail': 'Réservé à la scolarité.'}, status=status.HTTP_403_FORBIDDEN)
         doc = self.get_object()
         doc.status = 'valide'
         doc.verified_by = request.user
@@ -52,6 +87,8 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
+        if not _is_document_manager(request.user):
+            return Response({'detail': 'Réservé à la scolarité.'}, status=status.HTTP_403_FORBIDDEN)
         doc = self.get_object()
         doc.status = 'rejete'
         doc.rejection_reason = request.data.get('reason', '')
@@ -62,6 +99,8 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def archive(self, request, pk=None):
+        if not _is_document_manager(request.user):
+            return Response({'detail': 'Réservé à la scolarité.'}, status=status.HTTP_403_FORBIDDEN)
         doc = self.get_object()
         doc.status = 'archive'
         doc.save()
@@ -88,7 +127,25 @@ class GeneratedDocumentViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        # Faille CRITIQUE corrigée : rien n'empêchait un étudiant de générer
+        # lui-même un document officiel (diplôme, relevé de notes, PV de
+        # délibération...) avec le statut "signe", et de le rendre
+        # publiquement vérifiable via /documents/verify/<code>/ — fraude aux
+        # diplômes. Confirmé en direct sur la prod (HTTP 201, puis
+        # "valid": true sur l'endpoint public de vérification).
+        if not _is_document_manager(self.request.user):
+            raise PermissionDenied("Réservé à la scolarité.")
         serializer.save(generated_by=self.request.user)
+
+    def perform_update(self, serializer):
+        if not _is_document_manager(self.request.user):
+            raise PermissionDenied("Réservé à la scolarité.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_document_manager(self.request.user):
+            raise PermissionDenied("Réservé à la scolarité.")
+        instance.delete()
 
 
 @extend_schema(responses={200: OpenApiResponse(description='Résultat de vérification du document')})
