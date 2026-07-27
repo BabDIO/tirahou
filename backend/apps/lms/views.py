@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Q
@@ -14,6 +15,29 @@ from .serializers import (
     QuizSerializer, QuestionSerializer, QuizAttemptSerializer, StudentProgressSerializer,
     StudentAnswerSerializer, QuizAttemptDetailSerializer,
 )
+
+# Rôles habilités à administrer un espace de cours (création/édition/suppression)
+# indépendamment d'être ou non dans CourseSpace.teachers.
+LMS_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite',
+    'responsable_pedagogique', 'chef_departement',
+)
+
+
+def _can_manage_course_space(user, space):
+    """Vrai si `user` peut créer/modifier/supprimer du contenu de `space`.
+
+    Aucune de ces vérifications n'existait avant ce correctif : les
+    ViewSets n'avaient que des restrictions de LECTURE (get_queryset),
+    ce qui laissait n'importe quel utilisateur authentifié — y compris un
+    étudiant simplement inscrit — modifier ou supprimer un espace de
+    cours, un module, une ressource, un devoir ou un quiz via
+    PATCH/PUT/DELETE, du moment qu'il pouvait le voir en GET.
+    """
+    if user.is_superuser or user.roles.filter(name__in=LMS_MANAGER_ROLES).exists():
+        return True
+    return space.teachers.filter(id=user.id).exists()
+
 
 class CourseSpaceViewSet(viewsets.ModelViewSet):
     queryset = CourseSpace.objects.filter(is_active=True).select_related('ue', 'academic_year')
@@ -80,9 +104,28 @@ class CourseSpaceViewSet(viewsets.ModelViewSet):
             return CourseSpaceDetailSerializer
         return CourseSpaceSerializer
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not (user.is_superuser or user.roles.filter(name__in=LMS_MANAGER_ROLES).exists()
+                or hasattr(user, 'teacher_profile')):
+            raise PermissionDenied("Vous ne pouvez pas créer d'espace de cours.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance):
+            raise PermissionDenied("Vous ne gérez pas cet espace de cours.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance):
+            raise PermissionDenied("Vous ne gérez pas cet espace de cours.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
         space = self.get_object()
+        if not _can_manage_course_space(request.user, space):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         space.is_published = True
         space.save()
         return Response({'detail': 'Espace de cours publié.'})
@@ -90,6 +133,8 @@ class CourseSpaceViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def change_mode(self, request, pk=None):
         space = self.get_object()
+        if not _can_manage_course_space(request.user, space):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         new_mode = request.data.get('mode')
         if new_mode not in dict(CourseSpace.MODE_CHOICES):
             return Response({'detail': 'Mode invalide.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -134,6 +179,22 @@ class CourseModuleViewSet(viewsets.ModelViewSet):
             return base.filter(id__in=accessible_ids)
         return qs
 
+    def perform_create(self, serializer):
+        space = serializer.validated_data.get('course_space')
+        if not _can_manage_course_space(self.request.user, space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        instance.delete()
+
     @action(detail=True, methods=['get'])
     def access_status(self, request, pk=None):
         """Indique si l'étudiant connecté peut accéder à ce module (et pourquoi sinon)."""
@@ -171,10 +232,28 @@ class CourseResourceViewSet(viewsets.ModelViewSet):
             )
         return qs
 
+    def perform_create(self, serializer):
+        module = serializer.validated_data.get('module')
+        if not _can_manage_course_space(self.request.user, module.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance.module.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance.module.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def create_version(self, request, pk=None):
         """Publie une nouvelle version d'une ressource, en archivant l'ancienne (8.16 / H7)."""
         resource = self.get_object()
+        if not _can_manage_course_space(request.user, resource.module.course_space):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         new_resource = resource.create_new_version(
             uploaded_by=request.user,
             file=request.FILES.get('file'),
@@ -216,6 +295,22 @@ class AssignmentViewSet(viewsets.ModelViewSet):
             )
         return qs
 
+    def perform_create(self, serializer):
+        space = serializer.validated_data.get('course_space')
+        if not _can_manage_course_space(self.request.user, space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
         assignment = self.get_object()
@@ -238,6 +333,8 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def submissions(self, request, pk=None):
         assignment = self.get_object()
+        if not _can_manage_course_space(request.user, assignment.course_space):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         subs = AssignmentSubmission.objects.filter(assignment=assignment).select_related('student')
         return Response(AssignmentSubmissionSerializer(subs, many=True).data)
 
@@ -261,6 +358,22 @@ class QuizViewSet(viewsets.ModelViewSet):
                 is_published=True
             )
         return qs
+
+    def perform_create(self, serializer):
+        space = serializer.validated_data.get('course_space')
+        if not _can_manage_course_space(self.request.user, space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        instance.delete()
 
     @action(detail=True, methods=['post'])
     def start_attempt(self, request, pk=None):
@@ -391,12 +504,22 @@ class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
         qs = AssignmentSubmission.objects.select_related('assignment', 'student__user')
         if hasattr(user, 'student_profile'):
             return qs.filter(student=user.student_profile)
-        return qs
+        # Sans ce filtre, un enseignant (ou toute autre personne authentifiée
+        # sans profil étudiant) voyait — et pouvait noter — les rendus de
+        # TOUS les cours, pas seulement les siens.
+        if user.is_superuser or user.roles.filter(name__in=LMS_MANAGER_ROLES).exists():
+            return qs
+        return qs.filter(assignment__course_space__teachers=user)
 
     @action(detail=True, methods=['patch'])
     def grade(self, request, pk=None):
         """Corriger un rendu (enseignant)."""
         submission = self.get_object()
+        # Faille corrigée : rien n'empêchait auparavant un étudiant de
+        # s'auto-noter via cette action (confirmé en direct sur la prod :
+        # un compte étudiant a pu se mettre 20/20 sur son propre devoir).
+        if not _can_manage_course_space(request.user, submission.assignment.course_space):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         grade_val = request.data.get('grade')
         feedback = request.data.get('feedback', '')
         if grade_val is None:
