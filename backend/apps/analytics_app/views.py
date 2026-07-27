@@ -1,6 +1,29 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+
+# Rôles habilités à créditer/débiter manuellement un portefeuille de points —
+# ces opérations affectent un solde utilisable pour acheter des cours sur le
+# marketplace, donc réservées à l'administration.
+WALLET_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_financier', 'responsable_pedagogique',
+)
+
+
+def _is_wallet_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=WALLET_MANAGER_ROLES).exists()
+
+
+# Rôles habilités à administrer badges/certifications (catalogue + attribution) —
+# page frontend dédiée sous /admin, mais rien ne l'imposait côté API.
+GAMIFICATION_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement', 'enseignant',
+)
+
+
+def _is_gamification_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=GAMIFICATION_MANAGER_ROLES).exists()
 from django.db.models import Count, Sum, Avg
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import LearningActivity, EngagementScore, DashboardStat
@@ -50,6 +73,25 @@ class BadgeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['type', 'is_published']
 
+    def perform_create(self, serializer):
+        # Aucun contrôle n'existait : n'importe quel utilisateur authentifié
+        # pouvait ajouter un badge au catalogue via POST /badges/. Confirmé
+        # en direct (rejeté seulement par une erreur de validation, pas de
+        # permission, avec des paramètres invalides).
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        instance.delete()
+
 
 class StudentBadgeViewSet(viewsets.ModelViewSet):
     """Attribution de badges aux étudiants."""
@@ -68,7 +110,21 @@ class StudentBadgeViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        # Sans ce contrôle, un étudiant pouvait s'auto-attribuer n'importe
+        # quel badge (et les points associés) via POST /student-badges/.
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
         serializer.save(awarded_by=self.request.user)
+
+    def perform_update(self, serializer):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        instance.delete()
 
 
 class WalletViewSet(viewsets.ReadOnlyModelViewSet):
@@ -96,6 +152,13 @@ class WalletViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['post'])
     def credit(self, request):
         """Créditer/débiter le portefeuille d'un étudiant (usage administratif) — crée le portefeuille s'il n'existe pas encore."""
+        # Le commentaire "usage administratif" n'était pas appliqué : n'importe
+        # quel utilisateur authentifié pouvait créditer le portefeuille de
+        # n'importe quel étudiant avec un montant arbitraire. Confirmé en
+        # direct : un compte étudiant a pu se créditer 99999 points via
+        # /wallet-transactions/ (voir perform_create ci-dessous).
+        if not _is_wallet_manager(request.user):
+            raise PermissionDenied("Réservé à l'administration.")
         from apps.people.models import Student
         student_id = request.data.get('student')
         tx_type = request.data.get('type', 'reward')
@@ -130,7 +193,23 @@ class WalletTransactionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['wallet', 'type']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return WalletTransaction.objects.none()
+        qs = WalletTransaction.objects.select_related('wallet__student__user')
+        user = self.request.user
+        if hasattr(user, 'student_profile'):
+            return qs.filter(wallet__student=user.student_profile)
+        return qs
+
     def perform_create(self, serializer):
+        # Faille critique corrigée : cette action était accessible à tout
+        # utilisateur authentifié sans aucun contrôle de rôle, permettant à
+        # un étudiant de fabriquer un crédit arbitraire sur SON PROPRE
+        # portefeuille (ou celui de n'importe qui) et l'utiliser ensuite pour
+        # acheter des cours payants sur le marketplace. Confirmé en direct.
+        if not _is_wallet_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration.")
         transaction = serializer.save()
         wallet = transaction.wallet
         if transaction.type in ('credit', 'reward'):
@@ -140,6 +219,16 @@ class WalletTransactionViewSet(viewsets.ModelViewSet):
             wallet.balance -= transaction.amount
             wallet.total_spent += transaction.amount
         wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
+
+    def perform_update(self, serializer):
+        if not _is_wallet_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_wallet_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration.")
+        instance.delete()
 
 
 class MicroCertificationViewSet(viewsets.ModelViewSet):
@@ -160,7 +249,19 @@ class MicroCertificationViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
         serializer.save(created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        instance.delete()
 
 
 class StudentCertificationViewSet(viewsets.ModelViewSet):
@@ -178,6 +279,21 @@ class StudentCertificationViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'student_profile'):
             return qs.filter(student=user.student_profile)
         return qs
+
+    def perform_update(self, serializer):
+        # Sans ce contrôle, un étudiant pouvait passer directement son
+        # propre statut à "certified" (+ un score arbitraire) par un simple
+        # PATCH, en court-circuitant entièrement l'action certify()
+        # ci-dessous — et donc sans validation par un enseignant/admin.
+        # Confirmé en direct sur la prod.
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_gamification_manager(self.request.user):
+            raise PermissionDenied("Réservé à l'administration pédagogique.")
+        instance.delete()
 
     @action(detail=False, methods=['post'])
     def enroll(self, request):
@@ -200,6 +316,11 @@ class StudentCertificationViewSet(viewsets.ModelViewSet):
         """Marque la certification comme complétée/certifiée pour un étudiant (usage administratif)."""
         from django.utils import timezone
         sc = self.get_object()
+        # Sans ce contrôle, un étudiant pouvait s'auto-certifier (et
+        # déclencher l'attribution automatique du badge lié, cf. plus bas)
+        # via POST /student-certifications/{id}/certify/ sur sa propre ligne.
+        if not _is_gamification_manager(request.user):
+            return Response({'detail': 'Réservé à l\'administration pédagogique.'}, status=403)
         score = request.data.get('score')
         status_value = request.data.get('status', 'certified')
         if status_value not in dict(StudentCertification.STATUS_CHOICES):
