@@ -41,6 +41,21 @@ class MarketplaceCourseViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Seuls les enseignants peuvent créer un cours marketplace.")
         serializer.save(teacher=self.request.user)
 
+    def perform_update(self, serializer):
+        # Sans ce contrôle, n'importe quel utilisateur authentifié (même un
+        # étudiant) pouvait modifier le cours d'un autre enseignant via
+        # PATCH/PUT — seul perform_create() était protégé.
+        if serializer.instance.teacher_id != self.request.user.id and not self.request.user.is_superuser:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.teacher_id != self.request.user.id and not self.request.user.is_superuser:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne gérez pas ce cours.")
+        instance.delete()
+
     @action(detail=False, methods=['get'])
     def my_courses(self, request):
         if not hasattr(request.user, 'teacher_profile'):
@@ -197,3 +212,21 @@ class CourseReviewViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Vous devez avoir acheté ce cours pour laisser un avis.")
         review = serializer.save(student=student)
         review.course.update_rating()
+
+    def perform_update(self, serializer):
+        # Même faille que sur MarketplaceCourseViewSet : sans ce contrôle,
+        # n'importe quel étudiant authentifié pouvait modifier ou supprimer
+        # l'avis d'un autre étudiant via PATCH/PUT/DELETE.
+        if serializer.instance.student.user_id != self.request.user.id and not self.request.user.is_superuser:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne gérez pas cet avis.")
+        serializer.save()
+        serializer.instance.course.update_rating()
+
+    def perform_destroy(self, instance):
+        if instance.student.user_id != self.request.user.id and not self.request.user.is_superuser:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne gérez pas cet avis.")
+        course = instance.course
+        instance.delete()
+        course.update_rating()
