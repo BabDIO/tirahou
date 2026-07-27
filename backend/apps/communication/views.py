@@ -122,8 +122,12 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         user = self.request.user
         qs = Announcement.objects.select_related('author', 'course_space')
         
-        # Admins et responsables voient tout
-        if user.roles.filter(name__in=['admin', 'responsable_pedagogique']).exists():
+        # Admins et responsables voient tout, y compris les brouillons non
+        # publiés — 'admin' n'existe pas parmi les 13 rôles réels du système,
+        # cette vérification ne matchait donc jamais aucun compte admin réel.
+        if user.is_superuser or user.roles.filter(
+            name__in=['super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement']
+        ).exists():
             return qs.order_by('-is_pinned', '-published_at')
         
         # Autres utilisateurs voient seulement les annonces publiées
@@ -135,7 +139,8 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
         ann = self.get_object()
-        if not request.user.roles.filter(name__in=['admin', 'responsable_pedagogique', 'enseignant']).exists():
+        allowed_roles = ['super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement', 'enseignant']
+        if not (request.user.is_superuser or request.user.roles.filter(name__in=allowed_roles).exists()):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         
         ann.is_published = True
@@ -146,7 +151,8 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def pin(self, request, pk=None):
         ann = self.get_object()
-        if not request.user.roles.filter(name__in=['admin', 'responsable_pedagogique']).exists():
+        allowed_roles = ['super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement']
+        if not (request.user.is_superuser or request.user.roles.filter(name__in=allowed_roles).exists()):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         
         ann.is_pinned = not ann.is_pinned
@@ -220,7 +226,8 @@ class ForumViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def toggle_status(self, request, pk=None):
         forum = self.get_object()
-        if not request.user.roles.filter(name__in=['admin', 'responsable_pedagogique', 'enseignant']).exists():
+        allowed_roles = ['super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement', 'enseignant']
+        if not (request.user.is_superuser or request.user.roles.filter(name__in=allowed_roles).exists()):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         
         forum.is_open = not forum.is_open
@@ -254,7 +261,12 @@ class ForumPostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def pin(self, request, pk=None):
         post = self.get_object()
-        if not request.user.roles.filter(name__in=['admin', 'responsable_pedagogique', 'enseignant']).exists():
+        # 'admin' n'existe pas parmi les 13 rôles réels (super_admin,
+        # admin_institutionnel, ...) — cette vérification ne matchait jamais
+        # aucun compte administrateur réel, rendant l'épinglage inutilisable
+        # pour eux. Corrigé avec les noms de rôles effectivement définis.
+        allowed_roles = ['super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement', 'enseignant']
+        if not (request.user.is_superuser or request.user.roles.filter(name__in=allowed_roles).exists()):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         
         post.is_pinned = not post.is_pinned
