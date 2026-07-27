@@ -33,9 +33,19 @@ class StudentViewSet(viewsets.ModelViewSet):
         # Enseignant : seulement ses étudiants inscrits dans ses cours
         if hasattr(user, 'teacher_profile'):
             from apps.enrollment.models import UEEnrollment
-            student_ids = UEEnrollment.objects.filter(
-                ue__ecs__teachers=user
-            ).values_list(
+            enrollment_filter = {'ue__ecs__teachers': user}
+            # ?enrolled_in_ec=<id> (utilisé par la saisie de notes pour ne
+            # lister que les étudiants du cours sélectionné) — sans ce
+            # filtre explicite, le paramètre était silencieusement ignoré
+            # par django-filter (absent de filterset_fields) et l'enseignant
+            # voyait TOUJOURS son effectif complet, tous EC confondus, quel
+            # que soit l'EC choisi dans le formulaire.
+            ec_id = self.request.query_params.get('enrolled_in_ec')
+            if ec_id:
+                # ue__ecs__teachers=user reste appliqué : un enseignant ne
+                # peut filtrer que sur un EC qu'il enseigne lui-même.
+                enrollment_filter['ue__ecs__id'] = ec_id
+            student_ids = UEEnrollment.objects.filter(**enrollment_filter).values_list(
                 'peda_enrollment__admin_enrollment__student_id', flat=True
             ).distinct()
             return qs.filter(id__in=student_ids)

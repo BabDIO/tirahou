@@ -6,9 +6,9 @@ import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 
 interface GradeItem {
-  id: number
-  student: { id: number; name: string; student_number: string; email?: string }
-  ec: { id: number; name: string; code: string; credits: number }
+  id: string
+  student: { id: string; name: string; student_number: string; email?: string }
+  ec: { id: string; name: string; code: string; credits: number }
   cc_grade: number | null
   exam_grade: number | null
   score: number | null
@@ -18,9 +18,9 @@ interface GradeItem {
 }
 
 interface GradeEntryPayload {
-  student_id: number
-  ec_id: number
-  exam_session_id: number
+  student_id: string
+  ec_id: string
+  exam_session_id: string
   cc_grade: number
   exam_grade: number
 }
@@ -32,9 +32,9 @@ const statusBadge: Record<string, string> = {
 }
 
 const GradeEntry = () => {
-  const [selectedEC, setSelectedEC] = useState<number | null>(null)
-  const [selectedSession, setSelectedSession] = useState<number | null>(null)
-  const [grades, setGrades] = useState<Record<number, { cc: string; exam: string }>>({})
+  const [selectedEC, setSelectedEC] = useState<string | null>(null)
+  const [selectedSession, setSelectedSession] = useState<string | null>(null)
+  const [grades, setGrades] = useState<Record<string, { cc: string; exam: string }>>({})
   const [bulkMode, setBulkMode] = useState(false)
   const queryClient = useQueryClient()
 
@@ -72,11 +72,11 @@ const GradeEntry = () => {
     },
   })
 
-  const handleGradeChange = (studentId: number, type: 'cc' | 'exam', value: string) => {
+  const handleGradeChange = (studentId: string, type: 'cc' | 'exam', value: string) => {
     setGrades(prev => ({ ...prev, [studentId]: { ...prev[studentId], [type]: value } }))
   }
 
-  const handleSaveGrade = (studentId: number) => {
+  const handleSaveGrade = (studentId: string) => {
     if (!selectedEC || !selectedSession) return
     const g = grades[studentId]
     if (!g?.cc || !g?.exam) { toast.error('CC et Examen requis'); return }
@@ -91,7 +91,7 @@ const GradeEntry = () => {
     const toSave = Object.entries(grades)
       .filter(([, g]) => g.cc && g.exam)
       .map(([id, g]) => ({
-        student_id: parseInt(id), ec_id: selectedEC!, exam_session_id: selectedSession!,
+        student_id: id, ec_id: selectedEC!, exam_session_id: selectedSession!,
         cc_grade: parseFloat(g.cc), exam_grade: parseFloat(g.exam),
       }))
     if (!toSave.length) { toast.error('Aucune note à enregistrer'); return }
@@ -144,10 +144,10 @@ const GradeEntry = () => {
           <div>
             <label className="label">Élément Constitutif (EC)</label>
             <select className="input bg-white dark:bg-slate-900"
-              value={selectedEC?.toString() ?? ''}
-              onChange={e => setSelectedEC(e.target.value ? parseInt(e.target.value) : null)}>
+              value={selectedEC ?? ''}
+              onChange={e => setSelectedEC(e.target.value || null)}>
               <option value="">— Sélectionner un EC —</option>
-              {teacherECs?.map((ec: { id: number; code: string; name: string; credits: number }) => (
+              {teacherECs?.map((ec: { id: string; code: string; name: string; credits: number }) => (
                 <option key={ec.id} value={ec.id}>{ec.code} — {ec.name} ({ec.credits} cr.)</option>
               ))}
             </select>
@@ -155,10 +155,10 @@ const GradeEntry = () => {
           <div>
             <label className="label">Session d'examen</label>
             <select className="input bg-white dark:bg-slate-900"
-              value={selectedSession?.toString() ?? ''}
-              onChange={e => setSelectedSession(e.target.value ? parseInt(e.target.value) : null)}>
+              value={selectedSession ?? ''}
+              onChange={e => setSelectedSession(e.target.value || null)}>
               <option value="">— Sélectionner une session —</option>
-              {examSessions?.results?.map((s: { id: number; semester: string; session_type_display: string }) => (
+              {examSessions?.results?.map((s: { id: string; semester: string; session_type_display: string }) => (
                 <option key={s.id} value={s.id}>{s.semester} — {s.session_type_display}</option>
               ))}
             </select>
@@ -195,7 +195,7 @@ const GradeEntry = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((student: { id: number; name: string; email?: string; student_number: string }) => {
+                    {students.map((student: { id: string; name: string; email?: string; student_number: string }) => {
                       const existing = existingGrades?.find((g: GradeItem) => g.student.id === student.id)
                       const cur = grades[student.id] ?? { cc: '', exam: '' }
                       const ccVal = (cur.cc || existing?.cc_grade?.toString()) ?? ''

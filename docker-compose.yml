@@ -31,18 +31,21 @@ services:
 
   backend:
     build: ./backend
-    # Seed automatique au démarrage — les 3 scripts sont idempotents
-    # (get_or_create), donc sans risque à rejouer à chaque redémarrage du
-    # conteneur : create_test_users (comptes de démo, un par rôle — voir
-    # docs/COMPTES_TEST.md) puis seed_demo_data (structure académique,
-    # étudiants/notes/finances réalistes) puis create_test_courses (espaces
-    # de cours + contenu LMS, dépend des programmes créés par seed_demo_data
-    # — d'où l'ordre). Pour désactiver le seed automatique, remplacer cette
-    # commande par la version courte commentée juste en dessous.
+    # Seed automatique au démarrage — tous idempotents (get_or_create),
+    # donc sans risque à rejouer à chaque redémarrage du conteneur :
+    # create_test_users (comptes de démo, un par rôle — voir
+    # docs/COMPTES_TEST.md) puis seed_demo_data (structure académique +
+    # les 13 rôles, étudiants/notes/finances réalistes) puis seed_permissions
+    # (accorde les droits RBAC — a besoin des rôles créés par seed_demo_data,
+    # d'où l'ordre) puis create_test_courses (espaces de cours + contenu LMS,
+    # dépend des programmes créés par seed_demo_data). Pour désactiver le
+    # seed automatique, remplacer cette commande par la version courte
+    # commentée juste en dessous.
     command: >
       sh -c "python manage.py migrate &&
              python create_test_users.py &&
              python seed_demo_data.py &&
+             python manage.py seed_permissions &&
              python manage.py shell < create_test_courses.py &&
              python manage.py runserver 0.0.0.0:8000"
     # command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
