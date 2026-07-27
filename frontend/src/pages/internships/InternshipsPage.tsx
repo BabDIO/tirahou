@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, BookOpen, Plus, Eye, CheckCircle, Calendar, Users, FileText, Upload } from 'lucide-react'
 import { Button, Input, Badge, Spinner, Empty, Card, StatsCard, Modal, Alert, Tabs } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
+import { studentsApi, academicApi } from '../../api'
 import api from '../../lib/axios'
 
 type Tab = 'internships' | 'memoires' | 'soutenances'
@@ -218,22 +219,47 @@ export default function InternshipsPage() {
 }
 
 function InternshipForm({ onSuccess }: { onSuccess: () => void }) {
-  const [form, setForm] = useState({ student: '', company_name: '', subject: '', start_date: '', end_date: '' })
+  const [form, setForm] = useState({ student: '', academic_year: '', company_name: '', subject: '', start_date: '', end_date: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
+  const { data: students } = useQuery({ queryKey: ['students-for-internship'], queryFn: () => studentsApi.getStudents({ page_size: 200 }).then(r => r.data) })
+  const { data: years } = useQuery({ queryKey: ['years-for-internship'], queryFn: () => academicApi.getAcademicYears().then(r => r.data) })
+
   const handleSubmit = async () => {
-    if (!form.company_name || !form.subject) { setError('Entreprise et sujet requis'); return }
+    if (!form.student || !form.academic_year || !form.company_name || !form.subject) { setError('Étudiant, année académique, entreprise et sujet requis'); return }
     setLoading(true); setError('')
     try { await api.post('/internships/', form); onSuccess() }
-    catch { setError('Erreur lors de la création.') }
+    catch (err: unknown) {
+      const e = err as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(e?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur lors de la création.')
+    }
     finally { setLoading(false) }
   }
 
   return (
     <div className="space-y-4">
       {error && <Alert type="error">{error}</Alert>}
+      <div>
+        <label className="label">Étudiant</label>
+        <select className="input bg-white dark:bg-slate-900" value={form.student} onChange={e => set('student', e.target.value)}>
+          <option value="">— Sélectionner un étudiant —</option>
+          {students?.results?.map((s: { id: string; student_id: string; user: { full_name: string } }) => (
+            <option key={s.id} value={s.id}>{s.student_id} — {s.user.full_name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Année académique</label>
+        <select className="input bg-white dark:bg-slate-900" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
+          <option value="">— Sélectionner —</option>
+          {years?.results?.map((y: { id: string; label: string }) => (
+            <option key={y.id} value={y.id}>{y.label}</option>
+          ))}
+        </select>
+      </div>
       <div>
         <label className="label">Entreprise / Organisation</label>
         <input className="input" value={form.company_name} onChange={e => set('company_name', e.target.value)} placeholder="Nom de l'entreprise" />
@@ -260,16 +286,23 @@ function InternshipForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 function MemoireForm({ onSuccess }: { onSuccess: () => void }) {
-  const [form, setForm] = useState({ title: '', type: 'memoire', keywords: '' })
+  const [form, setForm] = useState({ student: '', academic_year: '', title: '', type: 'memoire_master', keywords: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
+  const { data: students } = useQuery({ queryKey: ['students-for-thesis'], queryFn: () => studentsApi.getStudents({ page_size: 200 }).then(r => r.data) })
+  const { data: years } = useQuery({ queryKey: ['years-for-thesis'], queryFn: () => academicApi.getAcademicYears().then(r => r.data) })
+
   const handleSubmit = async () => {
-    if (!form.title) { setError('Titre requis'); return }
+    if (!form.student || !form.academic_year || !form.title) { setError('Étudiant, année académique et titre requis'); return }
     setLoading(true); setError('')
     try { await api.post('/theses/', form); onSuccess() }
-    catch { setError('Erreur lors de la création.') }
+    catch (err: unknown) {
+      const e = err as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(e?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur lors de la création.')
+    }
     finally { setLoading(false) }
   }
 
@@ -277,11 +310,29 @@ function MemoireForm({ onSuccess }: { onSuccess: () => void }) {
     <div className="space-y-4">
       {error && <Alert type="error">{error}</Alert>}
       <div>
+        <label className="label">Étudiant</label>
+        <select className="input bg-white dark:bg-slate-900" value={form.student} onChange={e => set('student', e.target.value)}>
+          <option value="">— Sélectionner un étudiant —</option>
+          {students?.results?.map((s: { id: string; student_id: string; user: { full_name: string } }) => (
+            <option key={s.id} value={s.id}>{s.student_id} — {s.user.full_name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Année académique</label>
+        <select className="input bg-white dark:bg-slate-900" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
+          <option value="">— Sélectionner —</option>
+          {years?.results?.map((y: { id: string; label: string }) => (
+            <option key={y.id} value={y.id}>{y.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
         <label className="label">Type</label>
         <select className="input bg-white dark:bg-slate-900" value={form.type} onChange={e => set('type', e.target.value)}>
-          <option value="memoire">Mémoire de Master</option>
-          <option value="these">Thèse de Doctorat</option>
-          <option value="rapport">Rapport de stage</option>
+          <option value="memoire_licence">Mémoire de Licence</option>
+          <option value="memoire_master">Mémoire de Master</option>
+          <option value="these_doctorat">Thèse de Doctorat</option>
         </select>
       </div>
       <div>
@@ -300,22 +351,45 @@ function MemoireForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 function SoutenanceForm({ onSuccess }: { onSuccess: () => void }) {
-  const [form, setForm] = useState({ memoire: '', scheduled_date: '', room: '' })
+  // Le modèle Defense a un champ `thesis` (pas `memoire`) — le formulaire
+  // envoyait un nom de champ inexistant en plus de ne jamais le renseigner,
+  // donc DRF le rejetait toujours faute de `thesis` requis.
+  const [form, setForm] = useState({ thesis: '', scheduled_date: '', room: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
+  const { data: theses } = useQuery({
+    queryKey: ['theses-for-defense'],
+    queryFn: () => api.get('/theses/', { params: { page_size: 200 } }).then(r => r.data),
+  })
+  // Une soutenance par mémoire (OneToOne) — ne proposer que ceux qui n'en ont pas déjà une.
+  const availableTheses = (theses?.results ?? []).filter((t: { defense: unknown }) => !t.defense)
+
   const handleSubmit = async () => {
-    if (!form.scheduled_date) { setError('Date requise'); return }
+    if (!form.thesis || !form.scheduled_date) { setError('Mémoire et date requis'); return }
     setLoading(true); setError('')
     try { await api.post('/defenses/', form); onSuccess() }
-    catch { setError('Erreur lors de la planification.') }
+    catch (err: unknown) {
+      const e = err as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(e?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur lors de la planification.')
+    }
     finally { setLoading(false) }
   }
 
   return (
     <div className="space-y-4">
       {error && <Alert type="error">{error}</Alert>}
+      <div>
+        <label className="label">Mémoire / Thèse</label>
+        <select className="input bg-white dark:bg-slate-900" value={form.thesis} onChange={e => set('thesis', e.target.value)}>
+          <option value="">— Sélectionner —</option>
+          {availableTheses.map((t: { id: string; title: string; student_name: string }) => (
+            <option key={t.id} value={t.id}>{t.student_name} — {t.title}</option>
+          ))}
+        </select>
+      </div>
       <div>
         <label className="label">Date et heure</label>
         <input type="datetime-local" className="input" value={form.scheduled_date} onChange={e => set('scheduled_date', e.target.value)} />
