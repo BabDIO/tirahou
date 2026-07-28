@@ -29,7 +29,18 @@ class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = '__all__'
-        read_only_fields = ['application_number', 'submitted_at', 'applicant']
+        # status/score/rank/reviewed_*/application_fee_paid en lecture seule :
+        # ces champs manquaient et un candidat pouvait donc s'auto-admettre
+        # ou se marquer les frais de dossier comme payés via un simple PATCH
+        # direct, en contournant entièrement submit()/start_review()/
+        # decide(). Confirmé en direct sur la prod (statut "converti" d'une
+        # candidature réelle écrasé en "admis" avec score=20 par le candidat
+        # lui-même, HTTP 200) — reverti après vérification.
+        read_only_fields = [
+            'application_number', 'submitted_at', 'applicant', 'status',
+            'score', 'rank', 'reviewed_by', 'reviewed_at',
+            'application_fee_paid', 'application_fee_amount',
+        ]
 
     def get_applicant_name(self, obj):
         return obj.applicant.get_full_name()
