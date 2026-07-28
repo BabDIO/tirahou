@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiResponse
@@ -7,11 +8,36 @@ from .models import Room, ScheduledSession, Timetable
 from .serializers import RoomSerializer, ScheduledSessionSerializer, TimetableSerializer
 from .services import switch_session_mode, detect_room_conflicts, detect_teacher_conflicts
 
+# Rôles habilités à administrer salles/emplois du temps/séances en dehors
+# de l'enseignant assigné à la séance concernée.
+SCHEDULING_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique',
+)
+
+
+class IsSchedulingManager(permissions.BasePermission):
+    """Écriture réservée aux rôles planification/administration — la
+    lecture reste ouverte à tout authentifié (étudiants/enseignants ont
+    besoin de voir leur emploi du temps)."""
+    def has_permission(self, request, view):
+        user = request.user
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(user and user.is_authenticated and (
+            user.is_superuser or user.roles.filter(name__in=SCHEDULING_MANAGER_ROLES).exists()
+        ))
+
+
+def _can_manage_session(user, session):
+    if user.is_superuser or user.roles.filter(name__in=SCHEDULING_MANAGER_ROLES).exists():
+        return True
+    return session.teacher_id == user.id
+
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.filter(is_active=True)
     serializer_class = RoomSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSchedulingManager]
     filterset_fields = ['type', 'is_virtual']
     search_fields = ['name', 'code']
 
@@ -60,8 +86,17 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        # Vérification de conflit de salle
+        # Aucun contrôle n'existait auparavant : seuls la scolarité/la
+        # planification (ou l'enseignant assigné) doivent pouvoir créer une
+        # séance de cours.
         data = serializer.validated_data
+        teacher = data.get('teacher')
+        user = self.request.user
+        is_manager = user.is_superuser or user.roles.filter(name__in=SCHEDULING_MANAGER_ROLES).exists()
+        if not (is_manager or (teacher and teacher.id == user.id)):
+            raise PermissionDenied("Vous ne pouvez pas planifier cette séance.")
+
+        # Vérification de conflit de salle
         room = data.get('room')
         if room:
             conflict = ScheduledSession.objects.filter(
@@ -75,9 +110,25 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
                 raise ValidationError({'room': 'Conflit de salle détecté.'})
         serializer.save()
 
+    def perform_update(self, serializer):
+        # Faille confirmée en direct sur cancel() ci-dessous (même absence
+        # de contrôle) : un étudiant, dont get_queryset() l'autorise à VOIR
+        # les séances de son groupe, pouvait aussi les modifier/annuler
+        # directement — HTTP 200 sur un vrai cours du jeu de démonstration.
+        if not _can_manage_session(self.request.user, serializer.instance):
+            raise PermissionDenied("Vous ne gérez pas cette séance.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_session(self.request.user, instance):
+            raise PermissionDenied("Vous ne gérez pas cette séance.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         session = self.get_object()
+        if not _can_manage_session(request.user, session):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         session.status = 'annule'
         session.cancellation_reason = request.data.get('reason', '')
         session.save()
@@ -87,6 +138,8 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
     def switch_mode(self, request, pk=None):
         """Bascule le mode d'une séance avec notification automatique (8.18)."""
         session = self.get_object()
+        if not _can_manage_session(request.user, session):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         new_mode = request.data.get('mode')
         reason = request.data.get('reason', '')
         valid_modes = ['presentiel', 'distanciel_sync', 'distanciel_async', 'hybride']
@@ -126,11 +179,14 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
 class TimetableViewSet(viewsets.ModelViewSet):
     queryset = Timetable.objects.all().select_related('group', 'academic_year')
     serializer_class = TimetableSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSchedulingManager]
     filterset_fields = ['group', 'academic_year', 'is_published']
 
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
+        user = request.user
+        if not (user.is_superuser or user.roles.filter(name__in=SCHEDULING_MANAGER_ROLES).exists()):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         timetable = self.get_object()
         timetable.is_published = True
         timetable.published_at = timezone.now()
