@@ -5,6 +5,25 @@ from django.utils import timezone
 from .models import Internship, Thesis, ThesisProgress, Defense
 from .serializers import InternshipSerializer, ThesisSerializer, ThesisProgressSerializer, DefenseSerializer
 
+# Rôles administratifs/pédagogiques habilités à valider ou noter un stage /
+# mémoire indépendamment d'être ou non le superviseur assigné.
+ACADEMIC_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite',
+    'responsable_pedagogique', 'chef_departement',
+)
+
+
+def _is_academic_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=ACADEMIC_MANAGER_ROLES).exists()
+
+
+def _can_manage_internship(user, internship):
+    return _is_academic_manager(user) or internship.supervisor_id == user.id
+
+
+def _can_manage_thesis(user, thesis):
+    return _is_academic_manager(user) or thesis.supervisor_id == user.id or thesis.co_supervisor_id == user.id
+
 
 class InternshipViewSet(viewsets.ModelViewSet):
     queryset = Internship.objects.all().select_related('student', 'academic_year')
@@ -31,9 +50,19 @@ class InternshipViewSet(viewsets.ModelViewSet):
         except Exception:
             serializer.save()
 
+    def perform_destroy(self, instance):
+        if not _can_manage_internship(self.request.user, instance):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Permission refusée.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
         internship = self.get_object()
+        # Sans ce contrôle, l'étudiant pouvait valider LUI-MÊME son propre
+        # stage (aucune vérification de rôle n'existait auparavant).
+        if not _can_manage_internship(request.user, internship):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         internship.status = 'valide'
         internship.validated_by = request.user
         internship.validated_at = timezone.now()
@@ -66,6 +95,12 @@ class InternshipViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def add_evaluation(self, request, pk=None):
         internship = self.get_object()
+        # Faille CRITIQUE corrigée : aucune vérification de rôle — un
+        # étudiant a pu s'auto-attribuer la note 20/20 de son propre stage
+        # via cette action. Confirmé en direct sur la prod (HTTP 200) sur
+        # un stage réel du jeu de données de démonstration.
+        if not _can_manage_internship(request.user, internship):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         internship.supervisor_grade = request.data.get('grade')
         internship.supervisor_comment = request.data.get('comment', '')
         internship.status = 'evalue'
@@ -98,9 +133,29 @@ class ThesisViewSet(viewsets.ModelViewSet):
         except Exception:
             serializer.save()
 
+    def perform_update(self, serializer):
+        # Comme pour Internship : aucun read_only_fields n'existait, un
+        # PATCH direct sur /theses/{id}/ aurait pu contourner
+        # validate_subject()/reject_subject() ci-dessous. Pas d'usage
+        # étudiant de ce endpoint côté frontend (seul submit_final/
+        # add_progress y accèdent via actions dédiées), donc restriction
+        # complète au directeur de mémoire / administration.
+        if not _can_manage_thesis(self.request.user, serializer.instance):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Permission refusée.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_thesis(self.request.user, instance):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Permission refusée.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def validate_subject(self, request, pk=None):
         thesis = self.get_object()
+        if not _can_manage_thesis(request.user, thesis):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         thesis.status = 'sujet_valide'
         thesis.validated_by = request.user
         thesis.validated_at = timezone.now()
@@ -121,6 +176,8 @@ class ThesisViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reject_subject(self, request, pk=None):
         thesis = self.get_object()
+        if not _can_manage_thesis(request.user, thesis):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         reason = request.data.get('reason', '')
         thesis.status = 'sujet_rejete'
         thesis.save()
@@ -140,6 +197,11 @@ class ThesisViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def add_progress(self, request, pk=None):
         thesis = self.get_object()
+        # Réservé au directeur de mémoire (ou à l'administration) — action
+        # exposée uniquement côté frontend enseignant, mais rien ne
+        # l'empêchait côté API.
+        if not _can_manage_thesis(request.user, thesis):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         serializer = ThesisProgressSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(thesis=thesis, logged_by=request.user)
@@ -201,10 +263,47 @@ class DefenseViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status']
     ordering_fields = ['scheduled_date']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Defense.objects.none()
+        user = self.request.user
+        qs = Defense.objects.select_related('thesis__student__user', 'thesis__supervisor')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(thesis__student=user.student_profile)
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(thesis__supervisor=user) | qs.filter(thesis__co_supervisor=user)
+        return qs
+
+    def perform_create(self, serializer):
+        thesis = serializer.validated_data.get('thesis')
+        if not (thesis and _can_manage_thesis(self.request.user, thesis)):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Permission refusée.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        defense = serializer.instance
+        is_jury = (
+            defense.jury_president_id == self.request.user.id
+            or defense.jury_members.filter(id=self.request.user.id).exists()
+        )
+        if not (_can_manage_thesis(self.request.user, defense.thesis) or is_jury):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Permission refusée.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_thesis(self.request.user, instance.thesis):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Permission refusée.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def schedule(self, request, pk=None):
         """Planifier une soutenance"""
         defense = self.get_object()
+        if not _can_manage_thesis(request.user, defense.thesis):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         defense.scheduled_date = request.data.get('date')
         defense.location = request.data.get('location', '')
         defense.status = 'planifiee'
@@ -253,6 +352,17 @@ class DefenseViewSet(viewsets.ModelViewSet):
     def record_grade(self, request, pk=None):
         """Enregistrer la note de soutenance"""
         defense = self.get_object()
+        # Faille CRITIQUE : aucun contrôle de rôle sur la note finale de
+        # soutenance — sans ce correctif, l'étudiant concerné (qui peut
+        # voir sa propre soutenance via get_queryset) aurait pu s'attribuer
+        # lui-même sa note de mémoire, qui déclenche en plus la publication
+        # automatique du mémoire en bibliothèque (voir plus bas).
+        is_jury = (
+            defense.jury_president_id == request.user.id
+            or defense.jury_members.filter(id=request.user.id).exists()
+        )
+        if not (_can_manage_thesis(request.user, defense.thesis) or is_jury):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         defense.grade = request.data.get('grade')
         defense.mention = request.data.get('mention', '')
         defense.jury_comments = request.data.get('comments', '')

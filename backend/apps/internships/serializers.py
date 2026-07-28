@@ -9,6 +9,16 @@ class InternshipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Internship
         fields = '__all__'
+        # status/évaluation en lecture seule : l'étudiant garde le droit de
+        # PATCHer son propre stage (upload du rapport, infos entreprise —
+        # voir MyInternshipPage.tsx), mais ne doit pouvoir ni changer le
+        # statut ni s'auto-attribuer une note en contournant les actions
+        # validate()/add_evaluation() de la vue (faille confirmée en direct :
+        # un étudiant s'est mis 20/20 sur son propre stage).
+        read_only_fields = [
+            'status', 'supervisor_grade', 'supervisor_comment',
+            'validated_by', 'validated_at', 'report_submitted_at',
+        ]
 
     def get_student_name(self, obj):
         return obj.student.user.get_full_name()
