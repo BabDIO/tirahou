@@ -125,6 +125,16 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         })
 
 
+def _can_manage_attendance_record(user, record):
+    if user.is_superuser:
+        return True
+    if hasattr(user, 'teacher_profile'):
+        return record.sheet.session.teacher_id == user.id
+    return user.roles.filter(name__in=[
+        'super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique',
+    ]).exists()
+
+
 class AttendanceRecordViewSet(viewsets.ModelViewSet):
     queryset = AttendanceRecord.objects.all().select_related('student', 'sheet')
     serializer_class = AttendanceRecordSerializer
@@ -144,6 +154,24 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
             return qs.filter(student=user.student_profile)
         return qs
 
+    def perform_update(self, serializer):
+        # Le serializer n'a aucun read_only_fields (le formulaire enseignant
+        # PATCH directement `status`, voir TeacherAttendancePage.tsx), donc
+        # le contrôle doit se faire ici plutôt que via read_only_fields —
+        # sinon un étudiant peut directement passer son statut "absent" en
+        # "present", ou son justification_status en "approved" en
+        # contournant justify()/approve_justification() ci-dessous. Confirmé
+        # en direct : un étudiant a fait passer justification_status de
+        # "not_required" à "approved" sur sa propre présence (HTTP 200).
+        if not _can_manage_attendance_record(self.request.user, serializer.instance):
+            raise PermissionDenied("Vous ne gérez pas cette présence.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_attendance_record(self.request.user, instance):
+            raise PermissionDenied("Vous ne gérez pas cette présence.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def justify(self, request, pk=None):
         """Soumettre un justificatif d'absence"""
@@ -162,6 +190,10 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
     def approve_justification(self, request, pk=None):
         """Valider un justificatif (enseignant/admin)"""
         record = self.get_object()
+        # Aucun contrôle n'existait : un étudiant pouvait approuver LUI-MÊME
+        # le justificatif d'absence qu'il venait de soumettre.
+        if not _can_manage_attendance_record(request.user, record):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         comment = request.data.get('comment', '')
         AttendanceService.validate_justification(record, request.user, approved=True, comment=comment)
         return Response({'detail': 'Justificatif approuvé.'})
@@ -170,6 +202,8 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
     def reject_justification(self, request, pk=None):
         """Rejeter un justificatif (enseignant/admin)"""
         record = self.get_object()
+        if not _can_manage_attendance_record(request.user, record):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         comment = request.data.get('comment', '')
         AttendanceService.validate_justification(record, request.user, approved=False, comment=comment)
         return Response({'detail': 'Justificatif rejeté.'})
