@@ -170,13 +170,18 @@ class CoursePurchaseViewSet(viewsets.ReadOnlyModelViewSet):
         if CoursePurchase.objects.filter(student=student, course=course).exists():
             return Response({'detail': 'Vous possédez déjà ce cours.'}, status=400)
 
-        price = 0 if course.is_free else float(course.price)
+        # Bug corrigé : price en float mélangé avec wallet.balance (Decimal)
+        # levait TypeError sur `wallet.balance -= price` — l'achat de TOUT
+        # cours payant (is_free=False) plantait avec une 500, jamais détecté
+        # car les cours testés en direct pendant cet audit étaient gratuits.
+        from decimal import Decimal
+        price = Decimal('0') if course.is_free else Decimal(str(course.price))
 
         if price > 0:
             from apps.analytics_app.extensions_models import Wallet, WalletTransaction
             wallet, _ = Wallet.objects.get_or_create(student=student)
-            if float(wallet.balance) < price:
-                return Response({'detail': f'Solde insuffisant. Il vous manque {price - float(wallet.balance):.0f} points.'}, status=400)
+            if wallet.balance < price:
+                return Response({'detail': f'Solde insuffisant. Il vous manque {price - wallet.balance:.0f} points.'}, status=400)
             WalletTransaction.objects.create(
                 wallet=wallet, type='purchase', amount=price,
                 description=f'Achat du cours « {course.title} »',

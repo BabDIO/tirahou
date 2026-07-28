@@ -172,7 +172,14 @@ class WalletViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'detail': 'Étudiant introuvable.'}, status=404)
 
         wallet, _ = Wallet.objects.get_or_create(student=student)
-        amount = abs(float(amount))
+        # Bug corrigé : abs(float(amount)) laissait `amount` (et donc
+        # transaction.amount juste après .create(), avant tout aller-retour
+        # DB) en float — un += / -= avec wallet.balance (Decimal) levait
+        # TypeError et faisait planter CETTE action à chaque appel réel
+        # (HTTP 500 confirmé en direct sur la prod, avec la transaction déjà
+        # créée mais le solde jamais mis à jour).
+        from decimal import Decimal
+        amount = abs(Decimal(str(amount)))
         transaction = WalletTransaction.objects.create(
             wallet=wallet, type=tx_type, amount=amount, description=description,
         )
