@@ -7,10 +7,31 @@ from .serializers import (
     UESerializer, ECSerializer, GroupSerializer,
 )
 
+# Mêmes rôles que apps.academic (structure pédagogique de référence) + chef
+# de département, qui gère typiquement la maquette de son département.
+# Ces ViewSets n'avaient QUE IsAuthenticated : n'importe quel étudiant
+# pouvait créer/modifier/supprimer programmes, UE, EC, groupes. Confirmé en
+# direct sur la prod (renommage d'une UE réelle via PATCH par un étudiant,
+# HTTP 200, reverti après vérification).
+PROGRAM_STRUCTURE_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite',
+    'responsable_pedagogique', 'chef_departement',
+)
+
+
+class IsProgramStructureManager(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(user and user.is_authenticated and (
+            user.is_superuser or user.roles.filter(name__in=PROGRAM_STRUCTURE_ROLES).exists()
+        ))
+
 
 class ProgramViewSet(viewsets.ModelViewSet):
     queryset = Program.objects.filter(is_active=True).select_related('department', 'responsible')
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
     filterset_fields = ['type', 'mode', 'status', 'department']
     search_fields = ['code', 'name']
 
@@ -67,14 +88,14 @@ class ProgramViewSet(viewsets.ModelViewSet):
 class SemesterViewSet(viewsets.ModelViewSet):
     queryset = Semester.objects.all().select_related('program').order_by('id')
     serializer_class = SemesterSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
     filterset_fields = ['program', 'academic_year']
 
 
 class UEViewSet(viewsets.ModelViewSet):
     queryset = UE.objects.filter(is_active=True).select_related('semester')
     serializer_class = UESerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
     filterset_fields = ['semester', 'type']
     search_fields = ['code', 'name']
 
@@ -82,7 +103,7 @@ class UEViewSet(viewsets.ModelViewSet):
 class ECViewSet(viewsets.ModelViewSet):
     queryset = EC.objects.filter(is_active=True).select_related('ue')
     serializer_class = ECSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
     filterset_fields = ['ue', 'activity_type']
     search_fields = ['code', 'name']
 
@@ -90,7 +111,7 @@ class ECViewSet(viewsets.ModelViewSet):
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.filter(is_active=True)
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
     filterset_fields = ['program', 'academic_year', 'type']
 
 

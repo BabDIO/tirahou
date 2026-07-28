@@ -22,6 +22,13 @@ class PedaEnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = PedaEnrollment
         fields = '__all__'
+        # admin_enrollment/semester en lecture seule : un étudiant peut
+        # confirmer sa propre inscription pédagogique (self-service, voir
+        # MyEnrollmentPage.tsx) mais ne doit jamais pouvoir la rattacher à
+        # une AUTRE inscription administrative ou à un autre semestre via
+        # PATCH direct (vérifié en direct : champ confirmé writable avant
+        # ce correctif).
+        read_only_fields = ['admin_enrollment', 'semester']
 
     def get_student_name(self, obj):
         return obj.admin_enrollment.student.user.get_full_name()

@@ -11,11 +11,35 @@ from .serializers import (
     TeacherAvailabilitySerializer,
 )
 
+# StudentSerializer/TeacherSerializer/AdminStaffSerializer n'ont aucun
+# read_only_fields — hors du champ `user` — et get_queryset() laisse
+# chaque étudiant/enseignant atteindre SA PROPRE fiche via l'API standard.
+# Sans restriction sur les écritures, un étudiant peut donc PATCHer
+# directement son propre statut, son programme, son niveau, etc. Confirmé
+# en direct sur la prod : un compte étudiant a fait passer son statut
+# "inscrit" à "diplome" (Diplômé) via PATCH /students/{id}/ (HTTP 200).
+# Reverti après vérification. `updateStudent`/`updateTeacher` ne sont
+# utilisés nulle part côté frontend (code mort) : aucune régression à
+# restreindre l'écriture aux rôles administratifs.
+PEOPLE_ADMIN_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique',
+)
+
+
+class IsPeopleAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(user and user.is_authenticated and (
+            user.is_superuser or user.roles.filter(name__in=PEOPLE_ADMIN_ROLES).exists()
+        ))
+
 
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.filter(is_active=True).select_related('user', 'current_program').order_by('id')
     serializer_class = StudentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPeopleAdmin]
     filterset_fields = ['status', 'current_program', 'current_year', 'gender']
     search_fields = ['student_id', 'user__first_name', 'user__last_name', 'user__email']
     ordering_fields = ['student_id', 'created_at']
@@ -120,7 +144,7 @@ class StudentViewSet(viewsets.ModelViewSet):
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.filter(is_active=True).select_related('user', 'department').order_by('id')
     serializer_class = TeacherSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPeopleAdmin]
     filterset_fields = ['grade', 'status', 'department']
     search_fields = ['teacher_id', 'user__first_name', 'user__last_name']
 
@@ -201,7 +225,7 @@ class TeacherAvailabilityViewSet(viewsets.ModelViewSet):
 class AdminStaffViewSet(viewsets.ModelViewSet):
     queryset = AdminStaff.objects.filter(is_active=True).select_related('user').order_by('id')
     serializer_class = AdminStaffSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPeopleAdmin]
     filterset_fields = ['service']
     search_fields = ['staff_id', 'user__first_name', 'user__last_name']
 

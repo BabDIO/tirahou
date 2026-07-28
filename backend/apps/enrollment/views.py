@@ -5,6 +5,16 @@ from django.utils import timezone
 from .models import AdminEnrollment, PedaEnrollment, UEEnrollment
 from .serializers import AdminEnrollmentSerializer, PedaEnrollmentSerializer, UEEnrollmentSerializer
 
+# Rôles habilités à valider/rejeter une inscription administrative ou
+# pédagogique — jamais l'étudiant lui-même.
+ENROLLMENT_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique',
+)
+
+
+def _is_enrollment_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=ENROLLMENT_MANAGER_ROLES).exists()
+
 
 class AdminEnrollmentViewSet(viewsets.ModelViewSet):
     queryset = AdminEnrollment.objects.all().select_related('student', 'program', 'academic_year').order_by('id')
@@ -23,9 +33,38 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
             return qs.filter(student=user.student_profile)
         return qs
 
+    def perform_update(self, serializer):
+        # AdminEnrollmentSerializer n'a que enrollment_number en
+        # read_only_fields : status/payment_validated/validated_by/
+        # validated_at restaient modifiables par PATCH direct, contournant
+        # validate()/validate_payment()/reject() ci-dessous. Confirmé en
+        # direct : un étudiant a fait passer son statut "validee" à
+        # "rejetee" via PATCH direct (HTTP 200). Reverti après vérification.
+        # Pas d'usage frontend d'un PATCH direct sur ce endpoint (seules les
+        # 3 actions dédiées sont utilisées) : aucune régression à restreindre
+        # entièrement l'update à la scolarité.
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé à la scolarité.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé à la scolarité.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
         enrollment = self.get_object()
+        # Faille CRITIQUE corrigée : aucun contrôle de rôle — un étudiant
+        # pouvait valider LUI-MÊME sa propre inscription (et via
+        # validate_payment() ci-dessous, marquer son propre paiement comme
+        # validé sans avoir payé). Confirmé en direct sur la prod
+        # (reject() puis validate() en tant qu'étudiant, HTTP 200 les deux
+        # fois) sur une inscription réelle du jeu de démonstration.
+        if not _is_enrollment_manager(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         if not enrollment.payment_validated:
             return Response({'detail': 'Paiement non validé.'}, status=status.HTTP_400_BAD_REQUEST)
         enrollment.status = 'validee'
@@ -57,6 +96,8 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def validate_payment(self, request, pk=None):
         enrollment = self.get_object()
+        if not _is_enrollment_manager(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         enrollment.payment_validated = True
         enrollment.save()
         return Response({'detail': 'Paiement validé.'})
@@ -64,6 +105,8 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         enrollment = self.get_object()
+        if not _is_enrollment_manager(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         reason = request.data.get('reason', '')
         enrollment.status = 'rejetee'
         enrollment.save()
@@ -151,6 +194,41 @@ class UEEnrollmentViewSet(viewsets.ModelViewSet):
     serializer_class = UEEnrollmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['peda_enrollment', 'ue']
+
+    def get_queryset(self):
+        # Absence totale de filtrage : n'importe quel étudiant authentifié
+        # pouvait lister les inscriptions aux UE de TOUS les étudiants du
+        # système (fuite de données). Confirmé en direct (35 enregistrements
+        # renvoyés à un compte étudiant, toutes UE/tous étudiants confondus).
+        if getattr(self, 'swagger_fake_view', False):
+            return UEEnrollment.objects.none()
+        qs = UEEnrollment.objects.select_related('peda_enrollment__admin_enrollment__student', 'ue')
+        user = self.request.user
+        if hasattr(user, 'student_profile'):
+            return qs.filter(peda_enrollment__admin_enrollment__student=user.student_profile)
+        return qs.order_by('id')
+
+    def perform_create(self, serializer):
+        # L'auto-inscription légitime aux UE d'un semestre passe déjà par
+        # PedaEnrollmentViewSet.auto_enroll_ues (scopé à la propre
+        # inscription pédagogique de l'étudiant) — la création directe ici
+        # reste donc réservée à la scolarité.
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé à la scolarité.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé à la scolarité.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé à la scolarité.")
+        instance.delete()
 
 
 @api_view(['GET'])
