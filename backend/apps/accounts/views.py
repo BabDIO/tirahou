@@ -14,6 +14,33 @@ from .serializers import (
 )
 from .permissions import HasModulePermission
 
+# Même périmètre que UserListCreateView.get_queryset() ci-dessous (les
+# rôles qui gèrent déjà les comptes utilisateurs) : AdminUsersPage.tsx
+# (frontend) permet à ces rôles de créer des comptes ET de leur assigner
+# des rôles, donc restreindre l'attribution de rôles à un sous-ensemble
+# plus étroit casserait ce flux légitime existant.
+ROLE_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'admin_scolarite',
+    'responsable_pedagogique', 'chef_departement',
+)
+
+
+class IsRoleManager(permissions.BasePermission):
+    """Faille CRITIQUE corrigée : RoleListCreateView/RoleDetailView/
+    assign_roles n'avaient auparavant QUE IsAuthenticated — n'importe quel
+    utilisateur authentifié (y compris un simple étudiant) pouvait créer/
+    modifier/supprimer un Role, ou s'auto-attribuer n'importe quel rôle
+    (dont super_admin) via POST /users/<id>/roles/. Cela permettait de
+    contourner intégralement tout le RBAC de l'application, y compris
+    chaque correctif d'autorisation apporté au cours de cet audit — c'est
+    la faille la plus grave trouvée dans tout le projet.
+    """
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and (
+            user.is_superuser or user.roles.filter(name__in=ROLE_MANAGER_ROLES).exists()
+        ))
+
 
 def log_action(user, action, module, obj_type='', obj_id='', description='', request=None):
     ip = None
@@ -192,18 +219,22 @@ class ChangePasswordView(APIView):
 class RoleListCreateView(generics.ListCreateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsRoleManager]
 
 
 class RoleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsRoleManager]
 
 
 class AuditLogListView(generics.ListAPIView):
     serializer_class = AuditLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # Faille corrigée : n'importe quel utilisateur authentifié pouvait
+    # consulter le journal d'audit COMPLET du système (actions de tous les
+    # utilisateurs, adresses IP...). Confirmé en direct (un compte étudiant
+    # a obtenu une réponse 200 avec des résultats, pas un 403).
+    permission_classes = [permissions.IsAuthenticated, IsRoleManager]
     filterset_fields = ['action', 'module', 'user']
     search_fields = ['description', 'object_type']
     ordering_fields = ['timestamp']
@@ -214,7 +245,7 @@ class AuditLogListView(generics.ListAPIView):
 
 @extend_schema(request={'application/json': {'type': 'object', 'properties': {'role_ids': {'type': 'array', 'items': {'type': 'string'}}}}}, responses={200: OpenApiResponse(description='Rôles assignés')})
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsRoleManager])
 def assign_roles(request, user_id):
     try:
         user = User.objects.get(id=user_id)
