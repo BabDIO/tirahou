@@ -240,6 +240,17 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:3000,http://localhost:5173'
 ).split(',')
+# Autorise n'importe quel port localhost/127.0.0.1, indépendamment de la
+# valeur de CORS_ALLOWED_ORIGINS (souvent fixée en dur sur l'environnement
+# de déploiement, donc pas modifiable ici) — utile pour tester en local
+# (Vite sur un port libre, Expo web sur :8081/:19006, etc.) contre le
+# backend déployé sans avoir à toucher la config de prod à chaque port.
+# Sans risque : un attaquant ne peut pas forcer un navigateur tiers à avoir
+# quelque chose d'utile sur le localhost de sa victime.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^http://localhost:\d+$',
+    r'^http://127\.0\.0\.1:\d+$',
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # URL publique du frontend — utilisée pour construire les liens de vérification
