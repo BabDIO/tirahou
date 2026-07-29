@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import { Card, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
+import { Card, HeroBanner, Icon, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
 
 interface StudentStats {
   courses_count: number
@@ -73,25 +73,27 @@ export default function StudentHome() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.greeting}>{greeting},</Text>
-      <Text style={styles.name}>{user?.first_name ?? user?.full_name}</Text>
+      <HeroBanner eyebrow={`${greeting},`} title={user?.first_name ?? user?.full_name ?? ''} subtitle="Bon retour dans votre espace" icon="school-outline" />
 
       {error && (
         <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
-          <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600' }}>
-            Certaines données n'ont pas pu être chargées. Tirez vers le bas pour réessayer.
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Certaines données n'ont pas pu être chargées. Tirez vers le bas pour réessayer.
+            </Text>
+          </View>
         </Card>
       )}
 
       <View style={styles.statsGrid}>
-        <StatTile label="Cours suivis" value={stats.courses_count} />
-        <StatTile label="Moyenne" value={`${stats.average ?? 0}/20`} tone={((stats.average ?? 0) >= 10) ? 'success' : 'danger'} />
-        <StatTile label="Crédits" value={`${stats.credits}/${stats.total_credits}`} />
-        <StatTile label="Assiduité" value={`${stats.attendance_rate ?? 0}%`} tone={(stats.attendance_rate ?? 0) >= 75 ? 'success' : 'warning'} />
+        <StatTile label="Cours suivis" value={stats.courses_count} icon="book-outline" />
+        <StatTile label="Moyenne" value={`${stats.average ?? 0}/20`} tone={((stats.average ?? 0) >= 10) ? 'success' : 'danger'} icon="stats-chart-outline" />
+        <StatTile label="Crédits" value={`${stats.credits}/${stats.total_credits}`} icon="ribbon-outline" />
+        <StatTile label="Assiduité" value={`${stats.attendance_rate ?? 0}%`} tone={(stats.attendance_rate ?? 0) >= 75 ? 'success' : 'warning'} icon="checkmark-circle-outline" />
       </View>
 
-      <SectionTitle>Prochains cours</SectionTitle>
+      <SectionTitle icon="time-outline">Prochains cours</SectionTitle>
       {upcoming.length === 0 ? (
         <Card>
           <Text style={{ color: colors.textMuted }}>Aucun cours à venir.</Text>
@@ -112,8 +114,6 @@ export default function StudentHome() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  greeting: { fontSize: 15, color: colors.textMuted },
-  name: { fontSize: 26, fontWeight: '900', color: colors.text, marginBottom: 18 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
   sessionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   sessionTime: { fontSize: 13, color: colors.textMuted, marginTop: 2, textTransform: 'capitalize' },

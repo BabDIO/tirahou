@@ -10,9 +10,10 @@ import {
   Pressable,
 } from 'react-native'
 import { useRouter } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
-import { Button, colors } from '../components/ui'
+import { Button, Icon, IconBadge, colors } from '../components/ui'
 
 const DEMO_ACCOUNTS = [
   { role: 'Étudiant', email: 'etudiant@tirahou.edu', password: 'Etudiant123!' },
@@ -27,6 +28,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(null)
 
   const onSubmit = async () => {
     if (!email.trim() || !password) {
@@ -70,52 +72,71 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.blobTop} />
+      <View style={styles.blobBottom} />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.logoBlock}>
-          <View style={styles.logo}>
+          <LinearGradient colors={[colors.primary, colors.violet]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logo}>
             <Text style={styles.logoText}>T</Text>
-          </View>
+          </LinearGradient>
           <Text style={styles.title}>TIRAHOU</Text>
           <Text style={styles.subtitle}>Espace étudiants & enseignants</Text>
         </View>
 
         {error ? (
           <View style={styles.errorBox}>
+            <Icon name="alert-circle" size={18} color="#b91c1c" />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : null}
 
         <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="prenom.nom@tirahou.edu"
-          placeholderTextColor="#94a3b8"
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
+        <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
+          <Icon name="mail-outline" size={18} color={focusedField === 'email' ? colors.primary : colors.textMuted} />
+          <TextInput
+            style={styles.input}
+            placeholder="prenom.nom@tirahou.edu"
+            placeholderTextColor="#94a3b8"
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            onFocus={() => setFocusedField('email')}
+            onBlur={() => setFocusedField(null)}
+          />
+        </View>
 
         <Text style={styles.label}>Mot de passe</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••"
-          placeholderTextColor="#94a3b8"
-          secureTextEntry
-          autoComplete="current-password"
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
+          <Icon name="lock-closed-outline" size={18} color={focusedField === 'password' ? colors.primary : colors.textMuted} />
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            placeholderTextColor="#94a3b8"
+            secureTextEntry
+            autoComplete="current-password"
+            value={password}
+            onChangeText={setPassword}
+            onFocus={() => setFocusedField('password')}
+            onBlur={() => setFocusedField(null)}
+          />
+        </View>
 
-        <Button title="Se connecter" onPress={onSubmit} loading={loading} />
+        <View style={{ marginTop: 8 }}>
+          <Button title="Se connecter" onPress={onSubmit} loading={loading} icon="log-in-outline" />
+        </View>
 
         <View style={styles.demoBlock}>
           <Text style={styles.demoTitle}>Comptes de démonstration</Text>
           {DEMO_ACCOUNTS.map((acc) => (
-            <Pressable key={acc.email} style={styles.demoItem} onPress={() => fillDemo(acc.email, acc.password)}>
-              <Text style={styles.demoRole}>{acc.role}</Text>
-              <Text style={styles.demoEmail}>{acc.email}</Text>
+            <Pressable key={acc.email} style={({ pressed }) => [styles.demoItem, pressed && { opacity: 0.7 }]} onPress={() => fillDemo(acc.email, acc.password)}>
+              <IconBadge name={acc.role === 'Étudiant' ? 'school-outline' : 'easel-outline'} color={colors.primary} boxSize={36} size={17} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.demoRole}>{acc.role}</Text>
+                <Text style={styles.demoEmail}>{acc.email}</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
           ))}
         </View>
@@ -125,28 +146,52 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 24, justifyContent: 'center', backgroundColor: '#f8fafc' },
+  container: { flexGrow: 1, padding: 24, justifyContent: 'center', backgroundColor: colors.bg },
+  blobTop: {
+    position: 'absolute', top: -120, right: -100, width: 260, height: 260, borderRadius: 130,
+    backgroundColor: colors.primary, opacity: 0.08,
+  },
+  blobBottom: {
+    position: 'absolute', bottom: -140, left: -110, width: 280, height: 280, borderRadius: 140,
+    backgroundColor: colors.violet, opacity: 0.07,
+  },
   logoBlock: { alignItems: 'center', marginBottom: 32 },
-  logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  logoText: { color: '#fff', fontSize: 28, fontWeight: '900' },
-  title: { fontSize: 24, fontWeight: '900', color: colors.text, letterSpacing: 0.5 },
+  logo: {
+    width: 68, height: 68, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+    shadowColor: colors.primary, shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 6,
+  },
+  logoText: { color: '#fff', fontSize: 30, fontWeight: '900' },
+  title: { fontSize: 26, fontWeight: '900', color: colors.text, letterSpacing: 0.5 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   label: { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  input: {
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     backgroundColor: '#fff',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 16,
+  },
+  inputWrapFocused: { borderColor: colors.primary },
+  input: {
+    flex: 1,
     paddingVertical: 13,
     fontSize: 15,
     color: colors.text,
   },
-  errorBox: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 14, padding: 14, marginBottom: 8 },
-  errorText: { color: '#b91c1c', fontSize: 13 },
+  errorBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 14, padding: 14, marginBottom: 8,
+  },
+  errorText: { color: '#b91c1c', fontSize: 13, flex: 1, lineHeight: 18 },
   demoBlock: { marginTop: 28, gap: 8 },
   demoTitle: { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 4 },
-  demoItem: { backgroundColor: '#eff6ff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#dbeafe' },
+  demoItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.primaryLight, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#dbeafe',
+  },
   demoRole: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
   demoEmail: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
 })

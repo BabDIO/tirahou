@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import api from '../../lib/api'
-import { Button, Card, EmptyState, Loading, StatTile, colors } from '../../components/ui'
+import { Button, Card, EmptyState, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
 
 interface Ec {
   id: string
@@ -139,7 +139,7 @@ export default function TeacherGrades() {
     <ScrollView style={styles.screen} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.title}>Saisie des Notes</Text>
 
-      <Text style={styles.label}>Élément Constitutif</Text>
+      <SectionTitle icon="layers-outline">Élément Constitutif</SectionTitle>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
         {ecs.map((ec) => (
           <Pressable key={ec.id} onPress={() => pickEc(ec.id)} style={[styles.chip, selectedEc === ec.id && styles.chipActive]}>
@@ -148,7 +148,7 @@ export default function TeacherGrades() {
         ))}
       </ScrollView>
 
-      <Text style={styles.label}>Session d'examen</Text>
+      <SectionTitle icon="calendar-outline">Session d'examen</SectionTitle>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
         {sessions.map((s) => (
           <Pressable key={s.id} onPress={() => pickSession(s.id)} style={[styles.chip, selectedSession === s.id && styles.chipActive]}>
@@ -158,19 +158,19 @@ export default function TeacherGrades() {
       </ScrollView>
 
       {!selectedEc || !selectedSession ? (
-        <EmptyState label="Sélectionnez un EC et une session pour commencer la saisie." />
+        <EmptyState label="Sélectionnez un EC et une session pour commencer la saisie." icon="create-outline" />
       ) : loadingTable ? (
         <Loading label="Chargement des étudiants..." />
       ) : tableError ? (
-        <EmptyState label="Erreur de chargement. Resélectionnez l'EC et la session pour réessayer." />
+        <EmptyState label="Erreur de chargement. Resélectionnez l'EC et la session pour réessayer." icon="alert-circle-outline" />
       ) : students.length === 0 ? (
-        <EmptyState label="Aucun étudiant inscrit à cet EC pour cette session." />
+        <EmptyState label="Aucun étudiant inscrit à cet EC pour cette session." icon="people-outline" />
       ) : (
         <>
           {stats && (
             <View style={styles.statsRow}>
-              <StatTile label="Moyenne" value={`${Number(stats.average ?? 0).toFixed(2)}/20`} />
-              <StatTile label="Réussite" value={`${stats.success_rate ?? 0}%`} />
+              <StatTile label="Moyenne" value={`${Number(stats.average ?? 0).toFixed(2)}/20`} icon="stats-chart-outline" />
+              <StatTile label="Réussite" value={`${stats.success_rate ?? 0}%`} icon="checkmark-done-outline" tone="success" />
             </View>
           )}
           {students.map((s) => {
@@ -210,7 +210,7 @@ export default function TeacherGrades() {
                     </Text>
                   </View>
                 </View>
-                <Button title="Enregistrer" onPress={() => saveGrade(s.id)} loading={savingId === s.id} />
+                <Button title="Enregistrer" icon="save-outline" onPress={() => saveGrade(s.id)} loading={savingId === s.id} />
               </Card>
             )
           })}
@@ -223,7 +223,6 @@ export default function TeacherGrades() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 8, marginTop: 8 },
   chipRow: { marginBottom: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, marginRight: 8 },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },

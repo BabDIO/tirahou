@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
-import { Badge, Card, EmptyState, Loading, colors } from '../../components/ui'
+import { Badge, Card, EmptyState, Icon, Loading, colors } from '../../components/ui'
 
 interface ScheduledSession {
   id: string
@@ -60,11 +60,14 @@ export default function StudentSchedule() {
       <Text style={styles.title}>Mon Emploi du temps</Text>
 
       {sessions.length === 0 ? (
-        <EmptyState label="Aucune séance planifiée." />
+        <EmptyState label="Aucune séance planifiée." icon="calendar-outline" />
       ) : (
         DAYS_ORDER.filter((d) => byDay[d]).map((day) => (
           <View key={day} style={{ marginBottom: 16 }}>
-            <Text style={styles.dayTitle}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text>
+            <View style={styles.dayTitleRow}>
+              <Icon name="calendar-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.dayTitle}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text>
+            </View>
             {byDay[day].map((s) => (
               <Card key={s.id}>
                 <View style={styles.row}>
@@ -78,7 +81,7 @@ export default function StudentSchedule() {
                     </Text>
                     {s.teacher_name ? <Text style={styles.meta}>{s.teacher_name}</Text> : null}
                   </View>
-                  <Badge label={s.mode_display} />
+                  <Badge label={s.mode_display} icon={false} />
                 </View>
               </Card>
             ))}
@@ -92,7 +95,8 @@ export default function StudentSchedule() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
-  dayTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 8, textTransform: 'capitalize' },
+  dayTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  dayTitle: { fontSize: 14, fontWeight: '800', color: colors.text, textTransform: 'capitalize' },
   row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   ecName: { fontSize: 15, fontWeight: '700', color: colors.text },
   meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },

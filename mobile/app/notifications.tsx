@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { useRouter } from 'expo-router'
 import api from '../lib/api'
-import { Badge, Card, EmptyState, Loading, colors } from '../components/ui'
+import { Badge, Card, EmptyState, IconName, Loading, ScreenHeader, colors } from '../components/ui'
+
+const TYPE_ICON: Record<string, IconName> = {
+  resultat: 'ribbon-outline',
+  paiement: 'card-outline',
+  absence: 'calendar-outline',
+  alerte: 'warning-outline',
+}
 
 interface Notification {
   id: string
@@ -23,7 +29,6 @@ const TYPE_TONE: Record<string, 'default' | 'success' | 'danger' | 'warning'> = 
 }
 
 export default function NotificationsScreen() {
-  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -83,17 +88,13 @@ export default function NotificationsScreen() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.back}>← Retour</Text>
-        </Pressable>
-        {unreadCount > 0 && (
-          <Pressable onPress={markAllRead} disabled={markingAll}>
-            <Text style={styles.markAll}>{markingAll ? '...' : 'Tout marquer comme lu'}</Text>
-          </Pressable>
-        )}
-      </View>
-      <Text style={styles.title}>Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}</Text>
+      <ScreenHeader
+        title="Notifications"
+        count={unreadCount}
+        rightLabel={unreadCount > 0 ? 'Tout marquer comme lu' : undefined}
+        onRightPress={markAllRead}
+        rightBusy={markingAll}
+      />
 
       {error ? (
         <EmptyState label="Erreur de chargement. Tirez vers le bas pour réessayer." />
@@ -104,7 +105,7 @@ export default function NotificationsScreen() {
           <Pressable key={n.id} onPress={() => !n.is_read && markRead(n.id)}>
             <Card style={!n.is_read ? styles.unreadCard : undefined}>
               <View style={styles.rowBetween}>
-                <Badge label={n.type_display} tone={TYPE_TONE[n.type] ?? 'default'} />
+                <Badge label={n.type_display} tone={TYPE_TONE[n.type] ?? 'default'} icon={TYPE_ICON[n.type]} />
                 {!n.is_read && <View style={styles.dot} />}
               </View>
               <Text style={styles.notifTitle}>{n.title}</Text>
@@ -122,11 +123,7 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  back: { color: colors.primary, fontWeight: '600', fontSize: 14 },
-  markAll: { color: colors.primary, fontWeight: '600', fontSize: 13 },
-  title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
-  unreadCard: { borderColor: colors.primary, backgroundColor: '#eff6ff' },
+  unreadCard: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
   notifTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 3 },

@@ -3,7 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import * as DocumentPicker from 'expo-document-picker'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
-import { Badge, Button, Card, EmptyState, Loading, SectionTitle, colors } from '../components/ui'
+import { Badge, Button, Card, EmptyState, Loading, ScreenHeader, SectionTitle, colors } from '../components/ui'
 
 interface Assignment {
   id: string
@@ -107,10 +107,10 @@ export default function AssignmentsScreen() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.title}>Devoirs</Text>
+      <ScreenHeader title="Devoirs" />
 
       {assignments.length === 0 ? (
-        <EmptyState label="Aucun devoir publié pour le moment." />
+        <EmptyState label="Aucun devoir publié pour le moment." icon="document-text-outline" />
       ) : (
         assignments.map((a) => {
           const overdue = new Date(a.due_date) < new Date()
@@ -122,7 +122,7 @@ export default function AssignmentsScreen() {
                   <Text style={styles.assignmentTitle}>{a.title}</Text>
                   <Text style={styles.meta}>{a.type_display} · {a.max_grade}/20</Text>
                 </View>
-                <Badge label={overdue ? 'Échéance dépassée' : formatDate(a.due_date)} tone={overdue ? 'danger' : 'default'} />
+                <Badge label={overdue ? 'Échéance dépassée' : formatDate(a.due_date)} tone={overdue ? 'danger' : 'default'} icon={overdue ? undefined : 'time-outline'} />
               </View>
               {a.instructions ? <Text style={styles.instructions}>{a.instructions}</Text> : null}
 
@@ -133,6 +133,7 @@ export default function AssignmentsScreen() {
                   <Button
                     title="Déposer mon fichier"
                     variant="secondary"
+                    icon="cloud-upload-outline"
                     loading={submittingId === a.id}
                     onPress={() => submit(a.id)}
                   />
@@ -167,7 +168,6 @@ export default function AssignmentsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
   row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   assignmentTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
-import { Badge, Button, Card, EmptyState, Loading, colors } from '../../components/ui'
+import { Badge, Button, Card, EmptyState, Icon, Loading, colors } from '../../components/ui'
 
 interface ScheduledSession {
   id: string
@@ -90,7 +90,7 @@ export default function TeacherAttendance() {
       <Text style={styles.hint}>Ouvrez une feuille pour une séance, puis communiquez le code à vos étudiants.</Text>
 
       {sessions.length === 0 ? (
-        <EmptyState label="Aucune séance récente." />
+        <EmptyState label="Aucune séance récente." icon="calendar-outline" />
       ) : (
         sessions.map((s) => {
           const sheet = sheetForSession(s.id)
@@ -105,18 +105,24 @@ export default function TeacherAttendance() {
                 <>
                   <View style={styles.row}>
                     <Badge label={sheet.is_open ? 'Ouverte' : 'Fermée'} tone={sheet.is_open ? 'success' : 'default'} />
-                    {sheet.is_open && <Text style={styles.code}>Code : {sheet.session_code}</Text>}
+                    {sheet.is_open && (
+                      <View style={styles.codeRow}>
+                        <Icon name="key-outline" size={14} color={colors.primaryDark} />
+                        <Text style={styles.code}>{sheet.session_code}</Text>
+                      </View>
+                    )}
                   </View>
                   <Text style={styles.meta}>{sheet.present_count}/{sheet.total_count} présent(s)</Text>
                   <Button
                     title={sheet.is_open ? 'Fermer la feuille' : 'Rouvrir la feuille'}
                     variant={sheet.is_open ? 'danger' : 'secondary'}
+                    icon={sheet.is_open ? 'lock-closed-outline' : 'lock-open-outline'}
                     loading={busyId === sheet.id}
                     onPress={() => toggleSheet(sheet)}
                   />
                 </>
               ) : (
-                <Button title="Créer et ouvrir la feuille" loading={busyId === s.id} onPress={() => createAndOpen(s.id)} />
+                <Button title="Créer et ouvrir la feuille" icon="add-circle-outline" loading={busyId === s.id} onPress={() => createAndOpen(s.id)} />
               )}
             </Card>
           )
@@ -133,5 +139,6 @@ const styles = StyleSheet.create({
   sessionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   meta: { fontSize: 12, color: colors.textMuted, marginTop: 2, marginBottom: 8, textTransform: 'capitalize' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  codeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   code: { fontSize: 15, fontWeight: '800', color: colors.primaryDark, letterSpacing: 1 },
 })

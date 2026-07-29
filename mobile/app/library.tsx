@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { useRouter } from 'expo-router'
 import api from '../lib/api'
-import { Badge, Button, Card, EmptyState, Loading, colors } from '../components/ui'
+import { Badge, Button, Card, EmptyState, Loading, ScreenHeader, colors } from '../components/ui'
 
 interface LibraryDocument {
   id: string
@@ -26,7 +25,6 @@ interface Borrowing {
 type Tab = 'catalogue' | 'emprunts'
 
 export default function LibraryScreen() {
-  const router = useRouter()
   const [tab, setTab] = useState<Tab>('catalogue')
   const [search, setSearch] = useState('')
   const [documents, setDocuments] = useState<LibraryDocument[]>([])
@@ -89,10 +87,7 @@ export default function LibraryScreen() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Pressable onPress={() => router.back()}>
-        <Text style={styles.back}>← Retour</Text>
-      </Pressable>
-      <Text style={styles.title}>Bibliothèque</Text>
+      <ScreenHeader title="Bibliothèque" />
 
       <View style={styles.tabRow}>
         <Pressable onPress={() => setTab('catalogue')} style={[styles.tabBtn, tab === 'catalogue' && styles.tabBtnActive]}>
@@ -103,7 +98,7 @@ export default function LibraryScreen() {
         </Pressable>
       </View>
 
-      {error && <EmptyState label="Erreur de chargement. Tirez vers le bas pour réessayer." />}
+      {error && <EmptyState label="Erreur de chargement. Tirez vers le bas pour réessayer." icon="alert-circle-outline" />}
 
       {!error && tab === 'catalogue' && (
         <>
@@ -119,19 +114,20 @@ export default function LibraryScreen() {
             <Button title="OK" onPress={runSearch} />
           </View>
           {documents.length === 0 ? (
-            <EmptyState label="Aucun document trouvé." />
+            <EmptyState label="Aucun document trouvé." icon="search-outline" />
           ) : (
             documents.map((doc) => (
               <Card key={doc.id}>
                 <Text style={styles.docTitle}>{doc.title}</Text>
                 <Text style={styles.docMeta}>{doc.author} · {doc.year}</Text>
                 <View style={styles.badgeRow}>
-                  <Badge label={doc.domain} />
-                  <Badge label={doc.type} tone="warning" />
+                  <Badge label={doc.domain} icon="pricetag-outline" />
+                  <Badge label={doc.type} tone="warning" icon="document-outline" />
                 </View>
                 <Button
                   title="Emprunter"
                   variant="secondary"
+                  icon="add-circle-outline"
                   loading={borrowingId === doc.id}
                   onPress={() => borrow(doc)}
                 />
@@ -143,7 +139,7 @@ export default function LibraryScreen() {
 
       {!error && tab === 'emprunts' && (
         borrowings.length === 0 ? (
-          <EmptyState label="Aucun emprunt en cours." />
+          <EmptyState label="Aucun emprunt en cours." icon="book-outline" />
         ) : (
           borrowings.map((b) => (
             <Card key={b.id}>
@@ -160,8 +156,6 @@ export default function LibraryScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  back: { color: colors.primary, fontWeight: '600', fontSize: 14, marginBottom: 6 },
-  title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
   tabRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
   tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
   tabBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },

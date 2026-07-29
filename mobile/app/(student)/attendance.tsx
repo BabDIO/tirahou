@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
-import { Badge, Card, EmptyState, Loading, StatTile, colors } from '../../components/ui'
+import { Badge, Card, EmptyState, Icon, Loading, StatTile, colors } from '../../components/ui'
 
 interface AttendanceRecord {
   id: string
@@ -61,20 +61,23 @@ export default function StudentAttendance() {
       <Text style={styles.title}>Mon Assiduité</Text>
 
       <View style={styles.statsGrid}>
-        <StatTile label="Taux de présence" value={`${stats.rate}%`} tone={stats.rate >= 75 ? 'success' : 'danger'} />
-        <StatTile label="Présent" value={stats.present} tone="success" />
-        <StatTile label="Absent" value={stats.absent} tone="danger" />
-        <StatTile label="Total séances" value={total} />
+        <StatTile label="Taux de présence" value={`${stats.rate}%`} tone={stats.rate >= 75 ? 'success' : 'danger'} icon="pie-chart-outline" />
+        <StatTile label="Présent" value={stats.present} tone="success" icon="checkmark-outline" />
+        <StatTile label="Absent" value={stats.absent} tone="danger" icon="close-outline" />
+        <StatTile label="Total séances" value={total} icon="layers-outline" />
       </View>
 
       {stats.rate < 75 && total > 0 && (
         <Card style={styles.warningCard}>
-          <Text style={styles.warningText}>⚠️ Votre taux de présence est inférieur à 75%. Cela peut affecter votre validation du semestre.</Text>
+          <View style={styles.warningRow}>
+            <Icon name="warning-outline" size={18} color="#92400e" />
+            <Text style={styles.warningText}>Votre taux de présence est inférieur à 75%. Cela peut affecter votre validation du semestre.</Text>
+          </View>
         </Card>
       )}
 
       {records.length === 0 ? (
-        <EmptyState label="Aucun historique d'assiduité." />
+        <EmptyState label="Aucun historique d'assiduité." icon="calendar-outline" />
       ) : (
         records.map((r) => (
           <Card key={r.id}>
@@ -97,7 +100,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
   warningCard: { backgroundColor: '#fffbeb', borderColor: '#fde68a' },
-  warningText: { color: '#92400e', fontSize: 13 },
+  warningRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  warningText: { color: '#92400e', fontSize: 13, flex: 1, lineHeight: 18 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   courseName: { fontSize: 15, fontWeight: '700', color: colors.text },
   meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },

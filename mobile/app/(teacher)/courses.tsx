@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
-import { Badge, Card, EmptyState, Loading, colors } from '../../components/ui'
+import { Badge, Card, EmptyState, Icon, Loading, colors } from '../../components/ui'
 
 interface CourseSpace {
   id: string
@@ -50,15 +50,22 @@ export default function TeacherCourses() {
       <Text style={styles.title}>Mes Cours</Text>
 
       {error ? (
-        <EmptyState label="Erreur de chargement de vos cours. Tirez vers le bas pour réessayer." />
+        <EmptyState label="Erreur de chargement de vos cours. Tirez vers le bas pour réessayer." icon="alert-circle-outline" />
       ) : courses.length === 0 ? (
-        <EmptyState label="Aucun cours assigné." />
+        <EmptyState label="Aucun cours assigné." icon="book-outline" />
       ) : (
         courses.map((c) => (
           <Card key={c.id}>
-            <Text style={styles.courseTitle}>{c.title}</Text>
-            {c.code ? <Text style={styles.meta}>{c.code}</Text> : null}
-            {typeof c.students_count === 'number' && <Badge label={`${c.students_count} étudiant(s)`} />}
+            <View style={styles.courseRow}>
+              <View style={styles.courseIconWrap}>
+                <Icon name="book-outline" size={18} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.courseTitle}>{c.title}</Text>
+                {c.code ? <Text style={styles.meta}>{c.code}</Text> : null}
+              </View>
+            </View>
+            {typeof c.students_count === 'number' && <Badge label={`${c.students_count} étudiant(s)`} icon="people-outline" />}
           </Card>
         ))
       )}
@@ -69,6 +76,8 @@ export default function TeacherCourses() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
-  courseTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  meta: { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
+  courseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  courseIconWrap: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  courseTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  meta: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
 })

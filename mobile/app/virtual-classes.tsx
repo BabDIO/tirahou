@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
-import { Badge, Button, Card, EmptyState, Loading, colors } from '../components/ui'
+import { Badge, Button, Card, EmptyState, Loading, ScreenHeader, colors } from '../components/ui'
 
 interface VirtualSession {
   id: string
@@ -81,10 +81,10 @@ export default function VirtualClassesScreen() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.title}>Classes virtuelles</Text>
+      <ScreenHeader title="Classes virtuelles" />
 
       {sessions.length === 0 ? (
-        <EmptyState label="Aucune classe virtuelle programmée." />
+        <EmptyState label="Aucune classe virtuelle programmée." icon="videocam-outline" />
       ) : (
         sessions.map((s) => (
           <Card key={s.id} style={{ marginBottom: 12 }}>
@@ -102,6 +102,7 @@ export default function VirtualClassesScreen() {
             {(s.status === 'planifiee' || s.status === 'en_cours') && s.join_url ? (
               <Button
                 title={s.status === 'en_cours' ? 'Rejoindre maintenant' : 'Rejoindre'}
+                icon="videocam-outline"
                 loading={joiningId === s.id}
                 onPress={() => join(s)}
               />
@@ -115,7 +116,6 @@ export default function VirtualClassesScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
   row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 },
   sessionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },

@@ -56,12 +56,12 @@ export default function StudentGrades() {
       <Text style={styles.title}>Mes Notes</Text>
 
       <View style={styles.statsRow}>
-        <StatTile label="Moyenne" value={`${average}/20`} tone={Number(average) >= 10 ? 'success' : 'danger'} />
-        <StatTile label="EC validés" value={`${successCount}/${valid.length}`} />
+        <StatTile label="Moyenne" value={`${average}/20`} tone={Number(average) >= 10 ? 'success' : 'danger'} icon="stats-chart-outline" />
+        <StatTile label="EC validés" value={`${successCount}/${valid.length}`} icon="checkmark-done-outline" />
       </View>
 
       {grades.length === 0 ? (
-        <EmptyState label="Aucune note disponible pour le moment." />
+        <EmptyState label="Aucune note disponible pour le moment." icon="stats-chart-outline" />
       ) : (
         grades.map((g) => {
           const final = g.final_grade !== null ? Number(g.final_grade) : null

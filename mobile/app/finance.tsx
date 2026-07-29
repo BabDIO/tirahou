@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Linking, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { useRouter } from 'expo-router'
 import api from '../lib/api'
-import { Badge, Button, Card, EmptyState, Loading, StatTile, colors } from '../components/ui'
+import { Badge, Button, Card, EmptyState, Loading, ScreenHeader, StatTile, colors } from '../components/ui'
 
 interface Invoice {
   id: string
@@ -29,7 +28,6 @@ function formatFCFA(value: string | number) {
 }
 
 export default function FinanceScreen() {
-  const router = useRouter()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -111,23 +109,20 @@ export default function FinanceScreen() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Pressable onPress={() => router.back()}>
-        <Text style={styles.back}>← Retour</Text>
-      </Pressable>
-      <Text style={styles.title}>Mes paiements</Text>
+      <ScreenHeader title="Mes paiements" />
 
       {error ? (
-        <EmptyState label="Erreur de chargement. Tirez vers le bas pour réessayer." />
+        <EmptyState label="Erreur de chargement. Tirez vers le bas pour réessayer." icon="alert-circle-outline" />
       ) : (
         <>
           <View style={styles.statsGrid}>
-            <StatTile label="Total facturé" value={formatFCFA(totals.total)} />
-            <StatTile label="Payé" value={formatFCFA(totals.paid)} tone="success" />
-            <StatTile label="Reste à payer" value={formatFCFA(totals.remaining)} tone={totals.remaining > 0 ? 'warning' : 'success'} />
+            <StatTile label="Total facturé" value={formatFCFA(totals.total)} icon="receipt-outline" />
+            <StatTile label="Payé" value={formatFCFA(totals.paid)} tone="success" icon="checkmark-done-outline" />
+            <StatTile label="Reste à payer" value={formatFCFA(totals.remaining)} tone={totals.remaining > 0 ? 'warning' : 'success'} icon="wallet-outline" />
           </View>
 
           {invoices.length === 0 ? (
-            <EmptyState label="Aucune facture pour le moment." />
+            <EmptyState label="Aucune facture pour le moment." icon="receipt-outline" />
           ) : (
             invoices.map((inv) => (
               <Card key={inv.id}>
@@ -142,7 +137,7 @@ export default function FinanceScreen() {
                 {Number(inv.remaining_amount) > 0 && (
                   <>
                     <Text style={styles.invRemaining}>Reste : {formatFCFA(inv.remaining_amount)}</Text>
-                    <Button title="Payer en ligne (Mobile Money)" onPress={() => openPay(inv)} />
+                    <Button title="Payer en ligne (Mobile Money)" icon="phone-portrait-outline" onPress={() => openPay(inv)} />
                   </>
                 )}
               </Card>
@@ -198,8 +193,6 @@ export default function FinanceScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  back: { color: colors.primary, fontWeight: '600', fontSize: 14, marginBottom: 6 },
-  title: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 14 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   invNumber: { fontSize: 14, fontWeight: '700', color: colors.text },

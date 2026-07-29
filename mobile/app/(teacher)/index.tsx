@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import { Card, EmptyState, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
+import { Card, EmptyState, HeroBanner, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
 
 interface CourseSpace {
   id: string
@@ -72,15 +72,14 @@ export default function TeacherHome() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.greeting}>{greeting},</Text>
-      <Text style={styles.name}>{user?.first_name ?? user?.full_name}</Text>
+      <HeroBanner eyebrow={`${greeting},`} title={user?.first_name ?? user?.full_name ?? ''} subtitle="Bon retour dans votre espace" icon="easel-outline" />
 
       <View style={styles.statsGrid}>
-        <StatTile label="Cours" value={courses.length} />
-        <StatTile label="Notes à valider" value={pendingCount} tone={pendingCount > 0 ? 'warning' : 'success'} />
+        <StatTile label="Cours" value={courses.length} icon="book-outline" />
+        <StatTile label="Notes à valider" value={pendingCount} tone={pendingCount > 0 ? 'warning' : 'success'} icon="create-outline" />
       </View>
 
-      <SectionTitle>Prochains cours</SectionTitle>
+      <SectionTitle icon="time-outline">Prochains cours</SectionTitle>
       {upcoming.length === 0 ? (
         <Card>
           <Text style={{ color: colors.textMuted }}>Aucun cours à venir.</Text>
@@ -96,9 +95,9 @@ export default function TeacherHome() {
         ))
       )}
 
-      <SectionTitle>Mes cours</SectionTitle>
+      <SectionTitle icon="book-outline">Mes cours</SectionTitle>
       {courses.length === 0 ? (
-        <EmptyState label="Aucun cours assigné." />
+        <EmptyState label="Aucun cours assigné." icon="book-outline" />
       ) : (
         courses.map((c) => (
           <Card key={c.id}>
@@ -112,8 +111,6 @@ export default function TeacherHome() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  greeting: { fontSize: 15, color: colors.textMuted },
-  name: { fontSize: 26, fontWeight: '900', color: colors.text, marginBottom: 18 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
   sessionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   sessionTime: { fontSize: 13, color: colors.textMuted, marginTop: 2, textTransform: 'capitalize' },
