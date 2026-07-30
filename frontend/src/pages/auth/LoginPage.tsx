@@ -233,7 +233,7 @@ export default function LoginPage() {
                   type="email"
                   placeholder="prenom.nom@tirahou.edu"
                   autoComplete="email"
-                  className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border bg-white text-sm text-gray-900 dark:text-gray-50 placeholder:text-gray-300 outline-none transition-all shadow-sm
+                  className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-50 placeholder:text-gray-300 outline-none transition-all shadow-sm
                     ${errors.email ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 dark:border-gray-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'}`}
                   {...register('email')}
                 />
@@ -251,7 +251,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className={`w-full pl-11 pr-12 py-3.5 rounded-2xl border bg-white text-sm text-gray-900 dark:text-gray-50 placeholder:text-gray-300 outline-none transition-all shadow-sm
+                  className={`w-full pl-11 pr-12 py-3.5 rounded-2xl border bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-50 placeholder:text-gray-300 outline-none transition-all shadow-sm
                     ${errors.password ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100' : 'border-gray-200 dark:border-gray-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'}`}
                   {...register('password')}
                 />
@@ -272,7 +272,7 @@ export default function LoginPage() {
                     type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus
                     placeholder="123456" maxLength={6}
                     value={mfaCode} onChange={e => setMfaCode(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white text-sm text-gray-900 dark:text-gray-50 tracking-[0.3em] font-semibold placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-normal outline-none transition-all shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-50 tracking-[0.3em] font-semibold placeholder:text-gray-300 placeholder:tracking-normal placeholder:font-normal outline-none transition-all shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Ouvrez votre application d'authentification (Google Authenticator, Authy...)</p>
