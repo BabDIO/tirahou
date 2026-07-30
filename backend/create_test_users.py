@@ -14,16 +14,16 @@ users_data = [
     {
         'email': 'admin@tirahou.edu',
         'password': 'Admin123!',
-        'first_name': 'Admin',
-        'last_name': 'Principal',
+        'first_name': 'Modibo',
+        'last_name': 'Diarra',
         'role': 'admin_institutionnel',
         'type': 'admin'
     },
     {
         'email': 'etudiant@tirahou.edu',
         'password': 'Etudiant123!',
-        'first_name': 'Jean',
-        'last_name': 'Dupont',
+        'first_name': 'Ibrahima',
+        'last_name': 'Keita',
         'role': 'etudiant',
         'type': 'student',
         'student_id': 'ETU-2024-001'
@@ -31,8 +31,8 @@ users_data = [
     {
         'email': 'enseignant@tirahou.edu',
         'password': 'Enseignant123!',
-        'first_name': 'Marie',
-        'last_name': 'Martin',
+        'first_name': 'Amara',
+        'last_name': 'Traore',
         'role': 'enseignant',
         'type': 'teacher',
         'grade': 'professeur'
@@ -40,32 +40,32 @@ users_data = [
     {
         'email': 'scolarite@tirahou.edu',
         'password': 'Scolarite123!',
-        'first_name': 'Pierre',
-        'last_name': 'Bernard',
+        'first_name': 'Aissata',
+        'last_name': 'Kone',
         'role': 'admin_scolarite',
         'type': 'admin'
     },
     {
         'email': 'financier@tirahou.edu',
         'password': 'Financier123!',
-        'first_name': 'Sophie',
-        'last_name': 'Dubois',
+        'first_name': 'Mamadou',
+        'last_name': 'Diallo',
         'role': 'admin_financier',
         'type': 'admin'
     },
     {
         'email': 'responsable@tirahou.edu',
         'password': 'Responsable123!',
-        'first_name': 'Luc',
-        'last_name': 'Lambert',
+        'first_name': 'Seydou',
+        'last_name': 'Maiga',
         'role': 'responsable_pedagogique',
         'type': 'admin'
     },
     {
         'email': 'bibliothecaire@tirahou.edu',
         'password': 'Biblio123!',
-        'first_name': 'Anne',
-        'last_name': 'Durand',
+        'first_name': 'Rokia',
+        'last_name': 'Sissoko',
         'role': 'bibliothecaire',
         'type': 'admin'
     }
@@ -103,7 +103,12 @@ for user_data in users_data:
     else:
         user.set_password(user_data['password'])
         user.is_active = True
-        user.save(update_fields=['password', 'is_active'])
+        # Resynchronise le nom à chaque exécution : get_or_create() ci-dessus
+        # ne touche pas une ligne déjà existante, donc sans ceci un compte créé
+        # une fois avec un ancien nom restait figé dessus à chaque redéploiement.
+        user.first_name = user_data['first_name']
+        user.last_name = user_data['last_name']
+        user.save(update_fields=['password', 'is_active', 'first_name', 'last_name'])
         print(f"ℹ️  {email} mis à jour")
 
     if user_data['type'] == 'student':

@@ -58,24 +58,32 @@ def create_user(email, first, last, role_key, password='Test@2024'):
     if created:
         user.set_password(password)
         user.save()
+    elif user.first_name != first or user.last_name != last:
+        # Resynchronise à chaque exécution : get_or_create() ci-dessus ne
+        # touche pas une ligne déjà existante, donc sans ceci un compte créé
+        # une fois avec un ancien nom (démo pré-TIRAHOU) restait figé sur cet
+        # ancien nom à tous les redéploiements suivants.
+        user.first_name = first
+        user.last_name = last
+        user.save(update_fields=['first_name', 'last_name'])
     user.roles.add(roles[role_key])
     return user
 
-admin_user     = create_user('admin@tirahou.edu',         'Kouassi',   'ADMIN',      'super_admin',            'Admin@2024')
-scolarite_user = create_user('scolarite@tirahou.edu',     'Aya',       'KONE',       'admin_scolarite')
+admin_user     = create_user('admin@tirahou.edu',         'Modibo',    'DIARRA',     'super_admin',            'Admin@2024')
+scolarite_user = create_user('scolarite@tirahou.edu',     'Aissata',   'KONE',       'admin_scolarite')
 financier_user = create_user('financier@tirahou.edu',     'Mamadou',   'DIALLO',     'admin_financier')
-resp_user      = create_user('responsable@tirahou.edu',   'Alphonse',  'YAO',        'responsable_pedagogique')
-chef_user      = create_user('chef.dept@tirahou.edu',     'Brice',     'OUATTARA',   'chef_departement')
+resp_user      = create_user('responsable@tirahou.edu',   'Seydou',    'MAIGA',      'responsable_pedagogique')
+chef_user      = create_user('chef.dept@tirahou.edu',     'Adama',     'DEMBELE',    'chef_departement')
 enseignant1    = create_user('enseignant@tirahou.edu',    'Dr. Amara', 'TRAORE',     'enseignant')
 enseignant2    = create_user('enseignant2@tirahou.edu',   'Dr. Fatou', 'CAMARA',     'enseignant')
-tuteur_user    = create_user('tuteur@tirahou.edu',        'Eric',      'BAMBA',      'tuteur')
-biblio_user    = create_user('bibliothecaire@tirahou.edu','Marie',     'KOUAME',     'bibliothecaire')
-etudiant1_user = create_user('etudiant@tirahou.edu',      'Jean-Paul', 'KOUASSI',    'etudiant')
+tuteur_user    = create_user('tuteur@tirahou.edu',        'Yacouba',   'BAMBA',      'tuteur')
+biblio_user    = create_user('bibliothecaire@tirahou.edu','Rokia',     'SISSOKO',    'bibliothecaire')
+etudiant1_user = create_user('etudiant@tirahou.edu',      'Ibrahima',  'KEITA',      'etudiant')
 etudiant2_user = create_user('etudiant2@tirahou.edu',     'Fatoumata', 'COULIBALY',  'etudiant')
 etudiant3_user = create_user('etudiant3@tirahou.edu',     'Moussa',    'SANGARE',    'etudiant')
 etudiant4_user = create_user('etudiant4@tirahou.edu',     'Aminata',   'BALDE',      'etudiant')
 etudiant5_user = create_user('etudiant5@tirahou.edu',     'Ibrahim',   'TOURE',      'etudiant')
-doctorant_user = create_user('doctorant@tirahou.edu',     'Dr. Sékou', 'FOFANA',     'doctorant')
+doctorant_user = create_user('doctorant@tirahou.edu',     'Dr. Sekou', 'FOFANA',     'doctorant')
 
 print(f"OK Utilisateurs crs (admin: admin@tirahou.edu / Admin@2024)")
 
