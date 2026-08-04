@@ -38,8 +38,14 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
     'https://tirahou-git-main-alibadra.vercel.app,https://tirahou.vercel.app'
 ).split(',')
 # Autorise aussi les URLs de preview Vercel (https://tirahou-<hash>-alibadra.vercel.app)
+# + n'importe quel port localhost/127.0.0.1 (test local — web/mobile Expo — contre
+# le backend déployé) : settings.py définit déjà ce dernier point, mais le
+# `from .settings import *` ci-dessus est écrasé par une réaffectation complète
+# de CORS_ALLOWED_ORIGIN_REGEXES ici, donc on doit le réinclure explicitement.
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r'^https://tirahou-[\w-]+-alibadra\.vercel\.app$',
+    r'^http://localhost:\d+$',
+    r'^http://127\.0\.0\.1:\d+$',
 ]
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
