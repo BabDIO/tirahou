@@ -45,6 +45,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'academic_year', 'student']
     search_fields = ['invoice_number', 'student__student_id', 'student__user__last_name']
 
+    def get_permissions(self):
+        # get_queryset() scope depuis longtemps un étudiant à SES PROPRES
+        # factures (et get_object() à SA PROPRE facture pour pay_online),
+        # mais le rôle 'etudiant' n'a jamais reçu de permission RBAC
+        # 'finance' dans seed_permissions.py — HasModulePermission bloquait
+        # donc list/retrieve/pay_online avec un 403 pour TOUT étudiant,
+        # rendant "Ma situation financière" et le paiement en ligne
+        # totalement inutilisables en production. Les actions qui créent ou
+        # modifient une facture / enregistrent un paiement manuel restent
+        # réservées au rôle RBAC 'finance'.
+        if self.action in ('list', 'retrieve', 'pay_online'):
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), HasModulePermission()]
+
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return Invoice.objects.none()
@@ -321,6 +335,19 @@ class PaymentViewSet(viewsets.ModelViewSet):
             return Payment.objects.none()
         return qs.order_by('id')
 
+    def perform_update(self, serializer):
+        # amount/status ne peuvent pas être en read_only_fields : add_payment()
+        # crée le Payment via ce même serializer et a besoin qu'amount reste
+        # écrivable à la création. Mais aucun perform_update() n'existait —
+        # un PATCH générique {"status": "valide", "amount": ...} désynchronisait
+        # irrémédiablement le paiement de invoice.paid_amount/status (vérifié en
+        # direct : un paiement de 200 000 FCFA déjà validé passait à 999 999
+        # FCFA en PATCH sans que la facture ne bouge). Seules validate()/
+        # reject()/refund() ci-dessous doivent pouvoir faire évoluer un paiement
+        # après sa création, car elles répercutent l'ajustement sur la facture.
+        from rest_framework.exceptions import PermissionDenied
+        raise PermissionDenied("Un paiement ne se modifie pas directement — utilisez validate/reject/refund.")
+
     @action(detail=True, methods=['post'])
     def validate(self, request, pk=None):
         """Valider un paiement (workflow manuel)."""
@@ -433,6 +460,22 @@ class ScholarshipViewSet(viewsets.ModelViewSet):
     permission_module = 'finance'
     filterset_fields = ['type', 'academic_year', 'student']
 
+    def get_queryset(self):
+        # Contrairement à InvoiceViewSet/PaymentViewSet dans ce même fichier,
+        # aucun scoping par rôle n'existait ici : today ce n'est pas
+        # exploitable (seul admin_financier a 'finance:view'), mais le jour
+        # où un rôle plus étroit obtient ce module, un étudiant verrait les
+        # bourses de tous les autres étudiants. Alignement défensif.
+        if getattr(self, 'swagger_fake_view', False):
+            return Scholarship.objects.none()
+        user = self.request.user
+        qs = Scholarship.objects.select_related('student__user', 'academic_year')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(student=user.student_profile)
+        if hasattr(user, 'teacher_profile'):
+            return Scholarship.objects.none()
+        return qs.order_by('id')
+
 
 class InstallmentViewSet(viewsets.ModelViewSet):
     queryset = Installment.objects.all().select_related('invoice').order_by('id')
@@ -440,6 +483,17 @@ class InstallmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasModulePermission]
     permission_module = 'finance'
     filterset_fields = ['invoice', 'status']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Installment.objects.none()
+        user = self.request.user
+        qs = Installment.objects.select_related('invoice__student__user')
+        if hasattr(user, 'student_profile'):
+            return qs.filter(invoice__student=user.student_profile)
+        if hasattr(user, 'teacher_profile'):
+            return Installment.objects.none()
+        return qs.order_by('id')
 
     @action(detail=True, methods=['post'])
     def mark_paid(self, request, pk=None):
@@ -456,6 +510,12 @@ class InstallmentViewSet(viewsets.ModelViewSet):
 def cash_journal(request):
     """Journal de caisse — liste des paiements avec filtres date."""
     from django.db.models import Sum
+    # HasModulePermission ne suffit pas ici : cette vue est basée sur une
+    # fonction (@api_view), pas une classe avec `permission_module` — sans
+    # ce contrôle explicite, n'importe quel compte connecté (étudiant compris)
+    # pouvait voir tous les paiements de tout le monde.
+    if not request.user.has_permission('finance', 'view'):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=status.HTTP_403_FORBIDDEN)
     start = request.query_params.get('start')
     end = request.query_params.get('end')
     qs = Payment.objects.filter(status='valide').select_related('invoice__student')
@@ -516,6 +576,8 @@ def finance_dashboard(request):
     Tableau de bord du service financier — toutes les valeurs sont
     calculées depuis la base (aucune donnée inventée).
     """
+    if not request.user.has_permission('finance', 'view'):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=status.HTTP_403_FORBIDDEN)
     from datetime import timedelta
     from django.db.models import Sum, Count
 

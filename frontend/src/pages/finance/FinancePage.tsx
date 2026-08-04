@@ -21,6 +21,7 @@ export default function FinancePage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [installmentsInvoice, setInstallmentsInvoice] = useState<Invoice | null>(null)
   const queryClient = useQueryClient()
+  const toast = useToast()
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', page, search, statusFilter],
@@ -39,6 +40,11 @@ export default function FinancePage() {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['finance-summary'] })
       setSelected(null)
+      toast.success('Paiement enregistré')
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string; detail?: string } } }
+      toast.error(e?.response?.data?.message ?? e?.response?.data?.detail ?? 'Erreur lors de l\'enregistrement du paiement.')
     },
   })
 

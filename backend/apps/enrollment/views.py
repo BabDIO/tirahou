@@ -77,6 +77,28 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
         student.current_program = enrollment.program
         student.current_year = enrollment.academic_year
         student.save()
+
+        # Facture de scolarité — EnrollmentService.validate_admin_enrollment()
+        # (services.py) fait bien ce travail mais n'est appelé nulle part :
+        # cette action-ci (celle réellement branchée sur /validate/) ne
+        # générait donc jamais de facture, laissant l'étudiant "validé"
+        # sans aucun frais facturé.
+        if enrollment.program.fees > 0:
+            from .services import EnrollmentService
+            EnrollmentService._create_tuition_invoice(enrollment)
+
+        # Inscription pédagogique — rien dans le code ne créait jamais de
+        # PedaEnrollment pour un étudiant réel (seul seed_demo_data.py en
+        # insère directement en base), ce qui rendait confirm()/
+        # auto_enroll_ues() inatteignables en dehors du jeu de démo. On crée
+        # ici l'inscription au premier semestre du niveau courant si ce
+        # semestre existe pour ce programme ; le statut reste 'en_attente'
+        # (confirmation explicite toujours nécessaire via confirm()).
+        first_semester_number = (student.current_level - 1) * 2 + 1
+        semester = enrollment.program.semesters.filter(number=first_semester_number).first()
+        if semester:
+            PedaEnrollment.objects.get_or_create(admin_enrollment=enrollment, semester=semester)
+
         # Notification à l'étudiant
         from apps.communication.notification_service import NotificationService
         NotificationService.send_notification(
@@ -167,6 +189,24 @@ class PedaEnrollmentViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'student_profile'):
             return qs.filter(admin_enrollment__student=user.student_profile)
         return qs
+
+    def perform_update(self, serializer):
+        # `group` n'est pas en read_only_fields et aucun perform_update()
+        # n'existait ici (contrairement à AdminEnrollmentViewSet/
+        # UEEnrollmentViewSet dans ce même fichier) — un étudiant, dont
+        # get_queryset() lui laisse voir SA PROPRE inscription pédagogique,
+        # pouvait donc se réassigner lui-même à n'importe quel groupe de TD/TP
+        # via un simple PATCH générique, en contournant confirm()/auto_enroll_ues().
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas modifier cette inscription pédagogique.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas supprimer cette inscription pédagogique.")
+        instance.delete()
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
