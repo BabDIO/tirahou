@@ -6,6 +6,7 @@ import { teachersApi, academicApi, teacherAvailabilityApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Avatar, Alert, Tabs, Select } from '../../components/ui'
 import { statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
+import { useExcel } from '../../hooks/useExcel'
 import api from '../../lib/axios'
 import type { Teacher, TeacherAvailability } from '../../types'
 
@@ -47,6 +48,21 @@ export default function TeachersPage() {
   const permanents = data?.results?.filter(t => t.status === 'permanent').length ?? 0
   const vacataires = data?.results?.filter(t => t.status === 'vacataire').length ?? 0
 
+  const { exportToExcel } = useExcel()
+  const handleExport = () => {
+    const rows = (data?.results ?? []).map(t => ({
+      'Matricule': t.teacher_id,
+      'Nom complet': t.user.full_name,
+      'Email': t.user.email,
+      'Grade': t.grade_display,
+      'Statut': t.status,
+      'Département': t.department_name ?? '',
+      'Quota hebdo (h)': t.weekly_hours_quota,
+    }))
+    if (rows.length === 0) return
+    exportToExcel(rows, 'enseignants', 'Enseignants')
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -56,7 +72,7 @@ export default function TeachersPage() {
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} enseignant(s) enregistré(s)</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" icon={<Download className="w-4 h-4" />} size="sm">Exporter</Button>
+          <Button variant="secondary" icon={<Download className="w-4 h-4" />} size="sm" onClick={handleExport}>Exporter</Button>
           <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>Nouvel enseignant</Button>
         </div>
       </div>

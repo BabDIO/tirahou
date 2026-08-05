@@ -43,6 +43,14 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             return Response({'detail': "Vous ne pouvez soumettre que votre propre candidature."}, status=status.HTTP_403_FORBIDDEN)
         if app.status != 'brouillon':
             return Response({'detail': 'Candidature déjà soumise.'}, status=status.HTTP_400_BAD_REQUEST)
+        # application_fee_paid/application_fee_amount existent sur le modèle
+        # mais n'étaient jamais vérifiés — une candidature pouvait être
+        # soumise (puis admise) sans que les frais de dossier soient payés.
+        if app.application_fee_amount > 0 and not app.application_fee_paid:
+            return Response(
+                {'detail': 'Les frais de dossier doivent être payés avant de soumettre la candidature.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         app.status = 'soumise'
         app.submitted_at = timezone.now()
         app.save()
@@ -65,6 +73,22 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         app = self.get_object()
         serializer = AdmissionDecisionSerializer(data=request.data)
         if serializer.is_valid():
+            decision_value = serializer.validated_data.get('decision')
+            if decision_value in ('admis', 'admis_attente'):
+                # Rien ne vérifiait les frais de dossier ni l'état des
+                # documents avant une décision d'admission — un dossier
+                # pouvait être admis sans frais payés ou avec un document
+                # explicitement rejeté par la scolarité.
+                if app.application_fee_amount > 0 and not app.application_fee_paid:
+                    return Response(
+                        {'detail': "Impossible d'admettre : les frais de dossier ne sont pas payés."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if app.documents.filter(status='rejete').exists():
+                    return Response(
+                        {'detail': "Impossible d'admettre : au moins un document du dossier a été rejeté."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             decision = serializer.save(application=app, decided_by=request.user)
             app.status = decision.decision if decision.decision != 'admis_attente' else 'admis_liste_attente'
             app.save()

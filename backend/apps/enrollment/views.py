@@ -150,10 +150,12 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def my_enrollment(self, request):
         """Inscription de l'étudiant connecté"""
-        try:
-            student = request.user.student_profile
-        except Exception:
+        # `except Exception` masquait n'importe quelle erreur (pas seulement
+        # l'absence de profil étudiant) sous un message trompeur, rendant le
+        # débogage difficile en cas de vrai bug plus loin dans la vue.
+        if not hasattr(request.user, 'student_profile'):
             return Response({'error': 'Profil étudiant requis.'}, status=400)
+        student = request.user.student_profile
         enrollment = AdminEnrollment.objects.filter(
             student=student, status='validee'
         ).select_related('program', 'academic_year').order_by('-created_at').first()

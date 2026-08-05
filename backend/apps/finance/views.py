@@ -3,7 +3,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.utils import timezone
 from django.http import HttpResponse
-from django.db import models
+from django.db import models, transaction
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import FeeType, Invoice, InvoiceItem, Payment, Scholarship, Installment
 from .serializers import (
@@ -93,13 +93,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Facture annulée.'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = PaymentSerializer(data=request.data)
         if serializer.is_valid():
-            payment = serializer.save(invoice=invoice, validated_by=request.user, paid_at=timezone.now(), status='valide')
-            invoice.paid_amount += payment.amount
-            if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
-                invoice.status = 'payee'
-            else:
-                invoice.status = 'partiellement_payee'
-            invoice.save()
+            # select_for_update() : deux paiements simultanés sur la même
+            # facture (double-clic, ou saisie caisse + webhook en parallèle)
+            # pouvaient auparavant se marcher dessus en lecture-modification-
+            # écriture non protégée sur paid_amount, perdant l'un des deux
+            # montants.
+            with transaction.atomic():
+                invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
+                payment = serializer.save(invoice=invoice, validated_by=request.user, paid_at=timezone.now(), status='valide')
+                invoice.paid_amount += payment.amount
+                if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
+                    invoice.status = 'payee'
+                else:
+                    invoice.status = 'partiellement_payee'
+                invoice.save()
             try:
                 from apps.core.tasks import dispatch_webhook
                 dispatch_webhook('payment.received', {
@@ -335,6 +342,15 @@ class PaymentViewSet(viewsets.ModelViewSet):
             return Payment.objects.none()
         return qs.order_by('id')
 
+    def perform_create(self, serializer):
+        # `invoice` est en read_only_fields (voir PaymentSerializer) : un POST
+        # direct ici sauvegardait sans facture et plantait en 500
+        # (IntegrityError, invoice_id NOT NULL) au lieu d'un 400 propre. Un
+        # paiement se crée toujours via POST /invoices/{id}/add_payment/
+        # (ou le webhook cinetpay_notify), jamais directement sur ce endpoint.
+        from rest_framework.exceptions import PermissionDenied
+        raise PermissionDenied("Un paiement ne se crée pas directement — utilisez POST /invoices/{id}/add_payment/.")
+
     def perform_update(self, serializer):
         # amount/status ne peuvent pas être en read_only_fields : add_payment()
         # crée le Payment via ce même serializer et a besoin qu'amount reste
@@ -357,18 +373,22 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if payment.status in ['rembourse']:
             return Response({'detail': 'Paiement remboursé — non validable.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        payment.status = 'valide'
-        payment.validated_by = request.user
-        payment.paid_at = payment.paid_at or timezone.now()
-        payment.save(update_fields=['status', 'validated_by', 'paid_at', 'updated_at'])
+        with transaction.atomic():
+            payment = Payment.objects.select_for_update().get(pk=payment.pk)
+            if payment.status == 'valide':
+                return Response({'detail': 'Paiement déjà validé.'})
+            payment.status = 'valide'
+            payment.validated_by = request.user
+            payment.paid_at = payment.paid_at or timezone.now()
+            payment.save(update_fields=['status', 'validated_by', 'paid_at', 'updated_at'])
 
-        invoice = payment.invoice
-        invoice.paid_amount = (invoice.paid_amount or 0) + payment.amount
-        if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
-            invoice.status = 'payee'
-        else:
-            invoice.status = 'partiellement_payee'
-        invoice.save(update_fields=['paid_amount', 'status', 'updated_at'])
+            invoice = Invoice.objects.select_for_update().get(pk=payment.invoice_id)
+            invoice.paid_amount = (invoice.paid_amount or 0) + payment.amount
+            if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
+                invoice.status = 'payee'
+            else:
+                invoice.status = 'partiellement_payee'
+            invoice.save(update_fields=['paid_amount', 'status', 'updated_at'])
 
         return Response(PaymentSerializer(payment).data)
 
@@ -393,24 +413,29 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if payment.status != 'valide':
             return Response({'detail': 'Seuls les paiements validés peuvent être remboursés.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        invoice = payment.invoice
-        # Mise à jour paiement
-        payment.status = 'rembourse'
-        payment.notes = (request.data.get('reason') or request.data.get('notes') or payment.notes or '').strip()
-        payment.validated_by = request.user
-        payment.save(update_fields=['status', 'notes', 'validated_by', 'updated_at'])
+        with transaction.atomic():
+            payment = Payment.objects.select_for_update().get(pk=payment.pk)
+            if payment.status != 'valide':
+                return Response({'detail': 'Seuls les paiements validés peuvent être remboursés.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ajuster la facture
-        invoice.paid_amount = (invoice.paid_amount or 0) - payment.amount
-        if invoice.paid_amount < 0:
-            invoice.paid_amount = 0
-        if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
-            invoice.status = 'payee'
-        elif invoice.paid_amount > 0:
-            invoice.status = 'partiellement_payee'
-        else:
-            invoice.status = 'emise'
-        invoice.save(update_fields=['paid_amount', 'status', 'updated_at'])
+            invoice = Invoice.objects.select_for_update().get(pk=payment.invoice_id)
+            # Mise à jour paiement
+            payment.status = 'rembourse'
+            payment.notes = (request.data.get('reason') or request.data.get('notes') or payment.notes or '').strip()
+            payment.validated_by = request.user
+            payment.save(update_fields=['status', 'notes', 'validated_by', 'updated_at'])
+
+            # Ajuster la facture
+            invoice.paid_amount = (invoice.paid_amount or 0) - payment.amount
+            if invoice.paid_amount < 0:
+                invoice.paid_amount = 0
+            if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
+                invoice.status = 'payee'
+            elif invoice.paid_amount > 0:
+                invoice.status = 'partiellement_payee'
+            else:
+                invoice.status = 'emise'
+            invoice.save(update_fields=['paid_amount', 'status', 'updated_at'])
 
         return Response(PaymentSerializer(payment).data)
 
@@ -497,10 +522,37 @@ class InstallmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def mark_paid(self, request, pk=None):
+        # Contrairement à add_payment/validate/refund, cette action ne
+        # touchait ni invoice.paid_amount ni ne créait de Payment — une
+        # échéance "payée" n'avançait donc jamais le solde réel de la
+        # facture (l'étudiant restait "partiellement payée" indéfiniment
+        # malgré des échéances marquées payées une à une).
         installment = self.get_object()
-        installment.status = 'paye'
-        installment.paid_at = timezone.now()
-        installment.save()
+        if installment.status == 'paye':
+            return Response({'detail': 'Échéance déjà marquée payée.'})
+
+        method = request.data.get('method', 'caisse')
+        with transaction.atomic():
+            installment = Installment.objects.select_for_update().get(pk=installment.pk)
+            if installment.status == 'paye':
+                return Response({'detail': 'Échéance déjà marquée payée.'})
+            installment.status = 'paye'
+            installment.paid_at = timezone.now()
+            installment.save(update_fields=['status', 'paid_at', 'updated_at'])
+
+            invoice = Invoice.objects.select_for_update().get(pk=installment.invoice_id)
+            Payment.objects.create(
+                invoice=invoice, amount=installment.amount, method=method,
+                status='valide', paid_at=installment.paid_at, validated_by=request.user,
+                notes=f"Échéance {installment.number}",
+            )
+            invoice.paid_amount = (invoice.paid_amount or 0) + installment.amount
+            if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount:
+                invoice.status = 'payee'
+            else:
+                invoice.status = 'partiellement_payee'
+            invoice.save(update_fields=['paid_amount', 'status', 'updated_at'])
+
         return Response({'detail': 'Échéance marquée payée.'})
 
 
@@ -556,15 +608,28 @@ def cinetpay_notify(request):
     except (IndexError, Invoice.DoesNotExist):
         return Response({'error': 'Facture introuvable pour cette transaction'}, status=status.HTTP_404_NOT_FOUND)
 
-    if not Payment.objects.filter(transaction_ref=transaction_id).exists():
-        amount = invoice.remaining_amount
-        payment = Payment.objects.create(
-            invoice=invoice, amount=amount, method='mobile_money',
-            transaction_ref=transaction_id, status='valide', paid_at=timezone.now(),
-        )
-        invoice.paid_amount += payment.amount
-        invoice.status = 'payee' if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount else 'partiellement_payee'
-        invoice.save()
+    # Vérifier-puis-créer n'était pas atomique : un retry webhook concurrent
+    # (comportement standard des agrégateurs mobile money) pouvait passer les
+    # deux fois le `if not exists()` avant que l'un des deux ne crée sa ligne,
+    # doublant le paiement. La contrainte unique_nonblank_transaction_ref
+    # (models.py) est le vrai filet de sécurité ; select_for_update() sur la
+    # facture protège paid_amount de la même façon que add_payment/validate.
+    from django.db import IntegrityError
+    try:
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
+            if Payment.objects.filter(transaction_ref=transaction_id).exists():
+                return Response({'detail': 'Paiement déjà confirmé.'})
+            amount = invoice.remaining_amount
+            payment = Payment.objects.create(
+                invoice=invoice, amount=amount, method='mobile_money',
+                transaction_ref=transaction_id, status='valide', paid_at=timezone.now(),
+            )
+            invoice.paid_amount += payment.amount
+            invoice.status = 'payee' if invoice.paid_amount >= invoice.total_amount - invoice.discount_amount else 'partiellement_payee'
+            invoice.save()
+    except IntegrityError:
+        return Response({'detail': 'Paiement déjà confirmé.'})
 
     return Response({'detail': 'Paiement confirmé.'})
 

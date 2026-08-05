@@ -313,6 +313,12 @@ class AssignmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
+        # allow_late/max_file_size_mb/allowed_formats/status/open_date
+        # existent sur le modèle depuis le début mais n'étaient jamais lus
+        # ici (contrairement à Quiz.start_attempt, qui vérifie bien
+        # open_date/close_date) — un devoir "fermé" ou pas encore ouvert
+        # acceptait quand même des dépôts, en retard ou non selon
+        # allow_late, et n'importe quel type/taille de fichier.
         assignment = self.get_object()
         from apps.people.models import Student
         try:
@@ -321,10 +327,35 @@ class AssignmentViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Profil étudiant introuvable.'}, status=status.HTTP_400_BAD_REQUEST)
         if AssignmentSubmission.objects.filter(assignment=assignment, student=student).exists():
             return Response({'detail': 'Devoir déjà soumis.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+        if assignment.status not in ('publie', 'ferme'):
+            return Response({'detail': "Ce devoir n'est pas ouvert aux dépôts."}, status=status.HTTP_400_BAD_REQUEST)
+        if assignment.open_date and now < assignment.open_date:
+            return Response({'detail': "Ce devoir n'est pas encore ouvert."}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_late = now > assignment.due_date
+        if is_late and (not assignment.allow_late or assignment.status == 'ferme'):
+            return Response({'detail': 'La date limite de dépôt est dépassée.'}, status=status.HTTP_400_BAD_REQUEST)
+
         file = request.FILES.get('file')
         if not file:
             return Response({'detail': 'Fichier requis.'}, status=status.HTTP_400_BAD_REQUEST)
-        is_late = timezone.now() > assignment.due_date
+
+        max_size = (assignment.max_file_size_mb or 10) * 1024 * 1024
+        if file.size > max_size:
+            return Response(
+                {'detail': f'Fichier trop volumineux (max {assignment.max_file_size_mb} Mo).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        allowed = [ext.strip().lower() for ext in (assignment.allowed_formats or '').split(',') if ext.strip()]
+        extension = file.name.rsplit('.', 1)[-1].lower() if '.' in file.name else ''
+        if allowed and extension not in allowed:
+            return Response(
+                {'detail': f"Format non autorisé (formats acceptés : {', '.join(allowed)})."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         submission = AssignmentSubmission.objects.create(
             assignment=assignment, student=student, file=file, is_late=is_late
         )
@@ -479,13 +510,20 @@ class QuizAttemptViewSet(viewsets.ReadOnlyModelViewSet):
         if not hasattr(request.user, 'teacher_profile') and not request.user.is_superuser:
             return Response({'detail': 'Réservé aux enseignants.'}, status=status.HTTP_403_FORBIDDEN)
         answer_id = request.data.get('answer_id')
-        points = request.data.get('points_earned')
         try:
             answer = attempt.answers.get(id=answer_id)
         except StudentAnswer.DoesNotExist:
             return Response({'detail': 'Réponse introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            points = float(request.data.get('points_earned'))
+        except (TypeError, ValueError):
+            return Response({'detail': 'points_earned doit être un nombre.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Non borné auparavant : un enseignant pouvait saisir une valeur
+        # négative ou dépassant le maximum de la question.
+        max_points = float(answer.question.points)
+        points = max(0.0, min(points, max_points))
         answer.points_earned = points
-        answer.is_correct = float(points) >= float(answer.question.points)
+        answer.is_correct = points >= max_points
         answer.save(update_fields=['points_earned', 'is_correct'])
         attempt.grade()
         return Response(QuizAttemptDetailSerializer(attempt).data)

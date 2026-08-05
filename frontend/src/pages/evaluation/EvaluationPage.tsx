@@ -95,6 +95,7 @@ export default function EvaluationPage() {
   const deleteAssignment = useMutation({
     mutationFn: (id: string) => evaluationApi.deleteRoomAssignment(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['exam-room-assignments'] }); toast.success('Planification supprimée') },
+    onError: () => toast.error('Erreur lors de la suppression'),
   })
 
   const [createJuryOpen, setCreateJuryOpen] = useState(false)
@@ -102,6 +103,7 @@ export default function EvaluationPage() {
   const closeJury = useMutation({
     mutationFn: (id: string) => evaluationApi.updateJury(id, { is_closed: true }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['juries'] }); toast.success('Jury clôturé') },
+    onError: () => toast.error('Erreur lors de la clôture du jury'),
   })
 
   const handleDownloadPV = async (examSessionId: string) => {
@@ -116,21 +118,25 @@ export default function EvaluationPage() {
   const openSession = useMutation({
     mutationFn: (id: string) => evaluationApi.openExamSession(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['exam-sessions'] }); toast.success('Session ouverte') },
+    onError: () => toast.error("Erreur lors de l'ouverture de la session"),
   })
 
   const closeSession = useMutation({
     mutationFn: (id: string) => evaluationApi.closeExamSession(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['exam-sessions'] }); toast.success('Session fermée') },
+    onError: () => toast.error('Erreur lors de la fermeture de la session'),
   })
 
   const validateGrade = useMutation({
     mutationFn: (id: string) => evaluationApi.validateGrade(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['grades'] }); toast.success('Note validée') },
+    onError: () => toast.error('Erreur lors de la validation de la note'),
   })
 
   const publishGrade = useMutation({
     mutationFn: (id: string) => evaluationApi.publishGrade(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['grades'] }); toast.success('Note publiée') },
+    onError: () => toast.error('Erreur lors de la publication de la note'),
   })
 
   const publishSemesterResults = useMutation({

@@ -5,6 +5,7 @@ import { financeApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Progress, Alert } from '../../components/ui'
 import { formatCurrency, formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
+import { useDownload } from '../../hooks/useDownload'
 import type { Invoice, Installment } from '../../types'
 import api from '../../lib/axios'
 
@@ -22,6 +23,7 @@ export default function FinancePage() {
   const [installmentsInvoice, setInstallmentsInvoice] = useState<Invoice | null>(null)
   const queryClient = useQueryClient()
   const toast = useToast()
+  const { downloadExcel } = useDownload()
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', page, search, statusFilter],
@@ -62,7 +64,10 @@ export default function FinancePage() {
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" icon={<Gift className="w-4 h-4" />}
             onClick={() => setDiscountOpen(true)}>Bourse / Exonération</Button>
-          <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />}>Export</Button>
+          <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />}
+            onClick={() => downloadExcel('payments', { search: search || undefined, status: statusFilter || undefined })}>
+            Export
+          </Button>
           <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Nouvelle facture</Button>
         </div>
       </div>

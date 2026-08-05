@@ -72,7 +72,12 @@ export default function StudentsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" icon={<Download className="w-4 h-4" />} size="sm">
+          <Button variant="secondary" icon={<Download className="w-4 h-4" />} size="sm"
+            onClick={() => downloadExcel('students', {
+              search: debouncedSearch || undefined,
+              status: statusFilter || undefined,
+              current_level: levelFilter || undefined,
+            })}>
             Exporter
           </Button>
           <Button icon={<Plus className="w-4 h-4" />} size="sm" onClick={() => setCreateOpen(true)}>

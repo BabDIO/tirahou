@@ -108,6 +108,18 @@ class Payment(BaseModel):
     class Meta:
         db_table = 'payments'
         verbose_name = 'Paiement'
+        constraints = [
+            # Empêche un retry de webhook (CinetPay, comportement standard des
+            # agrégateurs mobile money) de créer deux Payment pour la même
+            # transaction. Condition sur non-vide : la plupart des paiements
+            # caisse/chèque/virement laissent transaction_ref vide et ne
+            # doivent pas s'entre-bloquer.
+            models.UniqueConstraint(
+                fields=['transaction_ref'],
+                condition=~models.Q(transaction_ref=''),
+                name='unique_nonblank_transaction_ref',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.receipt_number} — {self.amount} FCFA"

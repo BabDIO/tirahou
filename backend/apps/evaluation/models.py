@@ -395,29 +395,35 @@ class UEResult(BaseModel):
         
         if not grades.exists():
             return None
-        
-        # Calcul pondéré par les coefficients des EC
-        total_weighted = 0
-        total_coef = 0
-        
-        for grade in grades:
-            if grade.final_grade is not None and not grade.is_absent:
-                coef = float(grade.ec.coefficient or 1)
-                total_weighted += float(grade.final_grade) * coef
-                total_coef += coef
-        
-        if total_coef == 0:
-            return None
-
-        self.average = round(total_weighted / total_coef, 2)
 
         # Étudiant absent à toutes les évaluations de l'UE : décision figée,
-        # non réévaluée par la compensation semestrielle.
+        # non réévaluée par la compensation semestrielle. Doit être vérifié
+        # AVANT le calcul pondéré ci-dessous : la boucle exclut les notes
+        # is_absent de total_coef, qui reste donc à 0 quand tout est absent —
+        # un `return None` prématuré rendait ce bloc inatteignable et l'UE
+        # disparaissait silencieusement du calcul du semestre au lieu de
+        # compter comme un échec (voir SemesterResult.calculate_semester_average
+        # qui exclut .filter(average=None)).
         if all(g.is_absent for g in grades):
             self.decision = 'absent'
             self.credits_obtained = 0
             self.save()
             return self.average
+
+        # Calcul pondéré par les coefficients des EC
+        total_weighted = 0
+        total_coef = 0
+
+        for grade in grades:
+            if grade.final_grade is not None and not grade.is_absent:
+                coef = float(grade.ec.coefficient or 1)
+                total_weighted += float(grade.final_grade) * coef
+                total_coef += coef
+
+        if total_coef == 0:
+            return None
+
+        self.average = round(total_weighted / total_coef, 2)
 
         # Décision provisoire : la compensation éventuelle (voir
         # SemesterResult.calculate_semester_average) n'est déterminable
@@ -504,13 +510,24 @@ class SemesterResult(BaseModel):
             student=self.student,
             ue__semester=self.semester,
             exam_session=self.exam_session
-        ).select_related('ue').exclude(average=None))
+        ).select_related('ue'))
 
         if not ue_results:
             return None
 
+        # Les UE "absent" (average=None, voir calculate_ue_average) étaient
+        # exclues ici par exclude(average=None) — la boucle plus bas prévoit
+        # pourtant explicitement `if decision == 'absent': failed += 1`, code
+        # mort tant que ces UE n'atteignent jamais la boucle. Une absence
+        # totale à une UE compte maintenant comme un 0 dans la moyenne
+        # pondérée (ses crédits pèsent dans total_credits sans contribuer à
+        # total_weighted) et comme un échec, au lieu de disparaître du calcul.
+        numeric_results = [r for r in ue_results if r.average is not None]
+        if not numeric_results:
+            return None
+
         # Moyenne semestrielle pondérée par les crédits de chaque UE
-        total_weighted = sum(float(r.average) * r.ue.credits for r in ue_results)
+        total_weighted = sum(float(r.average) * r.ue.credits for r in numeric_results)
         total_credits = sum(r.ue.credits for r in ue_results)
         if total_credits == 0:
             return None

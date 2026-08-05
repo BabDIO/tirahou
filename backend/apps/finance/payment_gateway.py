@@ -9,6 +9,7 @@ code de l'appel API réel est prêt, il ne manque que les identifiants
 marchands (à obtenir sur https://cinetpay.com).
 """
 import logging
+import uuid
 
 import requests
 from django.conf import settings
@@ -35,7 +36,11 @@ def initiate_mobile_money_payment(invoice, amount, phone, operator='OM', return_
             'error': "Passerelle mobile money non configurée (CINETPAY_API_KEY/CINETPAY_SITE_ID manquants).",
         }
 
-    transaction_id = f"TIRAHOU-{invoice.invoice_number}-{invoice.payments.count() + 1}"
+    # `invoice.payments.count() + 1` produisait le même transaction_id pour
+    # deux initiations de paiement concurrentes sur la même facture (deux
+    # onglets, double-clic) — un suffixe aléatoire garantit l'unicité sans
+    # avoir à verrouiller la facture le temps d'un appel réseau à CinetPay.
+    transaction_id = f"TIRAHOU-{invoice.invoice_number}-{uuid.uuid4().hex[:8]}"
     payload = {
         'apikey': settings.CINETPAY_API_KEY,
         'site_id': settings.CINETPAY_SITE_ID,

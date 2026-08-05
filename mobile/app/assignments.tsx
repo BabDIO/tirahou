@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
@@ -91,9 +91,12 @@ export default function AssignmentsScreen() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setMySubmittedIds((prev) => new Set(prev).add(assignmentId))
-    } catch {
-      // L'échec est visible via l'absence de mise à jour de mySubmittedIds ;
-      // le bouton "Déposer" reste actif pour réessayer.
+    } catch (err: unknown) {
+      // Un catch vide laissait l'étudiant sans aucune indication d'échec
+      // (fichier trop lourd, format refusé, retard non autorisé...) — le
+      // bouton redevenait juste cliquable sans explication.
+      const e = err as { response?: { data?: { detail?: string } } }
+      Alert.alert('Envoi impossible', e?.response?.data?.detail ?? "Le dépôt du fichier a échoué. Vérifiez votre connexion et réessayez.")
     } finally {
       setSubmittingId(null)
     }

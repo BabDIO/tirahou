@@ -12,6 +12,8 @@ Fournit des analyses statistiques approfondies :
 @author: TIRAHOU
 @version: 1.2.0
 """
+import logging
+
 from django.db.models import Avg, Count, StdDev, Q, F
 from django.core.cache import cache
 from decimal import Decimal
@@ -20,6 +22,8 @@ import statistics
 from .models import Grade, UEResult, SemesterResult
 from apps.programs.models import EC, UE, Semester
 from apps.people.models import Student
+
+logger = logging.getLogger(__name__)
 
 
 class GradeAnalytics:
@@ -275,9 +279,9 @@ class PredictiveAnalytics:
                 elif attendance_rate < 70:
                     risk_score += 10
                     factors.append("Assiduité insuffisante")
-        except:
-            pass
-        
+        except Exception:
+            logger.warning("Calcul du taux d'assiduité impossible pour %s", student, exc_info=True)
+
         # 4. Historique (10%)
         past_results = SemesterResult.objects.filter(
             student=student,
