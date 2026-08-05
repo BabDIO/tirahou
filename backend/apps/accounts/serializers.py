@@ -83,9 +83,6 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
 
-MAX_FAILED_LOGIN_ATTEMPTS = 5
-
-
 class CustomTokenObtainSerializer(TokenObtainPairSerializer):
     # Utiliser 'email' au lieu de 'username' pour la connexion
     username_field = 'email'
@@ -113,11 +110,10 @@ class CustomTokenObtainSerializer(TokenObtainPairSerializer):
         )
 
         if not user:
-            if existing_user:
-                existing_user.failed_login_attempts += 1
-                if existing_user.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS:
-                    existing_user.is_locked = True
-                existing_user.save(update_fields=['failed_login_attempts', 'is_locked'])
+            # Le comptage des échecs (failed_login_attempts) et le
+            # verrouillage se font maintenant dans EmailBackend.authenticate()
+            # lui-même (apps/accounts/backends.py) — les compter aussi ici
+            # aurait doublé chaque échec.
             raise serializers.ValidationError(
                 "Aucun compte actif n'a été trouvé avec les identifiants fournis"
             )

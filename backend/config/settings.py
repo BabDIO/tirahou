@@ -112,8 +112,17 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # Backend d'authentification personnalisé (connexion par email)
 AUTHENTICATION_BACKENDS = [
-    'apps.accounts.backends.EmailBackend',  # Authentification par email
-    'django.contrib.auth.backends.ModelBackend',  # Fallback sur username
+    # EmailBackend (sous-classe de ModelBackend) gère déjà authenticate(),
+    # get_user() et l'héritage complet des vérifications de permissions —
+    # le fallback ModelBackend ci-dessous a été retiré : Django essaie
+    # chaque backend dans l'ordre jusqu'à en trouver un qui retourne un
+    # utilisateur, et ModelBackend.authenticate() ne connaît pas is_locked.
+    # Un compte verrouillé par EmailBackend (voir apps/accounts/backends.py)
+    # pouvait donc quand même s'authentifier via ce fallback — confirmé en
+    # direct : is_locked=True n'empêchait pas authenticate() de réussir.
+    # Rien dans le code n'appelle authenticate(username=...) (grep vérifié),
+    # donc aucune régression attendue à le retirer.
+    'apps.accounts.backends.EmailBackend',
 ]
 
 AUTH_PASSWORD_VALIDATORS = [
