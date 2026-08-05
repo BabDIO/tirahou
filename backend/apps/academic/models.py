@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from apps.core.models import BaseModel
 from apps.accounts.models import User
@@ -51,7 +52,7 @@ class Department(BaseModel):
 
 
 class AcademicYear(BaseModel):
-    label = models.CharField(max_length=20)  # ex: 2024-2025
+    label = models.CharField(max_length=20, unique=True)  # ex: 2024-2025 — doit correspondre à start_date/end_date, voir clean()
     start_date = models.DateField()
     end_date = models.DateField()
     is_current = models.BooleanField(default=False)
@@ -72,11 +73,28 @@ class AcademicYear(BaseModel):
         db_table = 'academic_years'
         verbose_name = 'Année Académique'
         ordering = ['-start_date']
+        constraints = [
+            # Une seule année "en cours" à la fois, garanti au niveau base de
+            # données (le reset dans save() ne protège pas contre bulk_update/SQL brut).
+            models.UniqueConstraint(fields=['is_current'], condition=models.Q(is_current=True), name='academic_year_single_current'),
+        ]
 
     def __str__(self):
         return self.label
 
+    def clean(self):
+        super().clean()
+        if self.start_date and self.end_date and self.end_date <= self.start_date:
+            raise ValidationError({'end_date': "La date de fin doit être postérieure à la date de début."})
+        if self.label and self.start_date and self.end_date:
+            expected = f"{self.start_date.year}-{self.end_date.year}"
+            if self.label.strip() != expected:
+                raise ValidationError({
+                    'label': f"Le libellé « {self.label} » ne correspond pas aux dates choisies (attendu : « {expected} »).",
+                })
+
     def save(self, *args, **kwargs):
+        self.full_clean()
         if self.is_current:
             AcademicYear.objects.exclude(pk=self.pk).update(is_current=False)
         super().save(*args, **kwargs)

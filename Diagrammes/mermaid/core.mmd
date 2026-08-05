@@ -1,0 +1,28 @@
+classDiagram
+class core_WebhookSubscription["WebhookSubscription"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField url
+  +CharField event_type
+  +CharField secret
+  +CharField description
+  +User created_by
+}
+class core_WebhookDelivery["WebhookDelivery"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +WebhookSubscription subscription
+  +CharField event_type
+  +JSONField payload
+  +PositiveSmallIntegerField status_code
+  +BooleanField success
+  +TextField error_message
+  +DateTimeField delivered_at
+}
+class accounts_User["User"]
+  core_WebhookSubscription "*" --> "1" accounts_User : created_by
+  core_WebhookDelivery "*" --> "1" core_WebhookSubscription : subscription

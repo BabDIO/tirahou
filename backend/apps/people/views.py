@@ -266,7 +266,29 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
             return qs
         
         return qs.none()
-    
+
+    def perform_create(self, serializer):
+        # `student` est un champ librement écrivable de
+        # ParentGuardianCreateSerializer — sans ce contrôle, un étudiant
+        # pouvait s'ajouter (ou ajouter un complice) comme "parent/tuteur"
+        # d'un AUTRE étudiant, avec is_primary_contact/
+        # can_receive_notifications=True, détournant ainsi les
+        # notifications scolaires de ce dernier.
+        user = self.request.user
+        if hasattr(user, 'student_profile'):
+            serializer.save(student=user.student_profile)
+            return
+        serializer.save()
+
+    def perform_update(self, serializer):
+        # Même remarque à la mise à jour : empêcher un étudiant de
+        # réassigner son propre contact parent à un autre étudiant.
+        user = self.request.user
+        if hasattr(user, 'student_profile'):
+            serializer.save(student=user.student_profile)
+            return
+        serializer.save()
+
     @action(detail=False, methods=['get'], url_path='by-student/(?P<student_id>[^/.]+)')
     def by_student(self, request, student_id=None):
         """Récupérer les parents d'un étudiant"""

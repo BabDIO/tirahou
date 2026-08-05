@@ -549,6 +549,21 @@ class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
             return qs
         return qs.filter(assignment__course_space__teachers=user)
 
+    def perform_update(self, serializer):
+        # get_queryset() renvoie à l'étudiant SES PROPRES rendus, donc sans
+        # ce contrôle il pouvait PATCHer directement grade/status via le
+        # endpoint générique (MyAssignmentsPage.tsx s'en sert pour noter,
+        # donc les champs ne peuvent pas être passés en read_only_fields —
+        # seul un rôle habilité doit pouvoir déclencher ce PATCH du tout).
+        submission = serializer.instance
+        if not _can_manage_course_space(self.request.user, submission.assignment.course_space):
+            raise PermissionDenied("Vous ne pouvez pas modifier ce rendu.")
+        extra = {}
+        if 'grade' in serializer.validated_data:
+            extra['graded_by'] = self.request.user
+            extra['graded_at'] = timezone.now()
+        serializer.save(**extra)
+
     @action(detail=True, methods=['patch'])
     def grade(self, request, pk=None):
         """Corriger un rendu (enseignant)."""

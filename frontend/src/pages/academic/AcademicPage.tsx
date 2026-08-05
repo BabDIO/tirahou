@@ -238,7 +238,7 @@ export default function AcademicPage() {
 
 function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
   const [form, setForm] = useState({
-    label: '', start_date: '', end_date: '', is_current: false,
+    start_date: '', end_date: '', is_current: false,
     candidature_start: '', candidature_end: '',
     admin_enrollment_start: '', admin_enrollment_end: '',
   })
@@ -246,8 +246,16 @@ function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
   const [error, setError] = useState('')
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
 
+  // Le libellé n'est plus saisi à la main : un champ texte libre à côté de
+  // deux sélecteurs de date permettait de créer "2024-2025" avec des dates
+  // 2026-2027 (bug constaté en prod). Il est dérivé des dates choisies, qui
+  // font foi — le backend rejette de toute façon tout libellé incohérent.
+  const label = form.start_date && form.end_date
+    ? `${form.start_date.slice(0, 4)}-${form.end_date.slice(0, 4)}`
+    : ''
+
   const handleSubmit = async () => {
-    if (!form.label || !form.start_date || !form.end_date) { setError('Libellé et dates requis'); return }
+    if (!form.start_date || !form.end_date) { setError('Dates de début et de fin requises'); return }
     setLoading(true); setError('')
     try {
       // Les dates optionnelles laissées vides doivent être omises, pas
@@ -255,7 +263,7 @@ function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
       // n'a pas d'allow_blank et rejette '' avec "La date n'a pas le bon
       // format" — ce qui bloquait la création dès qu'une période
       // (candidatures/inscriptions) n'était pas encore connue.
-      const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ''))
+      const payload = Object.fromEntries(Object.entries({ ...form, label }).filter(([, v]) => v !== ''))
       await api.post('/academic-years/', payload)
       onSuccess()
     } catch (e: unknown) {
@@ -269,8 +277,9 @@ function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
     <div className="space-y-4">
       {error && <Alert type="error">{error}</Alert>}
       <div>
-        <label className="label">Libellé (ex: 2024-2025)</label>
-        <input className="input" value={form.label} onChange={e => set('label', e.target.value)} placeholder="2024-2025" />
+        <label className="label">Libellé</label>
+        <input className="input bg-gray-50 dark:bg-gray-800 text-gray-500 cursor-not-allowed" value={label} readOnly
+          placeholder="Choisissez les dates ci-dessous" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

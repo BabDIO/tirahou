@@ -1,0 +1,65 @@
+classDiagram
+class admissions_Application["Application"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User applicant
+  +Program program
+  +AcademicYear academic_year
+  +CharField status
+  +CharField application_number
+  +DateTimeField submitted_at
+  +CharField last_diploma
+  +PositiveSmallIntegerField last_diploma_year
+  +CharField last_institution
+  +DecimalField average_grade
+  +TextField motivation_letter
+  +DecimalField score
+  +PositiveIntegerField rank
+  +User reviewed_by
+  +DateTimeField reviewed_at
+  +TextField review_notes
+  +BooleanField application_fee_paid
+  +DecimalField application_fee_amount
+}
+class admissions_ApplicationDocument["ApplicationDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Application application
+  +CharField doc_type
+  +FileField file
+  +CharField status
+  +TextField rejection_reason
+  +User verified_by
+  +DateTimeField verified_at
+}
+class admissions_AdmissionDecision["AdmissionDecision"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Application application
+  +CharField decision
+  +User decided_by
+  +DateTimeField decided_at
+  +TextField notes
+  +DateField acceptance_deadline
+  +BooleanField accepted_by_student
+  +DateTimeField accepted_at
+  +BooleanField is_published
+  +DateTimeField published_at
+}
+class accounts_User["User"]
+class programs_Program["Program"]
+class academic_AcademicYear["AcademicYear"]
+  admissions_Application "*" --> "1" accounts_User : applicant
+  admissions_Application "*" --> "1" programs_Program : program
+  admissions_Application "*" --> "1" academic_AcademicYear : academic_year
+  admissions_Application "*" --> "1" accounts_User : reviewed_by
+  admissions_ApplicationDocument "*" --> "1" admissions_Application : application
+  admissions_ApplicationDocument "*" --> "1" accounts_User : verified_by
+  admissions_AdmissionDecision "1" --> "1" admissions_Application : application
+  admissions_AdmissionDecision "*" --> "1" accounts_User : decided_by

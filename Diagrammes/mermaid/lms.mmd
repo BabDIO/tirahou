@@ -1,0 +1,204 @@
+classDiagram
+class lms_CourseSpace["CourseSpace"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +UE ue
+  +AcademicYear academic_year
+  +CharField title
+  +TextField description
+  +CharField mode
+  +BooleanField is_published
+  +FileField banner
+  +User teachers
+  +Student enrolled_students
+}
+class lms_CourseModule["CourseModule"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +TextField description
+  +PositiveSmallIntegerField order
+  +BooleanField is_published
+  +DateTimeField available_from
+  +CourseModule prerequisite_module
+}
+class lms_CourseResource["CourseResource"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseModule module
+  +CharField title
+  +CharField type
+  +FileField file
+  +CharField external_url
+  +TextField description
+  +PositiveSmallIntegerField order
+  +BooleanField is_downloadable
+  +BooleanField is_published
+  +DateTimeField published_at
+  +User uploaded_by
+  +PositiveIntegerField file_size
+  +PositiveSmallIntegerField duration_minutes
+  +PositiveSmallIntegerField version
+  +CourseResource previous_version
+}
+class lms_ResourceCompletion["ResourceCompletion"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseResource resource
+  +DateTimeField completed_at
+}
+class lms_Assignment["Assignment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +CharField type
+  +TextField instructions
+  +DecimalField max_grade
+  +DecimalField coefficient
+  +DateTimeField open_date
+  +DateTimeField due_date
+  +BooleanField allow_late
+  +PositiveSmallIntegerField max_file_size_mb
+  +CharField allowed_formats
+  +CharField status
+  +User created_by
+}
+class lms_AssignmentSubmission["AssignmentSubmission"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Assignment assignment
+  +Student student
+  +FileField file
+  +DateTimeField submitted_at
+  +BooleanField is_late
+  +DecimalField grade
+  +TextField feedback
+  +User graded_by
+  +DateTimeField graded_at
+  +CharField status
+}
+class lms_Quiz["Quiz"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +TextField instructions
+  +PositiveSmallIntegerField duration_minutes
+  +DecimalField max_grade
+  +DateTimeField open_date
+  +DateTimeField close_date
+  +BooleanField randomize_questions
+  +BooleanField show_results_immediately
+  +PositiveSmallIntegerField max_attempts
+  +BooleanField is_published
+  +User created_by
+}
+class lms_Question["Question"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Quiz quiz
+  +TextField text
+  +CharField type
+  +DecimalField points
+  +PositiveSmallIntegerField order
+  +TextField explanation
+}
+class lms_QuestionChoice["QuestionChoice"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Question question
+  +CharField text
+  +BooleanField is_correct
+  +PositiveSmallIntegerField order
+}
+class lms_QuizAttempt["QuizAttempt"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Quiz quiz
+  +Student student
+  +DateTimeField started_at
+  +DateTimeField submitted_at
+  +DecimalField score
+  +CharField status
+  +PositiveSmallIntegerField attempt_number
+  +JSONField question_order
+}
+class lms_StudentAnswer["StudentAnswer"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +QuizAttempt attempt
+  +Question question
+  +TextField text_answer
+  +BooleanField is_correct
+  +DecimalField points_earned
+  +QuestionChoice selected_choices
+}
+class lms_StudentProgress["StudentProgress"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +PositiveSmallIntegerField resources_viewed
+  +PositiveSmallIntegerField total_resources
+  +DecimalField completion_rate
+  +DateTimeField last_access
+  +PositiveIntegerField total_time_minutes
+}
+class programs_UE["UE"]
+class academic_AcademicYear["AcademicYear"]
+class accounts_User["User"]
+class people_Student["Student"]
+  lms_CourseSpace "*" --> "1" programs_UE : ue
+  lms_CourseSpace "*" --> "1" academic_AcademicYear : academic_year
+  lms_CourseSpace "*" --> "*" accounts_User : teachers
+  lms_CourseSpace "*" --> "*" people_Student : enrolled_students
+  lms_CourseModule "*" --> "1" lms_CourseSpace : course_space
+  lms_CourseModule "*" --> "1" lms_CourseModule : prerequisite_module
+  lms_CourseResource "*" --> "1" lms_CourseModule : module
+  lms_CourseResource "*" --> "1" accounts_User : uploaded_by
+  lms_CourseResource "*" --> "1" lms_CourseResource : previous_version
+  lms_ResourceCompletion "*" --> "1" people_Student : student
+  lms_ResourceCompletion "*" --> "1" lms_CourseResource : resource
+  lms_Assignment "*" --> "1" lms_CourseSpace : course_space
+  lms_Assignment "*" --> "1" accounts_User : created_by
+  lms_AssignmentSubmission "*" --> "1" lms_Assignment : assignment
+  lms_AssignmentSubmission "*" --> "1" people_Student : student
+  lms_AssignmentSubmission "*" --> "1" accounts_User : graded_by
+  lms_Quiz "*" --> "1" lms_CourseSpace : course_space
+  lms_Quiz "*" --> "1" accounts_User : created_by
+  lms_Question "*" --> "1" lms_Quiz : quiz
+  lms_QuestionChoice "*" --> "1" lms_Question : question
+  lms_QuizAttempt "*" --> "1" lms_Quiz : quiz
+  lms_QuizAttempt "*" --> "1" people_Student : student
+  lms_StudentAnswer "*" --> "1" lms_QuizAttempt : attempt
+  lms_StudentAnswer "*" --> "1" lms_Question : question
+  lms_StudentAnswer "*" --> "*" lms_QuestionChoice : selected_choices
+  lms_StudentProgress "*" --> "1" people_Student : student
+  lms_StudentProgress "*" --> "1" lms_CourseSpace : course_space

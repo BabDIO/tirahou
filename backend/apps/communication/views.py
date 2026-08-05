@@ -26,6 +26,23 @@ def _can_send_notification(user):
     return user.is_superuser or user.roles.filter(name__in=NOTIFICATION_SENDER_ROLES).exists()
 
 
+# Rôles pédagogiques/administratifs habilités à gérer les annonces et forums
+# indépendamment d'en être l'auteur (mêmes rôles déjà utilisés par
+# publish/pin/toggle_status). Aucun perform_update/perform_destroy n'existait
+# sur Announcement/Forum/ForumPost : n'importe quel utilisateur authentifié
+# pouvait modifier ou supprimer l'annonce/le post/le forum de n'importe qui
+# (et même passer is_published/is_pinned/is_open directement en PATCH, en
+# contournant les actions publish()/pin()/toggle_status() ci-dessous).
+CONTENT_MANAGER_ROLES = [
+    'super_admin', 'admin_institutionnel', 'admin_scolarite',
+    'responsable_pedagogique', 'chef_departement', 'enseignant',
+]
+
+
+def _is_content_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=CONTENT_MANAGER_ROLES).exists()
+
+
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Notification.objects.none()
     serializer_class = NotificationSerializer
@@ -136,6 +153,19 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def perform_update(self, serializer):
+        ann = serializer.instance
+        if not (_is_content_manager(self.request.user) or ann.author_id == self.request.user.id):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas modifier cette annonce.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not (_is_content_manager(self.request.user) or instance.author_id == self.request.user.id):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas supprimer cette annonce.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
         ann = self.get_object()
@@ -177,6 +207,21 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
+
+    def perform_update(self, serializer):
+        # get_queryset() renvoie les messages où l'utilisateur est SOIT
+        # sender SOIT recipient — sans ce contrôle, le destinataire pouvait
+        # PATCHer subject/body/recipient d'un message qu'il n'a pas écrit
+        # (aucune fonctionnalité front n'édite un message : seul mark_read,
+        # qui passe par l'action dédiée ci-dessous, doit pouvoir le faire).
+        from rest_framework.exceptions import PermissionDenied
+        raise PermissionDenied("Un message ne peut pas être modifié après envoi.")
+
+    def perform_destroy(self, instance):
+        from rest_framework.exceptions import PermissionDenied
+        if instance.sender_id != self.request.user.id:
+            raise PermissionDenied("Seul l'expéditeur peut supprimer ce message.")
+        instance.delete()
 
     @action(detail=False, methods=['get'])
     def inbox(self, request):
@@ -223,6 +268,28 @@ class ForumViewSet(viewsets.ModelViewSet):
             posts_count=Count('posts')
         )
 
+    def perform_create(self, serializer):
+        # Créer un forum est une action pédagogique/administrative
+        # (voir CommunicationPage.tsx : bouton réservé à
+        # isAdmin/isEnseignant/isScolarite côté frontend) — sans ce contrôle,
+        # rien ne l'imposait côté API.
+        if not _is_content_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas créer de forum.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _is_content_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas modifier ce forum.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_content_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas supprimer ce forum.")
+        instance.delete()
+
     @action(detail=True, methods=['post'])
     def toggle_status(self, request, pk=None):
         forum = self.get_object()
@@ -257,6 +324,19 @@ class ForumPostViewSet(viewsets.ModelViewSet):
         if not forum.is_open:
             raise serializers.ValidationError('Ce forum est fermé.')
         serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        post = serializer.instance
+        if not (_is_content_manager(self.request.user) or post.author_id == self.request.user.id):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas modifier ce message.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not (_is_content_manager(self.request.user) or instance.author_id == self.request.user.id):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas supprimer ce message.")
+        instance.delete()
 
     @action(detail=True, methods=['post'])
     def pin(self, request, pk=None):

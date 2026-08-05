@@ -1,0 +1,91 @@
+classDiagram
+class programs_Program["Program"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField code
+  +CharField name
+  +CharField type
+  +CharField mode
+  +Department department
+  +LMDRegulation regulation
+  +User responsible
+  +PositiveSmallIntegerField duration_semesters
+  +CharField languages
+  +TextField prerequisites
+  +PositiveIntegerField capacity
+  +DecimalField fees
+  +CharField status
+  +TextField description
+  +BooleanField candidature_open
+}
+class programs_Semester["Semester"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Program program
+  +PositiveSmallIntegerField number
+  +CharField label
+  +AcademicYear academic_year
+  +PositiveSmallIntegerField total_credits
+}
+class programs_UE["UE"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Semester semester
+  +CharField code
+  +CharField name
+  +CharField type
+  +PositiveSmallIntegerField credits
+  +DecimalField coefficient
+  +PositiveSmallIntegerField volume_hours
+  +User responsible
+  +CharField eval_mode
+  +BooleanField compensation_allowed
+  +DecimalField passing_grade
+  +TextField description
+}
+class programs_EC["EC"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +UE ue
+  +CharField code
+  +CharField name
+  +CharField activity_type
+  +PositiveSmallIntegerField volume_hours
+  +PositiveSmallIntegerField credits
+  +DecimalField coefficient
+  +User teachers
+}
+class programs_Group["Group"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Program program
+  +AcademicYear academic_year
+  +CharField name
+  +CharField type
+  +PositiveSmallIntegerField capacity
+}
+class academic_Department["Department"]
+class academic_LMDRegulation["LMDRegulation"]
+class accounts_User["User"]
+class academic_AcademicYear["AcademicYear"]
+  programs_Program "*" --> "1" academic_Department : department
+  programs_Program "*" --> "1" academic_LMDRegulation : regulation
+  programs_Program "*" --> "1" accounts_User : responsible
+  programs_Semester "*" --> "1" programs_Program : program
+  programs_Semester "*" --> "1" academic_AcademicYear : academic_year
+  programs_UE "*" --> "1" programs_Semester : semester
+  programs_UE "*" --> "1" accounts_User : responsible
+  programs_EC "*" --> "1" programs_UE : ue
+  programs_EC "*" --> "*" accounts_User : teachers
+  programs_Group "*" --> "1" programs_Program : program
+  programs_Group "*" --> "1" academic_AcademicYear : academic_year

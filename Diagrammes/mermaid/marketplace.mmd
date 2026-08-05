@@ -1,0 +1,74 @@
+classDiagram
+class marketplace_MarketplaceCourse["MarketplaceCourse"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User teacher
+  +CharField title
+  +SlugField slug
+  +TextField description
+  +CharField category
+  +CharField level
+  +FileField cover_image
+  +DecimalField price
+  +BooleanField is_free
+  +PositiveSmallIntegerField duration_hours
+  +CharField status
+  +DateTimeField published_at
+  +DecimalField rating
+  +PositiveIntegerField rating_count
+}
+class marketplace_CourseLesson["CourseLesson"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +MarketplaceCourse course
+  +CharField title
+  +CharField content_type
+  +CharField content_url
+  +TextField content_text
+  +PositiveSmallIntegerField duration_minutes
+  +PositiveSmallIntegerField order
+  +BooleanField is_preview
+}
+class marketplace_CoursePurchase["CoursePurchase"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +MarketplaceCourse course
+  +DecimalField price_paid
+  +DateTimeField purchased_at
+}
+class marketplace_LessonCompletion["LessonCompletion"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseLesson lesson
+  +DateTimeField completed_at
+}
+class marketplace_CourseReview["CourseReview"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +MarketplaceCourse course
+  +PositiveSmallIntegerField rating
+  +TextField comment
+}
+class accounts_User["User"]
+class people_Student["Student"]
+  marketplace_MarketplaceCourse "*" --> "1" accounts_User : teacher
+  marketplace_CourseLesson "*" --> "1" marketplace_MarketplaceCourse : course
+  marketplace_CoursePurchase "*" --> "1" people_Student : student
+  marketplace_CoursePurchase "*" --> "1" marketplace_MarketplaceCourse : course
+  marketplace_LessonCompletion "*" --> "1" people_Student : student
+  marketplace_LessonCompletion "*" --> "1" marketplace_CourseLesson : lesson
+  marketplace_CourseReview "*" --> "1" people_Student : student
+  marketplace_CourseReview "*" --> "1" marketplace_MarketplaceCourse : course

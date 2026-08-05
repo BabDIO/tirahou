@@ -1,0 +1,102 @@
+classDiagram
+class people_Student["Student"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField student_id
+  +CharField national_id
+  +CharField gender
+  +DateField birth_date
+  +CharField birth_place
+  +CharField nationality
+  +TextField address
+  +CharField emergency_contact_name
+  +CharField emergency_contact_phone
+  +CharField emergency_contact_relation
+  +Program current_program
+  +AcademicYear current_year
+  +PositiveSmallIntegerField current_level
+  +CharField status
+  +FileField photo
+  +PositiveSmallIntegerField baccalaureate_year
+  +CharField baccalaureate_series
+  +CharField baccalaureate_mention
+}
+class people_Teacher["Teacher"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField teacher_id
+  +CharField grade
+  +CharField status
+  +Department department
+  +TextField specialities
+  +TextField bio
+  +CharField office
+  +PositiveSmallIntegerField weekly_hours_quota
+  +DecimalField hourly_rate
+  +CharField contract_reference
+}
+class people_AdminStaff["AdminStaff"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField staff_id
+  +CharField service
+  +CharField position
+  +Department department
+}
+class people_ParentGuardian["ParentGuardian"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CharField relationship
+  +CharField first_name
+  +CharField last_name
+  +CharField email
+  +CharField phone
+  +CharField phone_secondary
+  +TextField address
+  +CharField city
+  +CharField country
+  +CharField profession
+  +CharField employer
+  +BooleanField can_receive_notifications
+  +JSONField notification_preferences
+  +BooleanField is_primary_contact
+  +BooleanField is_emergency_contact
+  +BooleanField has_legal_authority
+  +CharField id_card_number
+}
+class people_TeacherAvailability["TeacherAvailability"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Teacher teacher
+  +PositiveSmallIntegerField day_of_week
+  +TimeField start_time
+  +TimeField end_time
+  +CharField notes
+}
+class accounts_User["User"]
+class programs_Program["Program"]
+class academic_AcademicYear["AcademicYear"]
+class academic_Department["Department"]
+  people_Student "1" --> "1" accounts_User : user
+  people_Student "*" --> "1" programs_Program : current_program
+  people_Student "*" --> "1" academic_AcademicYear : current_year
+  people_Teacher "1" --> "1" accounts_User : user
+  people_Teacher "*" --> "1" academic_Department : department
+  people_AdminStaff "1" --> "1" accounts_User : user
+  people_AdminStaff "*" --> "1" academic_Department : department
+  people_ParentGuardian "*" --> "1" people_Student : student
+  people_TeacherAvailability "*" --> "1" people_Teacher : teacher

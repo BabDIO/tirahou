@@ -1,0 +1,92 @@
+classDiagram
+class finance_FeeType["FeeType"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField category
+  +DecimalField amount
+  +AcademicYear academic_year
+  +BooleanField is_mandatory
+  +TextField description
+}
+class finance_Invoice["Invoice"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +CharField invoice_number
+  +CharField status
+  +DecimalField total_amount
+  +DecimalField paid_amount
+  +DecimalField discount_amount
+  +DateField due_date
+  +TextField notes
+}
+class finance_InvoiceItem["InvoiceItem"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Invoice invoice
+  +FeeType fee_type
+  +CharField label
+  +DecimalField amount
+}
+class finance_Payment["Payment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Invoice invoice
+  +DecimalField amount
+  +CharField method
+  +CharField status
+  +CharField transaction_ref
+  +CharField receipt_number
+  +DateTimeField paid_at
+  +User validated_by
+  +TextField notes
+}
+class finance_Scholarship["Scholarship"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +CharField type
+  +DecimalField amount
+  +DecimalField percentage
+  +TextField reason
+  +User granted_by
+}
+class finance_Installment["Installment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Invoice invoice
+  +PositiveSmallIntegerField number
+  +DecimalField amount
+  +DateField due_date
+  +CharField status
+  +DateTimeField paid_at
+}
+class academic_AcademicYear["AcademicYear"]
+class people_Student["Student"]
+class accounts_User["User"]
+  finance_FeeType "*" --> "1" academic_AcademicYear : academic_year
+  finance_Invoice "*" --> "1" people_Student : student
+  finance_Invoice "*" --> "1" academic_AcademicYear : academic_year
+  finance_InvoiceItem "*" --> "1" finance_Invoice : invoice
+  finance_InvoiceItem "*" --> "1" finance_FeeType : fee_type
+  finance_Payment "*" --> "1" finance_Invoice : invoice
+  finance_Payment "*" --> "1" accounts_User : validated_by
+  finance_Scholarship "*" --> "1" people_Student : student
+  finance_Scholarship "*" --> "1" academic_AcademicYear : academic_year
+  finance_Scholarship "*" --> "1" accounts_User : granted_by
+  finance_Installment "*" --> "1" finance_Invoice : invoice

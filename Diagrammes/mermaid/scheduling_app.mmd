@@ -1,0 +1,62 @@
+classDiagram
+class scheduling_app_Room["Room"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField code
+  +CharField type
+  +PositiveSmallIntegerField capacity
+  +CharField building
+  +CharField floor
+  +BooleanField has_projector
+  +BooleanField has_computer
+  +BooleanField has_internet
+  +BooleanField is_virtual
+}
+class scheduling_app_ScheduledSession["ScheduledSession"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +EC ec
+  +Group group
+  +User teacher
+  +Room room
+  +AcademicYear academic_year
+  +CharField mode
+  +DateTimeField start_datetime
+  +DateTimeField end_datetime
+  +CharField status
+  +BooleanField is_recurring
+  +CharField recurrence_rule
+  +TextField notes
+  +TextField cancellation_reason
+  +ScheduledSession rescheduled_to
+}
+class scheduling_app_Timetable["Timetable"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Group group
+  +AcademicYear academic_year
+  +PositiveSmallIntegerField week_number
+  +BooleanField is_published
+  +DateTimeField published_at
+  +ScheduledSession sessions
+}
+class programs_EC["EC"]
+class programs_Group["Group"]
+class accounts_User["User"]
+class academic_AcademicYear["AcademicYear"]
+  scheduling_app_ScheduledSession "*" --> "1" programs_EC : ec
+  scheduling_app_ScheduledSession "*" --> "1" programs_Group : group
+  scheduling_app_ScheduledSession "*" --> "1" accounts_User : teacher
+  scheduling_app_ScheduledSession "*" --> "1" scheduling_app_Room : room
+  scheduling_app_ScheduledSession "*" --> "1" academic_AcademicYear : academic_year
+  scheduling_app_ScheduledSession "*" --> "1" scheduling_app_ScheduledSession : rescheduled_to
+  scheduling_app_Timetable "*" --> "1" programs_Group : group
+  scheduling_app_Timetable "*" --> "1" academic_AcademicYear : academic_year
+  scheduling_app_Timetable "*" --> "*" scheduling_app_ScheduledSession : sessions

@@ -1,0 +1,65 @@
+classDiagram
+class documents_DocumentCategory["DocumentCategory"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField code
+  +TextField description
+  +BooleanField requires_validation
+}
+class documents_StudentDocument["StudentDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +DocumentCategory category
+  +CharField title
+  +FileField file
+  +PositiveIntegerField file_size
+  +CharField mime_type
+  +PositiveSmallIntegerField version
+  +CharField status
+  +User uploaded_by
+  +User verified_by
+  +DateTimeField verified_at
+  +TextField rejection_reason
+  +DateField expiry_date
+}
+class documents_GeneratedDocument["GeneratedDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CharField doc_type
+  +CharField title
+  +FileField file
+  +CharField verification_code
+  +FileField qr_code
+  +CharField status
+  +User generated_by
+  +DateTimeField delivered_at
+  +DateField valid_until
+  +JSONField metadata
+}
+class documents_DocumentAccessLog["DocumentAccessLog"] {
+  +BigAutoField id
+  +GeneratedDocument document
+  +User accessed_by
+  +GenericIPAddressField ip_address
+  +DateTimeField accessed_at
+  +CharField verification_method
+}
+class people_Student["Student"]
+class accounts_User["User"]
+  documents_StudentDocument "*" --> "1" people_Student : student
+  documents_StudentDocument "*" --> "1" documents_DocumentCategory : category
+  documents_StudentDocument "*" --> "1" accounts_User : uploaded_by
+  documents_StudentDocument "*" --> "1" accounts_User : verified_by
+  documents_GeneratedDocument "*" --> "1" people_Student : student
+  documents_GeneratedDocument "*" --> "1" accounts_User : generated_by
+  documents_DocumentAccessLog "*" --> "1" documents_GeneratedDocument : document
+  documents_DocumentAccessLog "*" --> "1" accounts_User : accessed_by

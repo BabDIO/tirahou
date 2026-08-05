@@ -1,0 +1,50 @@
+classDiagram
+class virtual_class_VirtualClassSession["VirtualClassSession"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +ScheduledSession scheduled_session
+  +CharField title
+  +TextField description
+  +CharField mode
+  +CharField provider
+  +DateTimeField scheduled_start
+  +DateTimeField scheduled_end
+  +DateTimeField actual_start
+  +DateTimeField actual_end
+  +CharField meeting_id
+  +CharField join_url
+  +CharField moderator_password
+  +CharField attendee_password
+  +CharField recording_url
+  +BooleanField is_recorded
+  +BooleanField replay_available
+  +CharField status
+  +User created_by
+  +PositiveSmallIntegerField room_capacity
+  +CharField physical_room
+}
+class virtual_class_SessionParticipant["SessionParticipant"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +VirtualClassSession session
+  +User user
+  +CharField role
+  +DateTimeField joined_at
+  +DateTimeField left_at
+  +PositiveSmallIntegerField duration_minutes
+  +BooleanField is_present
+  +CharField join_mode
+}
+class lms_CourseSpace["CourseSpace"]
+class scheduling_app_ScheduledSession["ScheduledSession"]
+class accounts_User["User"]
+  virtual_class_VirtualClassSession "*" --> "1" lms_CourseSpace : course_space
+  virtual_class_VirtualClassSession "*" --> "1" scheduling_app_ScheduledSession : scheduled_session
+  virtual_class_VirtualClassSession "*" --> "1" accounts_User : created_by
+  virtual_class_SessionParticipant "*" --> "1" virtual_class_VirtualClassSession : session
+  virtual_class_SessionParticipant "*" --> "1" accounts_User : user

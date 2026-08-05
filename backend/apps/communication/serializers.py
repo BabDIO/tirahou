@@ -27,7 +27,9 @@ class AnnouncementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Announcement
         fields = '__all__'
-        read_only_fields = ['author', 'published_at']
+        # is_published/is_pinned en lecture seule : sinon un PATCH direct
+        # contournait les contrôles de rôle des actions publish()/pin().
+        read_only_fields = ['author', 'published_at', 'is_published', 'is_pinned']
 
     def get_author_name(self, obj):
         return obj.author.get_full_name() if obj.author else 'Système'
@@ -60,7 +62,7 @@ class ForumPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = ForumPost
         fields = '__all__'
-        read_only_fields = ['author']
+        read_only_fields = ['author', 'is_pinned']
 
     def get_author_name(self, obj):
         return obj.author.get_full_name()
@@ -80,6 +82,7 @@ class ForumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Forum
         fields = '__all__'
+        read_only_fields = ['is_open']
 
     def get_recent_posts(self, obj):
         posts = obj.posts.filter(is_active=True).select_related('author')[:5]

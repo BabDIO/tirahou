@@ -34,8 +34,8 @@ export default function TeacherAttendancePage() {
 
   const createSheetMut = useMutation({
     mutationFn: (data: object) => api.post('/attendance-sheets/', data),
-    onSuccess: () => { toast.success('Feuille créée'); setShowCreateSheet(false); qc.invalidateQueries({ queryKey: ['attendance-sheets'] }) },
-    onError: () => toast.error('Erreur lors de la création'),
+    onSuccess: () => { toast.success('Feuille créée'); setShowCreateSheet(false); setSessionId(''); qc.invalidateQueries({ queryKey: ['attendance-sheets'] }) },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? 'Erreur lors de la création'),
   })
 
   const openSheetMut = useMutation({
@@ -56,6 +56,14 @@ export default function TeacherAttendancePage() {
   const sheetList = sheets?.results ?? []
   const recordList = records?.results ?? []
   const selectedSheetData = sheetList.find((s: { id: string }) => s.id === selectedSheet)
+
+  // Une séance ne peut avoir qu'une seule feuille (contrainte OneToOne côté
+  // backend) — on retire du menu les séances déjà pourvues, sinon la création
+  // échoue avec une erreur 400 peu explicite pour l'enseignant.
+  const sheetedSessionIds = new Set(sheetList.map((s: { session: string }) => s.session))
+  const availableSessions = (sessions?.results ?? []).filter(
+    (s: { id: string }) => !sheetedSessionIds.has(s.id)
+  )
 
   const presentCount = recordList.filter((r: { status: string }) => r.status === 'present').length
   const absentCount = recordList.filter((r: { status: string }) => r.status === 'absent').length
@@ -79,13 +87,13 @@ export default function TeacherAttendancePage() {
           <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Feuilles de présence</h3>
           {isLoading ? <Spinner /> : !sheetList.length ? (
             <Empty icon={<UserCheck className="w-6 h-6" />} message="Aucune feuille" description="Créez une feuille pour une séance." />
-          ) : sheetList.map((sheet: { id: string; session_code: string; is_open: boolean; created_at: string; session?: { ec_code?: string; start_datetime?: string } }) => (
+          ) : sheetList.map((sheet: { id: string; session_code: string; is_open: boolean; created_at: string; ec_code?: string; session_start_datetime?: string }) => (
             <Card key={sheet.id} hover onClick={() => setSelectedSheet(sheet.id)}
               className={`cursor-pointer ${selectedSheet === sheet.id ? 'ring-2 ring-primary-500' : ''}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{sheet.session?.ec_code ?? 'Séance'}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{sheet.session?.start_datetime ? formatDate(sheet.session.start_datetime) : formatDate(sheet.created_at)}</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{sheet.ec_code ?? 'Séance'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{sheet.session_start_datetime ? formatDate(sheet.session_start_datetime) : formatDate(sheet.created_at)}</p>
                   <p className="font-mono text-xs text-primary-600 mt-0.5">Code : {sheet.session_code}</p>
                 </div>
                 <Badge label={sheet.is_open ? 'Ouverte' : 'Fermée'} className={sheet.is_open ? 'badge-green' : 'badge-gray'} />
@@ -191,12 +199,17 @@ export default function TeacherAttendancePage() {
             <label className="label">Séance *</label>
             <select className="input" value={sessionId} onChange={e => setSessionId(e.target.value)}>
               <option value="">— Sélectionner une séance —</option>
-              {(sessions?.results ?? []).map((s: { id: string; ec_code?: string; start_datetime: string }) => (
+              {availableSessions.map((s: { id: string; ec_code?: string; start_datetime: string }) => (
                 <option key={s.id} value={s.id}>
                   {s.ec_code ?? 'Séance'} — {formatDate(s.start_datetime)}
                 </option>
               ))}
             </select>
+            {!availableSessions.length && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Toutes vos séances ont déjà une feuille de présence.
+              </p>
+            )}
           </div>
           <div className="flex gap-3">
             <button onClick={() => setShowCreateSheet(false)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition">Annuler</button>

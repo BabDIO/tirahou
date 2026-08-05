@@ -37,9 +37,14 @@ class CourseLessonLockedSerializer(serializers.ModelSerializer):
         if obj.is_preview:
             return True
         request = self.context.get('request')
-        if not request or not hasattr(request.user, 'student_profile'):
+        if not request:
             return False
-        return CoursePurchase.objects.filter(student=request.user.student_profile, course=obj.course).exists()
+        user = request.user
+        if user.is_superuser or obj.course.teacher_id == user.id:
+            return True
+        if not hasattr(user, 'student_profile'):
+            return False
+        return CoursePurchase.objects.filter(student=user.student_profile, course=obj.course).exists()
 
     def get_is_locked(self, obj):
         return not self._has_access(obj)

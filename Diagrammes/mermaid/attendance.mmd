@@ -1,0 +1,65 @@
+classDiagram
+class attendance_AttendanceSheet["AttendanceSheet"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ScheduledSession session
+  +FileField qr_code
+  +CharField session_code
+  +BooleanField is_open
+  +DateTimeField opened_at
+  +DateTimeField closed_at
+  +User created_by
+}
+class attendance_AttendanceRecord["AttendanceRecord"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +AttendanceSheet sheet
+  +Student student
+  +CharField status
+  +CharField method
+  +DateTimeField marked_at
+  +TextField justification
+  +FileField justification_file
+  +BooleanField is_justified
+  +CharField justification_status
+  +CharField justification_reason
+  +User reviewed_by
+  +DateTimeField reviewed_at
+  +TextField reviewer_comment
+  +PositiveSmallIntegerField minutes_late
+}
+class attendance_AbsenceSummary["AbsenceSummary"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +PositiveSmallIntegerField total_sessions
+  +PositiveSmallIntegerField present_count
+  +PositiveSmallIntegerField absent_count
+  +PositiveSmallIntegerField justified_count
+  +DecimalField attendance_rate
+  +BooleanField alert_sent
+  +PositiveSmallIntegerField late_count
+  +PositiveSmallIntegerField unjustified_count
+  +DecimalField punctuality_rate
+  +CharField alert_level
+  +DateTimeField last_alert_sent
+  +JSONField recommendations
+}
+class scheduling_app_ScheduledSession["ScheduledSession"]
+class accounts_User["User"]
+class people_Student["Student"]
+class lms_CourseSpace["CourseSpace"]
+  attendance_AttendanceSheet "1" --> "1" scheduling_app_ScheduledSession : session
+  attendance_AttendanceSheet "*" --> "1" accounts_User : created_by
+  attendance_AttendanceRecord "*" --> "1" attendance_AttendanceSheet : sheet
+  attendance_AttendanceRecord "*" --> "1" people_Student : student
+  attendance_AttendanceRecord "*" --> "1" accounts_User : reviewed_by
+  attendance_AbsenceSummary "*" --> "1" people_Student : student
+  attendance_AbsenceSummary "*" --> "1" lms_CourseSpace : course_space

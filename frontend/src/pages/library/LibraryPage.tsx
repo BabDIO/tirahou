@@ -248,11 +248,11 @@ export default function LibraryPage() {
               <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Vous n'avez aucun emprunt en cours.</p>
             ) : (
               <div className="space-y-3">
-                {myBorrowings.map((b: { id: string; document: { title: string; author: string; cover: string | null }; borrowed_at: string; due_date: string; late_days: number; penalty_amount: number; status: string }) => (
+                {myBorrowings.map((b: { id: string; document_title: string; document_author: string; document_cover: string | null; borrowed_at: string; due_date: string; late_days: number; penalty_amount: number; status: string }) => (
                   <div key={b.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{b.document.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{b.document.author} • Retour prévu le {formatDate(b.due_date)}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">{b.document_title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{b.document_author} • Retour prévu le {formatDate(b.due_date)}</p>
                       {b.penalty_amount > 0 && (
                         <p className="text-xs text-red-600 mt-1">Pénalité : {b.penalty_amount} FCFA ({b.late_days}j de retard)</p>
                       )}

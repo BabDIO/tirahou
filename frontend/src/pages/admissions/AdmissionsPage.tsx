@@ -14,6 +14,7 @@ export default function AdmissionsPage() {
   const [selected, setSelected] = useState<Application | null>(null)
   const [publishOpen, setPublishOpen] = useState(false)
   const queryClient = useQueryClient()
+  const toast = useToast()
 
   const { data, isLoading } = useQuery({
     queryKey: ['applications', page, search, statusFilter],
@@ -29,6 +30,7 @@ export default function AdmissionsPage() {
     mutationFn: ({ id, decision }: { id: string; decision: string }) =>
       admissionsApi.decide(id, { decision }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['applications'] }); setSelected(null) },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la décision'),
   })
 
   return (

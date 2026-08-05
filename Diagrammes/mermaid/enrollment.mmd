@@ -1,0 +1,57 @@
+classDiagram
+class enrollment_AdminEnrollment["AdminEnrollment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +Program program
+  +CharField type
+  +Program previous_program
+  +CharField enrollment_number
+  +CharField status
+  +User validated_by
+  +DateTimeField validated_at
+  +BooleanField payment_validated
+  +TextField notes
+}
+class enrollment_PedaEnrollment["PedaEnrollment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +AdminEnrollment admin_enrollment
+  +Semester semester
+  +Group group
+  +CharField status
+  +DateTimeField confirmed_at
+}
+class enrollment_UEEnrollment["UEEnrollment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +PedaEnrollment peda_enrollment
+  +UE ue
+  +BooleanField is_optional
+  +BooleanField prerequisite_waived
+  +TextField waiver_reason
+}
+class people_Student["Student"]
+class academic_AcademicYear["AcademicYear"]
+class programs_Program["Program"]
+class accounts_User["User"]
+class programs_Semester["Semester"]
+class programs_Group["Group"]
+class programs_UE["UE"]
+  enrollment_AdminEnrollment "*" --> "1" people_Student : student
+  enrollment_AdminEnrollment "*" --> "1" academic_AcademicYear : academic_year
+  enrollment_AdminEnrollment "*" --> "1" programs_Program : program
+  enrollment_AdminEnrollment "*" --> "1" programs_Program : previous_program
+  enrollment_AdminEnrollment "*" --> "1" accounts_User : validated_by
+  enrollment_PedaEnrollment "*" --> "1" enrollment_AdminEnrollment : admin_enrollment
+  enrollment_PedaEnrollment "*" --> "1" programs_Semester : semester
+  enrollment_PedaEnrollment "*" --> "1" programs_Group : group
+  enrollment_UEEnrollment "*" --> "1" enrollment_PedaEnrollment : peda_enrollment
+  enrollment_UEEnrollment "*" --> "1" programs_UE : ue

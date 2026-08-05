@@ -71,6 +71,15 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         if not _is_admissions_staff(request.user):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         app = self.get_object()
+        # AdmissionDecision est OneToOneField sur Application : un
+        # double-clic (ou un second appel après correction) déclenchait une
+        # IntegrityError non gérée (500) — le frontend n'avait d'ailleurs
+        # aucun onError pour l'afficher (voir AdmissionsPage.tsx).
+        if hasattr(app, 'decision'):
+            return Response(
+                {'detail': 'Une décision existe déjà pour ce dossier.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = AdmissionDecisionSerializer(data=request.data)
         if serializer.is_valid():
             decision_value = serializer.validated_data.get('decision')

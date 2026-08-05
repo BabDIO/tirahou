@@ -25,7 +25,9 @@
       "Bash(grep -rn \"^\\\\s*pass\\\\s*$\" apps/ --include=\"*.py\")",
       "Bash(grep -rln \"notification\" pages/communication/)",
       "Bash(ls pages/communication/)",
-      "Bash(grep -n \"navigate\\(\\\\`/students\\\\|navigate\\(\\\\`/courses\\\\|navigate\\(\\\\`/documents\\\\|StudentProfile\\\\|/my-documents\\\\|CourseSpace\" pages/people/StudentsPage.tsx)"
+      "Bash(grep -n \"navigate\\(\\\\`/students\\\\|navigate\\(\\\\`/courses\\\\|navigate\\(\\\\`/documents\\\\|StudentProfile\\\\|/my-documents\\\\|CourseSpace\" pages/people/StudentsPage.tsx)",
+      "WebFetch(domain:docs.expo.dev)",
+      "WebFetch(domain:expo.dev)"
     ]
   }
 }

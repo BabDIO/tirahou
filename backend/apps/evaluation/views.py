@@ -261,6 +261,20 @@ class GradeContestViewSet(viewsets.ModelViewSet):
     permission_module = 'evaluation'
     filterset_fields = ['status', 'student']
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return GradeContest.objects.none()
+        user = self.request.user
+        qs = GradeContest.objects.select_related('student__user', 'grade__ec', 'reviewed_by')
+        # Enseignant : seulement les réclamations sur les notes des EC qu'il
+        # enseigne (même portée que GradeViewSet) — sans ce filtre, N'IMPORTE
+        # QUEL enseignant voyait les réclamations de TOUS les étudiants sur
+        # TOUS les cours de l'établissement, motif de contestation inclus.
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(grade__ec__teachers=user)
+        # Admin, scolarité, responsable : tout
+        return qs
+
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
         contest = self.get_object()

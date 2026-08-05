@@ -1,0 +1,99 @@
+classDiagram
+class communication_Notification["Notification"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User recipient
+  +CharField type
+  +CharField channel
+  +CharField priority
+  +CharField title
+  +TextField message
+  +BooleanField is_read
+  +DateTimeField read_at
+  +CharField action_url
+  +CharField action_label
+  +CharField icon
+  +CharField color
+  +DateTimeField sent_at
+  +BooleanField is_sent
+  +JSONField extra_data
+}
+class communication_Announcement["Announcement"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField title
+  +TextField content
+  +User author
+  +CharField audience
+  +CourseSpace course_space
+  +BooleanField is_published
+  +DateTimeField published_at
+  +DateTimeField expires_at
+  +BooleanField is_pinned
+  +FileField attachment
+}
+class communication_Message["Message"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User sender
+  +User recipient
+  +CharField subject
+  +TextField body
+  +BooleanField is_read
+  +DateTimeField read_at
+  +Message parent
+  +FileField attachment
+}
+class communication_Forum["Forum"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +TextField description
+  +BooleanField is_open
+}
+class communication_ForumPost["ForumPost"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Forum forum
+  +User author
+  +CharField title
+  +TextField content
+  +ForumPost parent
+  +BooleanField is_pinned
+  +FileField attachment
+}
+class communication_PushSubscription["PushSubscription"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField endpoint
+  +CharField p256dh
+  +CharField auth
+  +CharField user_agent
+}
+class accounts_User["User"]
+class lms_CourseSpace["CourseSpace"]
+  communication_Notification "*" --> "1" accounts_User : recipient
+  communication_Announcement "*" --> "1" accounts_User : author
+  communication_Announcement "*" --> "1" lms_CourseSpace : course_space
+  communication_Message "*" --> "1" accounts_User : sender
+  communication_Message "*" --> "1" accounts_User : recipient
+  communication_Message "*" --> "1" communication_Message : parent
+  communication_Forum "*" --> "1" lms_CourseSpace : course_space
+  communication_ForumPost "*" --> "1" communication_Forum : forum
+  communication_ForumPost "*" --> "1" accounts_User : author
+  communication_ForumPost "*" --> "1" communication_ForumPost : parent
+  communication_PushSubscription "*" --> "1" accounts_User : user

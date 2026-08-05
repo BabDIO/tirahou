@@ -1,0 +1,22 @@
+classDiagram
+class chatbot_ChatConversation["ChatConversation"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField title
+}
+class chatbot_ChatMessage["ChatMessage"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ChatConversation conversation
+  +CharField role
+  +TextField content
+  +JSONField tools_used
+}
+class accounts_User["User"]
+  chatbot_ChatConversation "*" --> "1" accounts_User : user
+  chatbot_ChatMessage "*" --> "1" chatbot_ChatConversation : conversation

@@ -6,7 +6,8 @@ from django.utils import timezone
 from .models import MarketplaceCourse, CourseLesson, CoursePurchase, LessonCompletion, CourseReview
 from .serializers import (
     MarketplaceCourseSerializer, MarketplaceCourseDetailSerializer,
-    CourseLessonSerializer, CoursePurchaseSerializer, CourseReviewSerializer,
+    CourseLessonSerializer, CourseLessonLockedSerializer,
+    CoursePurchaseSerializer, CourseReviewSerializer,
 )
 
 
@@ -96,6 +97,19 @@ class CourseLessonViewSet(viewsets.ModelViewSet):
         if getattr(self, 'swagger_fake_view', False):
             return CourseLesson.objects.none()
         return CourseLesson.objects.filter(is_active=True).select_related('course')
+
+    def get_serializer_class(self):
+        # `/marketplace/lessons/` était servi par MarketplaceCourseDetailSerializer
+        # côté "détail de cours" (contenu verrouillé tant que non acheté), mais
+        # ce ViewSet renvoyait le contenu complet (content_url/content_text) en
+        # clair à N'IMPORTE QUEL utilisateur authentifié via list/retrieve —
+        # contournement total du paywall. Seuls create/update/destroy (déjà
+        # réservés au propriétaire du cours ci-dessous) ont besoin du serializer
+        # complet ; list/retrieve doivent respecter le même verrouillage que la
+        # page de détail du cours.
+        if self.action in ('list', 'retrieve'):
+            return CourseLessonLockedSerializer
+        return CourseLessonSerializer
 
     def perform_create(self, serializer):
         course = serializer.validated_data.get('course')

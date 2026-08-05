@@ -1,0 +1,208 @@
+classDiagram
+%% ── Structure académique ──────────────────────────────────────
+class University {
+  +name
+  +acronym
+}
+class Faculty {
+  +name
+  +acronym
+}
+class Department {
+  +name
+  +acronym
+}
+class AcademicYear {
+  +label
+  +start_date
+  +end_date
+  +is_current
+}
+class Program {
+  +code
+  +name
+  +type
+  +mode
+  +capacity
+}
+class Semester {
+  +number
+  +label
+}
+class UE {
+  +code
+  +name
+  +credits
+  +coefficient
+}
+class EC {
+  +code
+  +name
+  +credits
+}
+class Group {
+  +name
+  +type
+  +capacity
+}
+class Room {
+  +name
+  +type
+  +capacity
+}
+
+%% ── Personnes ──────────────────────────────────────────────────
+class User {
+  +email
+  +first_name
+  +last_name
+  +phone
+}
+class Student {
+  +student_id
+  +gender
+  +status
+  +current_level
+}
+class Teacher {
+  +teacher_id
+  +grade
+  +status
+}
+
+%% ── Admissions & Inscriptions ────────────────────────────────────
+class Application {
+  +application_number
+  +status
+  +score
+}
+class AdminEnrollment {
+  +enrollment_number
+  +status
+}
+class PedaEnrollment {
+  +status
+}
+
+%% ── Évaluation & Résultats ─────────────────────────────────────
+class ExamSession {
+  +session_type
+  +start_date
+  +end_date
+}
+class Grade {
+  +cc_grade
+  +exam_grade
+  +final_grade
+  +status
+}
+class SemesterResult {
+  +average
+  +decision
+  +mention
+}
+
+%% ── Finance ──────────────────────────────────────────────────
+class Invoice {
+  +invoice_number
+  +total_amount
+  +paid_amount
+  +status
+}
+class Payment {
+  +amount
+  +method
+  +status
+}
+
+%% ── Planning & Présence ─────────────────────────────────────
+class ScheduledSession {
+  +start_datetime
+  +end_datetime
+  +mode
+  +status
+}
+class AttendanceSheet {
+  +session_code
+  +is_open
+}
+class AttendanceRecord {
+  +status
+  +marked_at
+}
+
+%% ── Modules périphériques (allégés, un aperçu seulement) ─────
+class CourseSpace {
+  +title
+  +mode
+  +is_published
+}
+class VirtualClassSession {
+  +title
+  +provider
+  +status
+}
+class Notification {
+  +type
+  +title
+  +is_read
+}
+class LibraryDocument {
+  +title
+  +author
+  +type
+}
+
+%% ── Relations : structure académique ──────────────────────────
+Faculty "*" --> "1" University : appartient à
+Department "*" --> "1" Faculty : appartient à
+Program "*" --> "1" Department : rattaché à
+Semester "*" --> "1" Program : découpe
+Semester "*" --> "1" AcademicYear : concerne
+UE "*" --> "1" Semester : compose
+EC "*" --> "1" UE : compose
+Group "*" --> "1" Program : regroupe
+
+%% ── Relations : personnes ──────────────────────────────────────
+Student "1" --> "1" User : est
+Teacher "1" --> "1" User : est
+Student "*" --> "1" Program : inscrit dans
+Student "*" --> "1" AcademicYear : année en cours
+Teacher "*" --> "1" Department : rattaché à
+
+%% ── Relations : admissions & inscriptions ─────────────────────
+Application "*" --> "1" User : candidat
+Application "*" --> "1" Program : vise
+AdminEnrollment "*" --> "1" Student : concerne
+AdminEnrollment "*" --> "1" Program : dans
+AdminEnrollment "*" --> "1" AcademicYear : pour
+PedaEnrollment "*" --> "1" AdminEnrollment : précise
+PedaEnrollment "*" --> "1" Semester : pour
+PedaEnrollment "*" --> "1" Group : dans
+
+%% ── Relations : évaluation ─────────────────────────────────────
+ExamSession "*" --> "1" Semester : organise
+Grade "*" --> "1" Student : note
+Grade "*" --> "1" EC : porte sur
+Grade "*" --> "1" ExamSession : lors de
+SemesterResult "*" --> "1" Student : bilan de
+SemesterResult "*" --> "1" Semester : pour
+
+%% ── Relations : finance ────────────────────────────────────────
+Invoice "*" --> "1" Student : facture
+Payment "*" --> "1" Invoice : règle
+
+%% ── Relations : planning & présence ────────────────────────────
+ScheduledSession "*" --> "1" EC : programme
+ScheduledSession "*" --> "1" Group : pour
+ScheduledSession "*" --> "1" Room : dans
+ScheduledSession "*" --> "1" User : enseigné par
+AttendanceSheet "1" --> "1" ScheduledSession : ouvre
+AttendanceRecord "*" --> "1" AttendanceSheet : émarge
+AttendanceRecord "*" --> "1" Student : concerne
+
+%% ── Relations : modules périphériques ──────────────────────────
+CourseSpace "*" --> "1" UE : espace de
+VirtualClassSession "*" --> "1" CourseSpace : visio pour
+Notification "*" --> "1" User : destinée à
+LibraryDocument "*" --> "1" User : déposé par

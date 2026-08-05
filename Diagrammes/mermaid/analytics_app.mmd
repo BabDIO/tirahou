@@ -1,0 +1,156 @@
+classDiagram
+class analytics_app_LearningActivity["LearningActivity"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +CharField action
+  +CourseResource resource
+  +PositiveIntegerField duration_seconds
+  +GenericIPAddressField ip_address
+  +CharField device_type
+  +DateTimeField timestamp
+}
+class analytics_app_EngagementScore["EngagementScore"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +AcademicYear academic_year
+  +PositiveIntegerField connection_count
+  +PositiveIntegerField total_time_minutes
+  +PositiveSmallIntegerField resources_viewed
+  +PositiveSmallIntegerField assignments_submitted
+  +PositiveSmallIntegerField quizzes_attempted
+  +PositiveSmallIntegerField forum_posts
+  +PositiveSmallIntegerField virtual_class_attended
+  +DecimalField completion_rate
+  +DecimalField forum_participation_rate
+  +DecimalField quiz_completion_rate
+  +DecimalField avg_module_progress
+  +DecimalField engagement_score
+  +CharField dropout_risk
+  +DateTimeField last_computed
+  +BooleanField alert_sent
+  +DecimalField success_prediction_score
+  +CharField success_probability
+  +JSONField recommendations
+  +DateField last_activity_date
+  +PositiveSmallIntegerField days_inactive
+}
+class analytics_app_DashboardStat["DashboardStat"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +AcademicYear academic_year
+  +CharField stat_type
+  +CharField label
+  +DecimalField value
+  +JSONField extra_data
+  +DateTimeField computed_at
+}
+class analytics_app_Badge["Badge"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +TextField description
+  +CharField type
+  +FileField icon
+  +TextField criteria
+  +PositiveSmallIntegerField points
+  +BooleanField is_published
+}
+class analytics_app_StudentBadge["StudentBadge"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +Badge badge
+  +User awarded_by
+  +DateTimeField awarded_at
+  +TextField reason
+  +CharField verification_code
+}
+class analytics_app_MicroCertification["MicroCertification"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField title
+  +CharField code
+  +TextField description
+  +Program program
+  +PositiveSmallIntegerField duration_hours
+  +PositiveSmallIntegerField credits
+  +Badge badge
+  +CharField status
+  +DecimalField price
+  +BooleanField is_free
+  +User created_by
+}
+class analytics_app_StudentCertification["StudentCertification"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +MicroCertification certification
+  +CharField status
+  +DateTimeField enrolled_at
+  +DateTimeField completed_at
+  +DecimalField score
+  +CharField certificate_url
+  +CharField verification_code
+}
+class analytics_app_Wallet["Wallet"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +DecimalField balance
+  +DecimalField total_earned
+  +DecimalField total_spent
+}
+class analytics_app_WalletTransaction["WalletTransaction"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Wallet wallet
+  +CharField type
+  +DecimalField amount
+  +CharField description
+  +CharField reference
+}
+class people_Student["Student"]
+class lms_CourseSpace["CourseSpace"]
+class lms_CourseResource["CourseResource"]
+class academic_AcademicYear["AcademicYear"]
+class accounts_User["User"]
+class programs_Program["Program"]
+  analytics_app_LearningActivity "*" --> "1" people_Student : student
+  analytics_app_LearningActivity "*" --> "1" lms_CourseSpace : course_space
+  analytics_app_LearningActivity "*" --> "1" lms_CourseResource : resource
+  analytics_app_EngagementScore "*" --> "1" people_Student : student
+  analytics_app_EngagementScore "*" --> "1" lms_CourseSpace : course_space
+  analytics_app_EngagementScore "*" --> "1" academic_AcademicYear : academic_year
+  analytics_app_DashboardStat "*" --> "1" academic_AcademicYear : academic_year
+  analytics_app_StudentBadge "*" --> "1" people_Student : student
+  analytics_app_StudentBadge "*" --> "1" analytics_app_Badge : badge
+  analytics_app_StudentBadge "*" --> "1" accounts_User : awarded_by
+  analytics_app_MicroCertification "*" --> "1" programs_Program : program
+  analytics_app_MicroCertification "*" --> "1" analytics_app_Badge : badge
+  analytics_app_MicroCertification "*" --> "1" accounts_User : created_by
+  analytics_app_StudentCertification "*" --> "1" people_Student : student
+  analytics_app_StudentCertification "*" --> "1" analytics_app_MicroCertification : certification
+  analytics_app_Wallet "1" --> "1" people_Student : student
+  analytics_app_WalletTransaction "*" --> "1" analytics_app_Wallet : wallet

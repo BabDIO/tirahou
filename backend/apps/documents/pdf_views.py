@@ -13,6 +13,7 @@ from apps.evaluation.models import ExamSession, UEResult, SemesterResult
 from apps.evaluation.services import compute_semester_results, get_student_transcript
 from apps.academic.models import University
 from .models import GeneratedDocument
+from .views import _is_document_manager
 from .pdf_service import (
     generate_certificat_scolarite,
     generate_releve_notes,
@@ -28,12 +29,28 @@ def _get_university_name():
     return uni.name if uni else 'Université Virtuelle Hybride'
 
 
+def _can_access_own_documents(user, student):
+    """Un étudiant peut générer/consulter SES PROPRES documents ; la
+    scolarité peut le faire pour n'importe quel étudiant. Ce module
+    (endpoints @api_view historiquement séparés de GeneratedDocumentViewSet)
+    n'appliquait aucun de ces deux contrôles — seul IsAuthenticated était
+    requis, avec student_id pris tel quel depuis l'URL : n'importe quel
+    compte connecté pouvait télécharger le certificat de scolarité, le
+    relevé de notes, la carte étudiant ou la fiche d'inscription de
+    N'IMPORTE QUEL AUTRE étudiant."""
+    if _is_document_manager(user):
+        return True
+    return hasattr(user, 'student_profile') and user.student_profile.id == student.id
+
+
 @extend_schema(responses={200: OpenApiResponse(description='PDF certificat de scolarité')})
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def generate_certificat_pdf(request, student_id):
     try:
         student = Student.objects.select_related('user').get(id=student_id)
+        if not _can_access_own_documents(request.user, student):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         academic_year_id = request.query_params.get('academic_year')
 
         enrollment = AdminEnrollment.objects.filter(
@@ -79,6 +96,8 @@ def generate_certificat_pdf(request, student_id):
 def generate_releve_pdf(request, student_id):
     try:
         student = Student.objects.select_related('user').get(id=student_id)
+        if not _can_access_own_documents(request.user, student):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         semester_id = request.query_params.get('semester')
         session_id = request.query_params.get('session')
 
@@ -125,6 +144,8 @@ def generate_releve_pdf(request, student_id):
 def generate_fiche_inscription_pdf(request, student_id):
     try:
         student = Student.objects.select_related('user').get(id=student_id)
+        if not _can_access_own_documents(request.user, student):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         academic_year_id = request.query_params.get('academic_year')
 
         enrollment = AdminEnrollment.objects.filter(student=student, status='validee')
@@ -166,6 +187,8 @@ def generate_fiche_inscription_pdf(request, student_id):
 def generate_carte_etudiant_pdf(request, student_id):
     try:
         student = Student.objects.select_related('user').get(id=student_id)
+        if not _can_access_own_documents(request.user, student):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         academic_year_id = request.query_params.get('academic_year')
 
         enrollment = AdminEnrollment.objects.filter(student=student, status='validee')
@@ -208,6 +231,12 @@ def generate_carte_etudiant_pdf(request, student_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def compute_results(request):
+    # Recalcule les résultats officiels d'un semestre/session pour TOUS les
+    # étudiants concernés — aucune vérification de rôle n'existait, ce qui
+    # permettait à n'importe quel compte connecté de déclencher un
+    # recalcul des délibérations à tout moment.
+    if not _is_document_manager(request.user):
+        return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
     semester_id = request.data.get('semester_id')
     session_id = request.data.get('session_id')
 
@@ -230,6 +259,8 @@ def compute_results(request):
 def student_transcript(request, student_id):
     try:
         student = Student.objects.get(id=student_id)
+        if not _can_access_own_documents(request.user, student):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         academic_year_id = request.query_params.get('academic_year')
 
         if not academic_year_id:
@@ -286,6 +317,11 @@ def student_transcript(request, student_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_convocation_pdf(request):
+    # Réservé à la scolarité : sans ce contrôle, n'importe quel compte
+    # connecté pouvait générer une convocation officielle « au nom de »
+    # n'importe quel étudiant, avec un titre/date/lieu arbitraires.
+    if not _is_document_manager(request.user):
+        return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
     try:
         student = Student.objects.select_related('user').get(id=request.data.get('student_id'))
         event_title = request.data.get('event_title', 'Convocation')
@@ -324,6 +360,13 @@ def generate_convocation_pdf(request):
 def generate_diplome_pdf(request, student_id):
     try:
         student = Student.objects.select_related('user').get(id=student_id)
+        # Réservé à la scolarité — un diplôme/attestation officiel ne doit
+        # jamais être auto-généré par l'étudiant lui-même (fraude aux
+        # diplômes), même si le document reste ensuite public via
+        # /documents/verify/<code>/ (fraude déjà corrigée côté
+        # GeneratedDocumentViewSet.perform_create, mais pas ici).
+        if not _is_document_manager(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         academic_year_id = request.query_params.get('academic_year')
         is_attestation = request.query_params.get('attestation') == 'true'
         mention = request.query_params.get('mention', '')

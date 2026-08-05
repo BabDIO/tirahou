@@ -1,0 +1,1643 @@
+classDiagram
+class core_WebhookSubscription["WebhookSubscription"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField url
+  +CharField event_type
+  +CharField secret
+  +CharField description
+  +User created_by
+}
+class core_WebhookDelivery["WebhookDelivery"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +WebhookSubscription subscription
+  +CharField event_type
+  +JSONField payload
+  +PositiveSmallIntegerField status_code
+  +BooleanField success
+  +TextField error_message
+  +DateTimeField delivered_at
+}
+class accounts_Role["Role"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +TextField description
+}
+class accounts_Permission["Permission"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField module
+  +CharField action
+  +CharField description
+}
+class accounts_RolePermission["RolePermission"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Role role
+  +Permission permission
+}
+class accounts_User["User"] {
+  +CharField password
+  +DateTimeField last_login
+  +BooleanField is_superuser
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField email
+  +CharField username
+  +CharField first_name
+  +CharField last_name
+  +CharField phone
+  +FileField avatar
+  +BooleanField is_staff
+  +BooleanField is_verified
+  +GenericIPAddressField last_login_ip
+  +PositiveSmallIntegerField failed_login_attempts
+  +BooleanField is_locked
+  +BooleanField mfa_enabled
+  +CharField mfa_secret
+  +Group groups
+  +Permission user_permissions
+  +Role roles
+}
+class accounts_AuditLog["AuditLog"] {
+  +BigAutoField id
+  +User user
+  +CharField action
+  +CharField module
+  +CharField object_type
+  +CharField object_id
+  +TextField description
+  +GenericIPAddressField ip_address
+  +TextField user_agent
+  +DateTimeField timestamp
+  +JSONField extra_data
+}
+class academic_University["University"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField acronym
+  +FileField logo
+  +TextField address
+  +CharField website
+  +CharField email
+  +CharField phone
+  +User rector
+}
+class academic_Faculty["Faculty"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +University university
+  +CharField name
+  +CharField acronym
+  +User dean
+  +CharField email
+}
+class academic_Department["Department"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Faculty faculty
+  +CharField name
+  +CharField acronym
+  +User head
+}
+class academic_AcademicYear["AcademicYear"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField label
+  +DateField start_date
+  +DateField end_date
+  +BooleanField is_current
+  +DateField candidature_start
+  +DateField candidature_end
+  +DateField admin_enrollment_start
+  +DateField admin_enrollment_end
+  +DateField peda_enrollment_start
+  +DateField peda_enrollment_end
+  +DateField courses_start
+  +DateField courses_end
+  +DateField exams_start
+  +DateField exams_end
+  +DateField deliberation_date
+}
+class academic_LMDRegulation["LMDRegulation"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField cycle
+  +University university
+  +AcademicYear effective_year
+  +PositiveSmallIntegerField credits_per_semester
+  +PositiveSmallIntegerField credits_per_year
+  +PositiveSmallIntegerField total_credits
+  +DecimalField passing_grade
+  +BooleanField compensation_allowed
+  +DecimalField compensation_min_grade
+  +PositiveSmallIntegerField max_years_allowed
+  +TextField notes
+}
+class programs_Program["Program"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField code
+  +CharField name
+  +CharField type
+  +CharField mode
+  +Department department
+  +LMDRegulation regulation
+  +User responsible
+  +PositiveSmallIntegerField duration_semesters
+  +CharField languages
+  +TextField prerequisites
+  +PositiveIntegerField capacity
+  +DecimalField fees
+  +CharField status
+  +TextField description
+  +BooleanField candidature_open
+}
+class programs_Semester["Semester"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Program program
+  +PositiveSmallIntegerField number
+  +CharField label
+  +AcademicYear academic_year
+  +PositiveSmallIntegerField total_credits
+}
+class programs_UE["UE"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Semester semester
+  +CharField code
+  +CharField name
+  +CharField type
+  +PositiveSmallIntegerField credits
+  +DecimalField coefficient
+  +PositiveSmallIntegerField volume_hours
+  +User responsible
+  +CharField eval_mode
+  +BooleanField compensation_allowed
+  +DecimalField passing_grade
+  +TextField description
+}
+class programs_EC["EC"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +UE ue
+  +CharField code
+  +CharField name
+  +CharField activity_type
+  +PositiveSmallIntegerField volume_hours
+  +PositiveSmallIntegerField credits
+  +DecimalField coefficient
+  +User teachers
+}
+class programs_Group["Group"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Program program
+  +AcademicYear academic_year
+  +CharField name
+  +CharField type
+  +PositiveSmallIntegerField capacity
+}
+class people_Student["Student"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField student_id
+  +CharField national_id
+  +CharField gender
+  +DateField birth_date
+  +CharField birth_place
+  +CharField nationality
+  +TextField address
+  +CharField emergency_contact_name
+  +CharField emergency_contact_phone
+  +CharField emergency_contact_relation
+  +Program current_program
+  +AcademicYear current_year
+  +PositiveSmallIntegerField current_level
+  +CharField status
+  +FileField photo
+  +PositiveSmallIntegerField baccalaureate_year
+  +CharField baccalaureate_series
+  +CharField baccalaureate_mention
+}
+class people_Teacher["Teacher"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField teacher_id
+  +CharField grade
+  +CharField status
+  +Department department
+  +TextField specialities
+  +TextField bio
+  +CharField office
+  +PositiveSmallIntegerField weekly_hours_quota
+  +DecimalField hourly_rate
+  +CharField contract_reference
+}
+class people_AdminStaff["AdminStaff"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField staff_id
+  +CharField service
+  +CharField position
+  +Department department
+}
+class people_ParentGuardian["ParentGuardian"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CharField relationship
+  +CharField first_name
+  +CharField last_name
+  +CharField email
+  +CharField phone
+  +CharField phone_secondary
+  +TextField address
+  +CharField city
+  +CharField country
+  +CharField profession
+  +CharField employer
+  +BooleanField can_receive_notifications
+  +JSONField notification_preferences
+  +BooleanField is_primary_contact
+  +BooleanField is_emergency_contact
+  +BooleanField has_legal_authority
+  +CharField id_card_number
+}
+class people_TeacherAvailability["TeacherAvailability"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Teacher teacher
+  +PositiveSmallIntegerField day_of_week
+  +TimeField start_time
+  +TimeField end_time
+  +CharField notes
+}
+class admissions_Application["Application"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User applicant
+  +Program program
+  +AcademicYear academic_year
+  +CharField status
+  +CharField application_number
+  +DateTimeField submitted_at
+  +CharField last_diploma
+  +PositiveSmallIntegerField last_diploma_year
+  +CharField last_institution
+  +DecimalField average_grade
+  +TextField motivation_letter
+  +DecimalField score
+  +PositiveIntegerField rank
+  +User reviewed_by
+  +DateTimeField reviewed_at
+  +TextField review_notes
+  +BooleanField application_fee_paid
+  +DecimalField application_fee_amount
+}
+class admissions_ApplicationDocument["ApplicationDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Application application
+  +CharField doc_type
+  +FileField file
+  +CharField status
+  +TextField rejection_reason
+  +User verified_by
+  +DateTimeField verified_at
+}
+class admissions_AdmissionDecision["AdmissionDecision"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Application application
+  +CharField decision
+  +User decided_by
+  +DateTimeField decided_at
+  +TextField notes
+  +DateField acceptance_deadline
+  +BooleanField accepted_by_student
+  +DateTimeField accepted_at
+  +BooleanField is_published
+  +DateTimeField published_at
+}
+class enrollment_AdminEnrollment["AdminEnrollment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +Program program
+  +CharField type
+  +Program previous_program
+  +CharField enrollment_number
+  +CharField status
+  +User validated_by
+  +DateTimeField validated_at
+  +BooleanField payment_validated
+  +TextField notes
+}
+class enrollment_PedaEnrollment["PedaEnrollment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +AdminEnrollment admin_enrollment
+  +Semester semester
+  +Group group
+  +CharField status
+  +DateTimeField confirmed_at
+}
+class enrollment_UEEnrollment["UEEnrollment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +PedaEnrollment peda_enrollment
+  +UE ue
+  +BooleanField is_optional
+  +BooleanField prerequisite_waived
+  +TextField waiver_reason
+}
+class finance_FeeType["FeeType"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField category
+  +DecimalField amount
+  +AcademicYear academic_year
+  +BooleanField is_mandatory
+  +TextField description
+}
+class finance_Invoice["Invoice"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +CharField invoice_number
+  +CharField status
+  +DecimalField total_amount
+  +DecimalField paid_amount
+  +DecimalField discount_amount
+  +DateField due_date
+  +TextField notes
+}
+class finance_InvoiceItem["InvoiceItem"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Invoice invoice
+  +FeeType fee_type
+  +CharField label
+  +DecimalField amount
+}
+class finance_Payment["Payment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Invoice invoice
+  +DecimalField amount
+  +CharField method
+  +CharField status
+  +CharField transaction_ref
+  +CharField receipt_number
+  +DateTimeField paid_at
+  +User validated_by
+  +TextField notes
+}
+class finance_Scholarship["Scholarship"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +CharField type
+  +DecimalField amount
+  +DecimalField percentage
+  +TextField reason
+  +User granted_by
+}
+class finance_Installment["Installment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Invoice invoice
+  +PositiveSmallIntegerField number
+  +DecimalField amount
+  +DateField due_date
+  +CharField status
+  +DateTimeField paid_at
+}
+class documents_DocumentCategory["DocumentCategory"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField code
+  +TextField description
+  +BooleanField requires_validation
+}
+class documents_StudentDocument["StudentDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +DocumentCategory category
+  +CharField title
+  +FileField file
+  +PositiveIntegerField file_size
+  +CharField mime_type
+  +PositiveSmallIntegerField version
+  +CharField status
+  +User uploaded_by
+  +User verified_by
+  +DateTimeField verified_at
+  +TextField rejection_reason
+  +DateField expiry_date
+}
+class documents_GeneratedDocument["GeneratedDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CharField doc_type
+  +CharField title
+  +FileField file
+  +CharField verification_code
+  +FileField qr_code
+  +CharField status
+  +User generated_by
+  +DateTimeField delivered_at
+  +DateField valid_until
+  +JSONField metadata
+}
+class documents_DocumentAccessLog["DocumentAccessLog"] {
+  +BigAutoField id
+  +GeneratedDocument document
+  +User accessed_by
+  +GenericIPAddressField ip_address
+  +DateTimeField accessed_at
+  +CharField verification_method
+}
+class evaluation_ExamSession["ExamSession"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Semester semester
+  +AcademicYear academic_year
+  +CharField session_type
+  +DateField start_date
+  +DateField end_date
+  +BooleanField is_open
+}
+class evaluation_ExamRoomAssignment["ExamRoomAssignment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ExamSession exam_session
+  +EC ec
+  +Room room
+  +DateTimeField start_datetime
+  +DateTimeField end_datetime
+  +CharField notes
+  +User invigilators
+}
+class evaluation_Grade["Grade"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +EC ec
+  +ExamSession exam_session
+  +DecimalField cc_grade
+  +DecimalField exam_grade
+  +DecimalField final_grade
+  +BooleanField is_absent
+  +CharField status
+  +User entered_by
+  +User validated_by
+  +DateTimeField validated_at
+  +TextField notes
+  +DecimalField cc_weight
+  +DecimalField exam_weight
+  +DecimalField bonus_points
+  +DecimalField penalty_points
+  +BooleanField is_rattrapage
+  +Grade previous_grade
+  +TextField appreciation
+  +BooleanField published_to_student
+  +DateTimeField published_at
+  +JSONField modification_history
+}
+class evaluation_UEResult["UEResult"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +UE ue
+  +ExamSession exam_session
+  +DecimalField average
+  +PositiveSmallIntegerField credits_obtained
+  +CharField decision
+  +BooleanField is_capitalized
+  +UEResult compensation_source
+  +PositiveIntegerField rank_in_ue
+  +PositiveIntegerField total_students
+  +DecimalField percentile
+}
+class evaluation_SemesterResult["SemesterResult"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +Semester semester
+  +ExamSession exam_session
+  +DecimalField average
+  +PositiveSmallIntegerField total_credits
+  +PositiveSmallIntegerField credits_obtained
+  +CharField decision
+  +PositiveIntegerField rank
+  +BooleanField published
+  +DateTimeField published_at
+  +CharField mention
+  +DecimalField gpa
+  +PositiveIntegerField total_students_in_semester
+  +DecimalField percentile
+  +PositiveSmallIntegerField ues_validated
+  +PositiveSmallIntegerField ues_failed
+  +TextField jury_observations
+  +DateTimeField deliberation_date
+}
+class evaluation_Jury["Jury"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ExamSession exam_session
+  +User president
+  +DateTimeField deliberation_date
+  +FileField pv_file
+  +BooleanField is_closed
+  +User members
+}
+class evaluation_GradeContest["GradeContest"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Grade grade
+  +Student student
+  +TextField reason
+  +CharField status
+  +User reviewed_by
+  +TextField response
+  +DecimalField new_grade
+}
+class lms_CourseSpace["CourseSpace"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +UE ue
+  +AcademicYear academic_year
+  +CharField title
+  +TextField description
+  +CharField mode
+  +BooleanField is_published
+  +FileField banner
+  +User teachers
+  +Student enrolled_students
+}
+class lms_CourseModule["CourseModule"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +TextField description
+  +PositiveSmallIntegerField order
+  +BooleanField is_published
+  +DateTimeField available_from
+  +CourseModule prerequisite_module
+}
+class lms_CourseResource["CourseResource"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseModule module
+  +CharField title
+  +CharField type
+  +FileField file
+  +CharField external_url
+  +TextField description
+  +PositiveSmallIntegerField order
+  +BooleanField is_downloadable
+  +BooleanField is_published
+  +DateTimeField published_at
+  +User uploaded_by
+  +PositiveIntegerField file_size
+  +PositiveSmallIntegerField duration_minutes
+  +PositiveSmallIntegerField version
+  +CourseResource previous_version
+}
+class lms_ResourceCompletion["ResourceCompletion"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseResource resource
+  +DateTimeField completed_at
+}
+class lms_Assignment["Assignment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +CharField type
+  +TextField instructions
+  +DecimalField max_grade
+  +DecimalField coefficient
+  +DateTimeField open_date
+  +DateTimeField due_date
+  +BooleanField allow_late
+  +PositiveSmallIntegerField max_file_size_mb
+  +CharField allowed_formats
+  +CharField status
+  +User created_by
+}
+class lms_AssignmentSubmission["AssignmentSubmission"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Assignment assignment
+  +Student student
+  +FileField file
+  +DateTimeField submitted_at
+  +BooleanField is_late
+  +DecimalField grade
+  +TextField feedback
+  +User graded_by
+  +DateTimeField graded_at
+  +CharField status
+}
+class lms_Quiz["Quiz"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +TextField instructions
+  +PositiveSmallIntegerField duration_minutes
+  +DecimalField max_grade
+  +DateTimeField open_date
+  +DateTimeField close_date
+  +BooleanField randomize_questions
+  +BooleanField show_results_immediately
+  +PositiveSmallIntegerField max_attempts
+  +BooleanField is_published
+  +User created_by
+}
+class lms_Question["Question"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Quiz quiz
+  +TextField text
+  +CharField type
+  +DecimalField points
+  +PositiveSmallIntegerField order
+  +TextField explanation
+}
+class lms_QuestionChoice["QuestionChoice"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Question question
+  +CharField text
+  +BooleanField is_correct
+  +PositiveSmallIntegerField order
+}
+class lms_QuizAttempt["QuizAttempt"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Quiz quiz
+  +Student student
+  +DateTimeField started_at
+  +DateTimeField submitted_at
+  +DecimalField score
+  +CharField status
+  +PositiveSmallIntegerField attempt_number
+  +JSONField question_order
+}
+class lms_StudentAnswer["StudentAnswer"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +QuizAttempt attempt
+  +Question question
+  +TextField text_answer
+  +BooleanField is_correct
+  +DecimalField points_earned
+  +QuestionChoice selected_choices
+}
+class lms_StudentProgress["StudentProgress"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +PositiveSmallIntegerField resources_viewed
+  +PositiveSmallIntegerField total_resources
+  +DecimalField completion_rate
+  +DateTimeField last_access
+  +PositiveIntegerField total_time_minutes
+}
+class virtual_class_VirtualClassSession["VirtualClassSession"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +ScheduledSession scheduled_session
+  +CharField title
+  +TextField description
+  +CharField mode
+  +CharField provider
+  +DateTimeField scheduled_start
+  +DateTimeField scheduled_end
+  +DateTimeField actual_start
+  +DateTimeField actual_end
+  +CharField meeting_id
+  +CharField join_url
+  +CharField moderator_password
+  +CharField attendee_password
+  +CharField recording_url
+  +BooleanField is_recorded
+  +BooleanField replay_available
+  +CharField status
+  +User created_by
+  +PositiveSmallIntegerField room_capacity
+  +CharField physical_room
+}
+class virtual_class_SessionParticipant["SessionParticipant"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +VirtualClassSession session
+  +User user
+  +CharField role
+  +DateTimeField joined_at
+  +DateTimeField left_at
+  +PositiveSmallIntegerField duration_minutes
+  +BooleanField is_present
+  +CharField join_mode
+}
+class attendance_AttendanceSheet["AttendanceSheet"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ScheduledSession session
+  +FileField qr_code
+  +CharField session_code
+  +BooleanField is_open
+  +DateTimeField opened_at
+  +DateTimeField closed_at
+  +User created_by
+}
+class attendance_AttendanceRecord["AttendanceRecord"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +AttendanceSheet sheet
+  +Student student
+  +CharField status
+  +CharField method
+  +DateTimeField marked_at
+  +TextField justification
+  +FileField justification_file
+  +BooleanField is_justified
+  +CharField justification_status
+  +CharField justification_reason
+  +User reviewed_by
+  +DateTimeField reviewed_at
+  +TextField reviewer_comment
+  +PositiveSmallIntegerField minutes_late
+}
+class attendance_AbsenceSummary["AbsenceSummary"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +PositiveSmallIntegerField total_sessions
+  +PositiveSmallIntegerField present_count
+  +PositiveSmallIntegerField absent_count
+  +PositiveSmallIntegerField justified_count
+  +DecimalField attendance_rate
+  +BooleanField alert_sent
+  +PositiveSmallIntegerField late_count
+  +PositiveSmallIntegerField unjustified_count
+  +DecimalField punctuality_rate
+  +CharField alert_level
+  +DateTimeField last_alert_sent
+  +JSONField recommendations
+}
+class scheduling_app_Room["Room"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField code
+  +CharField type
+  +PositiveSmallIntegerField capacity
+  +CharField building
+  +CharField floor
+  +BooleanField has_projector
+  +BooleanField has_computer
+  +BooleanField has_internet
+  +BooleanField is_virtual
+}
+class scheduling_app_ScheduledSession["ScheduledSession"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +EC ec
+  +Group group
+  +User teacher
+  +Room room
+  +AcademicYear academic_year
+  +CharField mode
+  +DateTimeField start_datetime
+  +DateTimeField end_datetime
+  +CharField status
+  +BooleanField is_recurring
+  +CharField recurrence_rule
+  +TextField notes
+  +TextField cancellation_reason
+  +ScheduledSession rescheduled_to
+}
+class scheduling_app_Timetable["Timetable"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Group group
+  +AcademicYear academic_year
+  +PositiveSmallIntegerField week_number
+  +BooleanField is_published
+  +DateTimeField published_at
+  +ScheduledSession sessions
+}
+class internships_Internship["Internship"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +User supervisor
+  +CharField company_name
+  +TextField company_address
+  +CharField company_supervisor
+  +CharField company_supervisor_email
+  +CharField subject
+  +TextField description
+  +DateField start_date
+  +DateField end_date
+  +CharField status
+  +FileField convention_file
+  +FileField report_file
+  +DecimalField grade
+}
+class internships_Thesis["Thesis"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +CharField type
+  +CharField title
+  +TextField abstract
+  +CharField keywords
+  +User supervisor
+  +User co_supervisor
+  +CharField status
+  +User validated_by
+  +DateTimeField validated_at
+  +FileField final_file
+  +DecimalField plagiarism_score
+  +CharField plagiarism_analysis_id
+  +CharField plagiarism_report_url
+  +BooleanField is_published
+}
+class internships_ThesisProgress["ThesisProgress"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Thesis thesis
+  +DateField date
+  +TextField note
+  +FileField file
+  +User logged_by
+}
+class internships_Defense["Defense"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Thesis thesis
+  +DateTimeField scheduled_date
+  +CharField room
+  +CharField virtual_link
+  +CharField status
+  +User jury_president
+  +DecimalField grade
+  +CharField mention
+  +FileField pv_file
+  +TextField notes
+  +User jury_members
+}
+class communication_Notification["Notification"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User recipient
+  +CharField type
+  +CharField channel
+  +CharField priority
+  +CharField title
+  +TextField message
+  +BooleanField is_read
+  +DateTimeField read_at
+  +CharField action_url
+  +CharField action_label
+  +CharField icon
+  +CharField color
+  +DateTimeField sent_at
+  +BooleanField is_sent
+  +JSONField extra_data
+}
+class communication_Announcement["Announcement"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField title
+  +TextField content
+  +User author
+  +CharField audience
+  +CourseSpace course_space
+  +BooleanField is_published
+  +DateTimeField published_at
+  +DateTimeField expires_at
+  +BooleanField is_pinned
+  +FileField attachment
+}
+class communication_Message["Message"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User sender
+  +User recipient
+  +CharField subject
+  +TextField body
+  +BooleanField is_read
+  +DateTimeField read_at
+  +Message parent
+  +FileField attachment
+}
+class communication_Forum["Forum"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CourseSpace course_space
+  +CharField title
+  +TextField description
+  +BooleanField is_open
+}
+class communication_ForumPost["ForumPost"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Forum forum
+  +User author
+  +CharField title
+  +TextField content
+  +ForumPost parent
+  +BooleanField is_pinned
+  +FileField attachment
+}
+class communication_PushSubscription["PushSubscription"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField endpoint
+  +CharField p256dh
+  +CharField auth
+  +CharField user_agent
+}
+class analytics_app_LearningActivity["LearningActivity"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +CharField action
+  +CourseResource resource
+  +PositiveIntegerField duration_seconds
+  +GenericIPAddressField ip_address
+  +CharField device_type
+  +DateTimeField timestamp
+}
+class analytics_app_EngagementScore["EngagementScore"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseSpace course_space
+  +AcademicYear academic_year
+  +PositiveIntegerField connection_count
+  +PositiveIntegerField total_time_minutes
+  +PositiveSmallIntegerField resources_viewed
+  +PositiveSmallIntegerField assignments_submitted
+  +PositiveSmallIntegerField quizzes_attempted
+  +PositiveSmallIntegerField forum_posts
+  +PositiveSmallIntegerField virtual_class_attended
+  +DecimalField completion_rate
+  +DecimalField forum_participation_rate
+  +DecimalField quiz_completion_rate
+  +DecimalField avg_module_progress
+  +DecimalField engagement_score
+  +CharField dropout_risk
+  +DateTimeField last_computed
+  +BooleanField alert_sent
+  +DecimalField success_prediction_score
+  +CharField success_probability
+  +JSONField recommendations
+  +DateField last_activity_date
+  +PositiveSmallIntegerField days_inactive
+}
+class analytics_app_DashboardStat["DashboardStat"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +AcademicYear academic_year
+  +CharField stat_type
+  +CharField label
+  +DecimalField value
+  +JSONField extra_data
+  +DateTimeField computed_at
+}
+class analytics_app_Badge["Badge"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +TextField description
+  +CharField type
+  +FileField icon
+  +TextField criteria
+  +PositiveSmallIntegerField points
+  +BooleanField is_published
+}
+class analytics_app_StudentBadge["StudentBadge"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +Badge badge
+  +User awarded_by
+  +DateTimeField awarded_at
+  +TextField reason
+  +CharField verification_code
+}
+class analytics_app_MicroCertification["MicroCertification"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField title
+  +CharField code
+  +TextField description
+  +Program program
+  +PositiveSmallIntegerField duration_hours
+  +PositiveSmallIntegerField credits
+  +Badge badge
+  +CharField status
+  +DecimalField price
+  +BooleanField is_free
+  +User created_by
+}
+class analytics_app_StudentCertification["StudentCertification"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +MicroCertification certification
+  +CharField status
+  +DateTimeField enrolled_at
+  +DateTimeField completed_at
+  +DecimalField score
+  +CharField certificate_url
+  +CharField verification_code
+}
+class analytics_app_Wallet["Wallet"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +DecimalField balance
+  +DecimalField total_earned
+  +DecimalField total_spent
+}
+class analytics_app_WalletTransaction["WalletTransaction"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Wallet wallet
+  +CharField type
+  +DecimalField amount
+  +CharField description
+  +CharField reference
+}
+class library_LibraryDocument["LibraryDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField title
+  +CharField author
+  +CharField type
+  +CharField domain
+  +PositiveSmallIntegerField year
+  +CharField isbn
+  +TextField abstract
+  +CharField keywords
+  +FileField file
+  +FileField cover
+  +CharField external_url
+  +CharField access_level
+  +PositiveIntegerField download_count
+  +PositiveIntegerField view_count
+  +User uploaded_by
+  +BooleanField is_featured
+  +CharField status
+  +PositiveSmallIntegerField quantity
+  +PositiveSmallIntegerField available_quantity
+  +CharField location
+  +CharField publisher
+  +CharField edition
+  +PositiveSmallIntegerField pages
+  +CharField language
+  +DecimalField rating
+  +PositiveIntegerField rating_count
+  +JSONField tags
+  +JSONField related_courses
+}
+class library_Borrowing["Borrowing"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +LibraryDocument document
+  +User borrower
+  +DateTimeField borrowed_at
+  +DateField due_date
+  +DateTimeField returned_at
+  +CharField status
+  +PositiveSmallIntegerField late_days
+  +DecimalField penalty_amount
+  +BooleanField penalty_paid
+  +TextField borrower_notes
+  +TextField librarian_notes
+}
+class library_Reservation["Reservation"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +LibraryDocument document
+  +User user
+  +DateTimeField reserved_at
+  +DateTimeField available_at
+  +DateTimeField expires_at
+  +CharField status
+  +PositiveSmallIntegerField position
+  +BooleanField notified
+}
+class library_DocumentRating["DocumentRating"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +LibraryDocument document
+  +User user
+  +PositiveSmallIntegerField rating
+  +TextField comment
+}
+class library_ReadingList["ReadingList"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField name
+  +TextField description
+  +BooleanField is_public
+  +LibraryDocument documents
+}
+class marketplace_MarketplaceCourse["MarketplaceCourse"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User teacher
+  +CharField title
+  +SlugField slug
+  +TextField description
+  +CharField category
+  +CharField level
+  +FileField cover_image
+  +DecimalField price
+  +BooleanField is_free
+  +PositiveSmallIntegerField duration_hours
+  +CharField status
+  +DateTimeField published_at
+  +DecimalField rating
+  +PositiveIntegerField rating_count
+}
+class marketplace_CourseLesson["CourseLesson"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +MarketplaceCourse course
+  +CharField title
+  +CharField content_type
+  +CharField content_url
+  +TextField content_text
+  +PositiveSmallIntegerField duration_minutes
+  +PositiveSmallIntegerField order
+  +BooleanField is_preview
+}
+class marketplace_CoursePurchase["CoursePurchase"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +MarketplaceCourse course
+  +DecimalField price_paid
+  +DateTimeField purchased_at
+}
+class marketplace_LessonCompletion["LessonCompletion"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +CourseLesson lesson
+  +DateTimeField completed_at
+}
+class marketplace_CourseReview["CourseReview"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +MarketplaceCourse course
+  +PositiveSmallIntegerField rating
+  +TextField comment
+}
+class chatbot_ChatConversation["ChatConversation"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField title
+}
+class chatbot_ChatMessage["ChatMessage"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ChatConversation conversation
+  +CharField role
+  +TextField content
+  +JSONField tools_used
+}
+class auth_Group["Group"]
+class auth_Permission["Permission"]
+  core_WebhookSubscription "*" --> "1" accounts_User : created_by
+  core_WebhookDelivery "*" --> "1" core_WebhookSubscription : subscription
+  accounts_RolePermission "*" --> "1" accounts_Role : role
+  accounts_RolePermission "*" --> "1" accounts_Permission : permission
+  accounts_User "*" --> "*" auth_Group : groups
+  accounts_User "*" --> "*" auth_Permission : user_permissions
+  accounts_User "*" --> "*" accounts_Role : roles
+  accounts_AuditLog "*" --> "1" accounts_User : user
+  academic_University "*" --> "1" accounts_User : rector
+  academic_Faculty "*" --> "1" academic_University : university
+  academic_Faculty "*" --> "1" accounts_User : dean
+  academic_Department "*" --> "1" academic_Faculty : faculty
+  academic_Department "*" --> "1" accounts_User : head
+  academic_LMDRegulation "*" --> "1" academic_University : university
+  academic_LMDRegulation "*" --> "1" academic_AcademicYear : effective_year
+  programs_Program "*" --> "1" academic_Department : department
+  programs_Program "*" --> "1" academic_LMDRegulation : regulation
+  programs_Program "*" --> "1" accounts_User : responsible
+  programs_Semester "*" --> "1" programs_Program : program
+  programs_Semester "*" --> "1" academic_AcademicYear : academic_year
+  programs_UE "*" --> "1" programs_Semester : semester
+  programs_UE "*" --> "1" accounts_User : responsible
+  programs_EC "*" --> "1" programs_UE : ue
+  programs_EC "*" --> "*" accounts_User : teachers
+  programs_Group "*" --> "1" programs_Program : program
+  programs_Group "*" --> "1" academic_AcademicYear : academic_year
+  people_Student "1" --> "1" accounts_User : user
+  people_Student "*" --> "1" programs_Program : current_program
+  people_Student "*" --> "1" academic_AcademicYear : current_year
+  people_Teacher "1" --> "1" accounts_User : user
+  people_Teacher "*" --> "1" academic_Department : department
+  people_AdminStaff "1" --> "1" accounts_User : user
+  people_AdminStaff "*" --> "1" academic_Department : department
+  people_ParentGuardian "*" --> "1" people_Student : student
+  people_TeacherAvailability "*" --> "1" people_Teacher : teacher
+  admissions_Application "*" --> "1" accounts_User : applicant
+  admissions_Application "*" --> "1" programs_Program : program
+  admissions_Application "*" --> "1" academic_AcademicYear : academic_year
+  admissions_Application "*" --> "1" accounts_User : reviewed_by
+  admissions_ApplicationDocument "*" --> "1" admissions_Application : application
+  admissions_ApplicationDocument "*" --> "1" accounts_User : verified_by
+  admissions_AdmissionDecision "1" --> "1" admissions_Application : application
+  admissions_AdmissionDecision "*" --> "1" accounts_User : decided_by
+  enrollment_AdminEnrollment "*" --> "1" people_Student : student
+  enrollment_AdminEnrollment "*" --> "1" academic_AcademicYear : academic_year
+  enrollment_AdminEnrollment "*" --> "1" programs_Program : program
+  enrollment_AdminEnrollment "*" --> "1" programs_Program : previous_program
+  enrollment_AdminEnrollment "*" --> "1" accounts_User : validated_by
+  enrollment_PedaEnrollment "*" --> "1" enrollment_AdminEnrollment : admin_enrollment
+  enrollment_PedaEnrollment "*" --> "1" programs_Semester : semester
+  enrollment_PedaEnrollment "*" --> "1" programs_Group : group
+  enrollment_UEEnrollment "*" --> "1" enrollment_PedaEnrollment : peda_enrollment
+  enrollment_UEEnrollment "*" --> "1" programs_UE : ue
+  finance_FeeType "*" --> "1" academic_AcademicYear : academic_year
+  finance_Invoice "*" --> "1" people_Student : student
+  finance_Invoice "*" --> "1" academic_AcademicYear : academic_year
+  finance_InvoiceItem "*" --> "1" finance_Invoice : invoice
+  finance_InvoiceItem "*" --> "1" finance_FeeType : fee_type
+  finance_Payment "*" --> "1" finance_Invoice : invoice
+  finance_Payment "*" --> "1" accounts_User : validated_by
+  finance_Scholarship "*" --> "1" people_Student : student
+  finance_Scholarship "*" --> "1" academic_AcademicYear : academic_year
+  finance_Scholarship "*" --> "1" accounts_User : granted_by
+  finance_Installment "*" --> "1" finance_Invoice : invoice
+  documents_StudentDocument "*" --> "1" people_Student : student
+  documents_StudentDocument "*" --> "1" documents_DocumentCategory : category
+  documents_StudentDocument "*" --> "1" accounts_User : uploaded_by
+  documents_StudentDocument "*" --> "1" accounts_User : verified_by
+  documents_GeneratedDocument "*" --> "1" people_Student : student
+  documents_GeneratedDocument "*" --> "1" accounts_User : generated_by
+  documents_DocumentAccessLog "*" --> "1" documents_GeneratedDocument : document
+  documents_DocumentAccessLog "*" --> "1" accounts_User : accessed_by
+  evaluation_ExamSession "*" --> "1" programs_Semester : semester
+  evaluation_ExamSession "*" --> "1" academic_AcademicYear : academic_year
+  evaluation_ExamRoomAssignment "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_ExamRoomAssignment "*" --> "1" programs_EC : ec
+  evaluation_ExamRoomAssignment "*" --> "1" scheduling_app_Room : room
+  evaluation_ExamRoomAssignment "*" --> "*" accounts_User : invigilators
+  evaluation_Grade "*" --> "1" people_Student : student
+  evaluation_Grade "*" --> "1" programs_EC : ec
+  evaluation_Grade "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_Grade "*" --> "1" accounts_User : entered_by
+  evaluation_Grade "*" --> "1" accounts_User : validated_by
+  evaluation_Grade "*" --> "1" evaluation_Grade : previous_grade
+  evaluation_UEResult "*" --> "1" people_Student : student
+  evaluation_UEResult "*" --> "1" programs_UE : ue
+  evaluation_UEResult "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_UEResult "*" --> "1" evaluation_UEResult : compensation_source
+  evaluation_SemesterResult "*" --> "1" people_Student : student
+  evaluation_SemesterResult "*" --> "1" programs_Semester : semester
+  evaluation_SemesterResult "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_Jury "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_Jury "*" --> "1" accounts_User : president
+  evaluation_Jury "*" --> "*" accounts_User : members
+  evaluation_GradeContest "*" --> "1" evaluation_Grade : grade
+  evaluation_GradeContest "*" --> "1" people_Student : student
+  evaluation_GradeContest "*" --> "1" accounts_User : reviewed_by
+  lms_CourseSpace "*" --> "1" programs_UE : ue
+  lms_CourseSpace "*" --> "1" academic_AcademicYear : academic_year
+  lms_CourseSpace "*" --> "*" accounts_User : teachers
+  lms_CourseSpace "*" --> "*" people_Student : enrolled_students
+  lms_CourseModule "*" --> "1" lms_CourseSpace : course_space
+  lms_CourseModule "*" --> "1" lms_CourseModule : prerequisite_module
+  lms_CourseResource "*" --> "1" lms_CourseModule : module
+  lms_CourseResource "*" --> "1" accounts_User : uploaded_by
+  lms_CourseResource "*" --> "1" lms_CourseResource : previous_version
+  lms_ResourceCompletion "*" --> "1" people_Student : student
+  lms_ResourceCompletion "*" --> "1" lms_CourseResource : resource
+  lms_Assignment "*" --> "1" lms_CourseSpace : course_space
+  lms_Assignment "*" --> "1" accounts_User : created_by
+  lms_AssignmentSubmission "*" --> "1" lms_Assignment : assignment
+  lms_AssignmentSubmission "*" --> "1" people_Student : student
+  lms_AssignmentSubmission "*" --> "1" accounts_User : graded_by
+  lms_Quiz "*" --> "1" lms_CourseSpace : course_space
+  lms_Quiz "*" --> "1" accounts_User : created_by
+  lms_Question "*" --> "1" lms_Quiz : quiz
+  lms_QuestionChoice "*" --> "1" lms_Question : question
+  lms_QuizAttempt "*" --> "1" lms_Quiz : quiz
+  lms_QuizAttempt "*" --> "1" people_Student : student
+  lms_StudentAnswer "*" --> "1" lms_QuizAttempt : attempt
+  lms_StudentAnswer "*" --> "1" lms_Question : question
+  lms_StudentAnswer "*" --> "*" lms_QuestionChoice : selected_choices
+  lms_StudentProgress "*" --> "1" people_Student : student
+  lms_StudentProgress "*" --> "1" lms_CourseSpace : course_space
+  virtual_class_VirtualClassSession "*" --> "1" lms_CourseSpace : course_space
+  virtual_class_VirtualClassSession "*" --> "1" scheduling_app_ScheduledSession : scheduled_session
+  virtual_class_VirtualClassSession "*" --> "1" accounts_User : created_by
+  virtual_class_SessionParticipant "*" --> "1" virtual_class_VirtualClassSession : session
+  virtual_class_SessionParticipant "*" --> "1" accounts_User : user
+  attendance_AttendanceSheet "1" --> "1" scheduling_app_ScheduledSession : session
+  attendance_AttendanceSheet "*" --> "1" accounts_User : created_by
+  attendance_AttendanceRecord "*" --> "1" attendance_AttendanceSheet : sheet
+  attendance_AttendanceRecord "*" --> "1" people_Student : student
+  attendance_AttendanceRecord "*" --> "1" accounts_User : reviewed_by
+  attendance_AbsenceSummary "*" --> "1" people_Student : student
+  attendance_AbsenceSummary "*" --> "1" lms_CourseSpace : course_space
+  scheduling_app_ScheduledSession "*" --> "1" programs_EC : ec
+  scheduling_app_ScheduledSession "*" --> "1" programs_Group : group
+  scheduling_app_ScheduledSession "*" --> "1" accounts_User : teacher
+  scheduling_app_ScheduledSession "*" --> "1" scheduling_app_Room : room
+  scheduling_app_ScheduledSession "*" --> "1" academic_AcademicYear : academic_year
+  scheduling_app_ScheduledSession "*" --> "1" scheduling_app_ScheduledSession : rescheduled_to
+  scheduling_app_Timetable "*" --> "1" programs_Group : group
+  scheduling_app_Timetable "*" --> "1" academic_AcademicYear : academic_year
+  scheduling_app_Timetable "*" --> "*" scheduling_app_ScheduledSession : sessions
+  internships_Internship "*" --> "1" people_Student : student
+  internships_Internship "*" --> "1" academic_AcademicYear : academic_year
+  internships_Internship "*" --> "1" accounts_User : supervisor
+  internships_Thesis "*" --> "1" people_Student : student
+  internships_Thesis "*" --> "1" academic_AcademicYear : academic_year
+  internships_Thesis "*" --> "1" accounts_User : supervisor
+  internships_Thesis "*" --> "1" accounts_User : co_supervisor
+  internships_Thesis "*" --> "1" accounts_User : validated_by
+  internships_ThesisProgress "*" --> "1" internships_Thesis : thesis
+  internships_ThesisProgress "*" --> "1" accounts_User : logged_by
+  internships_Defense "1" --> "1" internships_Thesis : thesis
+  internships_Defense "*" --> "1" accounts_User : jury_president
+  internships_Defense "*" --> "*" accounts_User : jury_members
+  communication_Notification "*" --> "1" accounts_User : recipient
+  communication_Announcement "*" --> "1" accounts_User : author
+  communication_Announcement "*" --> "1" lms_CourseSpace : course_space
+  communication_Message "*" --> "1" accounts_User : sender
+  communication_Message "*" --> "1" accounts_User : recipient
+  communication_Message "*" --> "1" communication_Message : parent
+  communication_Forum "*" --> "1" lms_CourseSpace : course_space
+  communication_ForumPost "*" --> "1" communication_Forum : forum
+  communication_ForumPost "*" --> "1" accounts_User : author
+  communication_ForumPost "*" --> "1" communication_ForumPost : parent
+  communication_PushSubscription "*" --> "1" accounts_User : user
+  analytics_app_LearningActivity "*" --> "1" people_Student : student
+  analytics_app_LearningActivity "*" --> "1" lms_CourseSpace : course_space
+  analytics_app_LearningActivity "*" --> "1" lms_CourseResource : resource
+  analytics_app_EngagementScore "*" --> "1" people_Student : student
+  analytics_app_EngagementScore "*" --> "1" lms_CourseSpace : course_space
+  analytics_app_EngagementScore "*" --> "1" academic_AcademicYear : academic_year
+  analytics_app_DashboardStat "*" --> "1" academic_AcademicYear : academic_year
+  analytics_app_StudentBadge "*" --> "1" people_Student : student
+  analytics_app_StudentBadge "*" --> "1" analytics_app_Badge : badge
+  analytics_app_StudentBadge "*" --> "1" accounts_User : awarded_by
+  analytics_app_MicroCertification "*" --> "1" programs_Program : program
+  analytics_app_MicroCertification "*" --> "1" analytics_app_Badge : badge
+  analytics_app_MicroCertification "*" --> "1" accounts_User : created_by
+  analytics_app_StudentCertification "*" --> "1" people_Student : student
+  analytics_app_StudentCertification "*" --> "1" analytics_app_MicroCertification : certification
+  analytics_app_Wallet "1" --> "1" people_Student : student
+  analytics_app_WalletTransaction "*" --> "1" analytics_app_Wallet : wallet
+  library_LibraryDocument "*" --> "1" accounts_User : uploaded_by
+  library_Borrowing "*" --> "1" library_LibraryDocument : document
+  library_Borrowing "*" --> "1" accounts_User : borrower
+  library_Reservation "*" --> "1" library_LibraryDocument : document
+  library_Reservation "*" --> "1" accounts_User : user
+  library_DocumentRating "*" --> "1" library_LibraryDocument : document
+  library_DocumentRating "*" --> "1" accounts_User : user
+  library_ReadingList "*" --> "1" accounts_User : user
+  library_ReadingList "*" --> "*" library_LibraryDocument : documents
+  marketplace_MarketplaceCourse "*" --> "1" accounts_User : teacher
+  marketplace_CourseLesson "*" --> "1" marketplace_MarketplaceCourse : course
+  marketplace_CoursePurchase "*" --> "1" people_Student : student
+  marketplace_CoursePurchase "*" --> "1" marketplace_MarketplaceCourse : course
+  marketplace_LessonCompletion "*" --> "1" people_Student : student
+  marketplace_LessonCompletion "*" --> "1" marketplace_CourseLesson : lesson
+  marketplace_CourseReview "*" --> "1" people_Student : student
+  marketplace_CourseReview "*" --> "1" marketplace_MarketplaceCourse : course
+  chatbot_ChatConversation "*" --> "1" accounts_User : user
+  chatbot_ChatMessage "*" --> "1" chatbot_ChatConversation : conversation

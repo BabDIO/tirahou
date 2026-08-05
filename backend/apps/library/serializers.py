@@ -27,12 +27,28 @@ class LibraryDocumentSerializer(serializers.ModelSerializer):
 
 class BorrowingSerializer(serializers.ModelSerializer):
     document_title = serializers.CharField(source='document.title', read_only=True)
+    document_author = serializers.CharField(source='document.author', read_only=True)
+    document_cover = serializers.SerializerMethodField()
     borrower_name = serializers.CharField(source='borrower.get_full_name', read_only=True)
+
+    def get_document_cover(self, obj):
+        if obj.document.cover:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.document.cover.url) if request else obj.document.cover.url
+        return None
     
     class Meta:
         model = Borrowing
         fields = '__all__'
-        read_only_fields = ['borrowed_at', 'late_days', 'penalty_amount']
+        # Un emprunteur peut voir son propre Borrowing (get_queryset) et donc
+        # le PATCHer : sans ces champs en lecture seule, il pouvait passer
+        # lui-même son statut à "retourne" et penalty_paid à true, effaçant
+        # sa propre amende sans passer par return_book()/mark_penalty_paid()
+        # (réservés au bibliothécaire/admin).
+        read_only_fields = [
+            'document', 'borrower', 'borrowed_at', 'due_date', 'returned_at',
+            'status', 'late_days', 'penalty_amount', 'penalty_paid', 'librarian_notes',
+        ]
 
 
 class ReservationSerializer(serializers.ModelSerializer):

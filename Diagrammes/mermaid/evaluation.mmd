@@ -1,0 +1,152 @@
+classDiagram
+class evaluation_ExamSession["ExamSession"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Semester semester
+  +AcademicYear academic_year
+  +CharField session_type
+  +DateField start_date
+  +DateField end_date
+  +BooleanField is_open
+}
+class evaluation_ExamRoomAssignment["ExamRoomAssignment"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ExamSession exam_session
+  +EC ec
+  +Room room
+  +DateTimeField start_datetime
+  +DateTimeField end_datetime
+  +CharField notes
+  +User invigilators
+}
+class evaluation_Grade["Grade"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +EC ec
+  +ExamSession exam_session
+  +DecimalField cc_grade
+  +DecimalField exam_grade
+  +DecimalField final_grade
+  +BooleanField is_absent
+  +CharField status
+  +User entered_by
+  +User validated_by
+  +DateTimeField validated_at
+  +TextField notes
+  +DecimalField cc_weight
+  +DecimalField exam_weight
+  +DecimalField bonus_points
+  +DecimalField penalty_points
+  +BooleanField is_rattrapage
+  +Grade previous_grade
+  +TextField appreciation
+  +BooleanField published_to_student
+  +DateTimeField published_at
+  +JSONField modification_history
+}
+class evaluation_UEResult["UEResult"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +UE ue
+  +ExamSession exam_session
+  +DecimalField average
+  +PositiveSmallIntegerField credits_obtained
+  +CharField decision
+  +BooleanField is_capitalized
+  +UEResult compensation_source
+  +PositiveIntegerField rank_in_ue
+  +PositiveIntegerField total_students
+  +DecimalField percentile
+}
+class evaluation_SemesterResult["SemesterResult"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +Semester semester
+  +ExamSession exam_session
+  +DecimalField average
+  +PositiveSmallIntegerField total_credits
+  +PositiveSmallIntegerField credits_obtained
+  +CharField decision
+  +PositiveIntegerField rank
+  +BooleanField published
+  +DateTimeField published_at
+  +CharField mention
+  +DecimalField gpa
+  +PositiveIntegerField total_students_in_semester
+  +DecimalField percentile
+  +PositiveSmallIntegerField ues_validated
+  +PositiveSmallIntegerField ues_failed
+  +TextField jury_observations
+  +DateTimeField deliberation_date
+}
+class evaluation_Jury["Jury"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +ExamSession exam_session
+  +User president
+  +DateTimeField deliberation_date
+  +FileField pv_file
+  +BooleanField is_closed
+  +User members
+}
+class evaluation_GradeContest["GradeContest"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Grade grade
+  +Student student
+  +TextField reason
+  +CharField status
+  +User reviewed_by
+  +TextField response
+  +DecimalField new_grade
+}
+class programs_Semester["Semester"]
+class academic_AcademicYear["AcademicYear"]
+class programs_EC["EC"]
+class scheduling_app_Room["Room"]
+class accounts_User["User"]
+class people_Student["Student"]
+class programs_UE["UE"]
+  evaluation_ExamSession "*" --> "1" programs_Semester : semester
+  evaluation_ExamSession "*" --> "1" academic_AcademicYear : academic_year
+  evaluation_ExamRoomAssignment "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_ExamRoomAssignment "*" --> "1" programs_EC : ec
+  evaluation_ExamRoomAssignment "*" --> "1" scheduling_app_Room : room
+  evaluation_ExamRoomAssignment "*" --> "*" accounts_User : invigilators
+  evaluation_Grade "*" --> "1" people_Student : student
+  evaluation_Grade "*" --> "1" programs_EC : ec
+  evaluation_Grade "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_Grade "*" --> "1" accounts_User : entered_by
+  evaluation_Grade "*" --> "1" accounts_User : validated_by
+  evaluation_Grade "*" --> "1" evaluation_Grade : previous_grade
+  evaluation_UEResult "*" --> "1" people_Student : student
+  evaluation_UEResult "*" --> "1" programs_UE : ue
+  evaluation_UEResult "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_UEResult "*" --> "1" evaluation_UEResult : compensation_source
+  evaluation_SemesterResult "*" --> "1" people_Student : student
+  evaluation_SemesterResult "*" --> "1" programs_Semester : semester
+  evaluation_SemesterResult "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_Jury "*" --> "1" evaluation_ExamSession : exam_session
+  evaluation_Jury "*" --> "1" accounts_User : president
+  evaluation_Jury "*" --> "*" accounts_User : members
+  evaluation_GradeContest "*" --> "1" evaluation_Grade : grade
+  evaluation_GradeContest "*" --> "1" people_Student : student
+  evaluation_GradeContest "*" --> "1" accounts_User : reviewed_by

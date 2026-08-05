@@ -181,7 +181,8 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
         serializer = SessionParticipantSerializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], url_path='participants/presence')
+    @action(detail=True, methods=['post'], url_path='participants/presence',
+            permission_classes=[permissions.IsAuthenticated, IsInstructorOrStaff])
     def set_participant_presence(self, request, pk=None):
         """Met à jour la présence d'un participant. Body: {user_id, present: bool}"""
         session = self.get_object()

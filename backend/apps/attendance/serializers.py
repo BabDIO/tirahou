@@ -18,6 +18,8 @@ class AttendanceSheetSerializer(serializers.ModelSerializer):
     records = AttendanceRecordSerializer(many=True, read_only=True)
     present_count = serializers.SerializerMethodField()
     total_count = serializers.SerializerMethodField()
+    ec_code = serializers.CharField(source='session.ec.code', read_only=True)
+    session_start_datetime = serializers.DateTimeField(source='session.start_datetime', read_only=True)
 
     class Meta:
         model = AttendanceSheet

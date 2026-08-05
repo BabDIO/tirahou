@@ -1,0 +1,83 @@
+classDiagram
+class academic_University["University"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField acronym
+  +FileField logo
+  +TextField address
+  +CharField website
+  +CharField email
+  +CharField phone
+  +User rector
+}
+class academic_Faculty["Faculty"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +University university
+  +CharField name
+  +CharField acronym
+  +User dean
+  +CharField email
+}
+class academic_Department["Department"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Faculty faculty
+  +CharField name
+  +CharField acronym
+  +User head
+}
+class academic_AcademicYear["AcademicYear"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField label
+  +DateField start_date
+  +DateField end_date
+  +BooleanField is_current
+  +DateField candidature_start
+  +DateField candidature_end
+  +DateField admin_enrollment_start
+  +DateField admin_enrollment_end
+  +DateField peda_enrollment_start
+  +DateField peda_enrollment_end
+  +DateField courses_start
+  +DateField courses_end
+  +DateField exams_start
+  +DateField exams_end
+  +DateField deliberation_date
+}
+class academic_LMDRegulation["LMDRegulation"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +CharField cycle
+  +University university
+  +AcademicYear effective_year
+  +PositiveSmallIntegerField credits_per_semester
+  +PositiveSmallIntegerField credits_per_year
+  +PositiveSmallIntegerField total_credits
+  +DecimalField passing_grade
+  +BooleanField compensation_allowed
+  +DecimalField compensation_min_grade
+  +PositiveSmallIntegerField max_years_allowed
+  +TextField notes
+}
+class accounts_User["User"]
+  academic_University "*" --> "1" accounts_User : rector
+  academic_Faculty "*" --> "1" academic_University : university
+  academic_Faculty "*" --> "1" accounts_User : dean
+  academic_Department "*" --> "1" academic_Faculty : faculty
+  academic_Department "*" --> "1" accounts_User : head
+  academic_LMDRegulation "*" --> "1" academic_University : university
+  academic_LMDRegulation "*" --> "1" academic_AcademicYear : effective_year

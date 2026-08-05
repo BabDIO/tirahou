@@ -1,0 +1,72 @@
+classDiagram
+class accounts_Role["Role"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField name
+  +TextField description
+}
+class accounts_Permission["Permission"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField module
+  +CharField action
+  +CharField description
+}
+class accounts_RolePermission["RolePermission"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Role role
+  +Permission permission
+}
+class accounts_User["User"] {
+  +CharField password
+  +DateTimeField last_login
+  +BooleanField is_superuser
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField email
+  +CharField username
+  +CharField first_name
+  +CharField last_name
+  +CharField phone
+  +FileField avatar
+  +BooleanField is_staff
+  +BooleanField is_verified
+  +GenericIPAddressField last_login_ip
+  +PositiveSmallIntegerField failed_login_attempts
+  +BooleanField is_locked
+  +BooleanField mfa_enabled
+  +CharField mfa_secret
+  +Group groups
+  +Permission user_permissions
+  +Role roles
+}
+class accounts_AuditLog["AuditLog"] {
+  +BigAutoField id
+  +User user
+  +CharField action
+  +CharField module
+  +CharField object_type
+  +CharField object_id
+  +TextField description
+  +GenericIPAddressField ip_address
+  +TextField user_agent
+  +DateTimeField timestamp
+  +JSONField extra_data
+}
+class auth_Group["Group"]
+class auth_Permission["Permission"]
+  accounts_RolePermission "*" --> "1" accounts_Role : role
+  accounts_RolePermission "*" --> "1" accounts_Permission : permission
+  accounts_User "*" --> "*" auth_Group : groups
+  accounts_User "*" --> "*" auth_Permission : user_permissions
+  accounts_User "*" --> "*" accounts_Role : roles
+  accounts_AuditLog "*" --> "1" accounts_User : user

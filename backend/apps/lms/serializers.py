@@ -64,6 +64,13 @@ class AssignmentSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssignmentSubmission
         fields = '__all__'
+        # student/is_late en lecture seule : la création passe par l'action
+        # Assignment.submit() qui injecte le bon étudiant (voir ci-dessous) ;
+        # grade/feedback/status/graded_by/graded_at restent PATCHables via le
+        # PATCH générique (MyAssignmentsPage.tsx l'utilise directement, pas
+        # l'action grade()) mais perform_update() ci-dessous vérifie
+        # désormais que seul le gestionnaire du cours peut le faire.
+        read_only_fields = ['student', 'is_late', 'graded_by', 'graded_at']
 
     def get_student_name(self, obj):
         return obj.student.user.get_full_name()

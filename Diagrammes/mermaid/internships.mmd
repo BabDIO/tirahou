@@ -1,0 +1,88 @@
+classDiagram
+class internships_Internship["Internship"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +User supervisor
+  +CharField company_name
+  +TextField company_address
+  +CharField company_supervisor
+  +CharField company_supervisor_email
+  +CharField subject
+  +TextField description
+  +DateField start_date
+  +DateField end_date
+  +CharField status
+  +FileField convention_file
+  +FileField report_file
+  +DecimalField grade
+}
+class internships_Thesis["Thesis"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Student student
+  +AcademicYear academic_year
+  +CharField type
+  +CharField title
+  +TextField abstract
+  +CharField keywords
+  +User supervisor
+  +User co_supervisor
+  +CharField status
+  +User validated_by
+  +DateTimeField validated_at
+  +FileField final_file
+  +DecimalField plagiarism_score
+  +CharField plagiarism_analysis_id
+  +CharField plagiarism_report_url
+  +BooleanField is_published
+}
+class internships_ThesisProgress["ThesisProgress"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Thesis thesis
+  +DateField date
+  +TextField note
+  +FileField file
+  +User logged_by
+}
+class internships_Defense["Defense"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +Thesis thesis
+  +DateTimeField scheduled_date
+  +CharField room
+  +CharField virtual_link
+  +CharField status
+  +User jury_president
+  +DecimalField grade
+  +CharField mention
+  +FileField pv_file
+  +TextField notes
+  +User jury_members
+}
+class people_Student["Student"]
+class academic_AcademicYear["AcademicYear"]
+class accounts_User["User"]
+  internships_Internship "*" --> "1" people_Student : student
+  internships_Internship "*" --> "1" academic_AcademicYear : academic_year
+  internships_Internship "*" --> "1" accounts_User : supervisor
+  internships_Thesis "*" --> "1" people_Student : student
+  internships_Thesis "*" --> "1" academic_AcademicYear : academic_year
+  internships_Thesis "*" --> "1" accounts_User : supervisor
+  internships_Thesis "*" --> "1" accounts_User : co_supervisor
+  internships_Thesis "*" --> "1" accounts_User : validated_by
+  internships_ThesisProgress "*" --> "1" internships_Thesis : thesis
+  internships_ThesisProgress "*" --> "1" accounts_User : logged_by
+  internships_Defense "1" --> "1" internships_Thesis : thesis
+  internships_Defense "*" --> "1" accounts_User : jury_president
+  internships_Defense "*" --> "*" accounts_User : jury_members

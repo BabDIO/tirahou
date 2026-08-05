@@ -1,0 +1,97 @@
+classDiagram
+class library_LibraryDocument["LibraryDocument"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +CharField title
+  +CharField author
+  +CharField type
+  +CharField domain
+  +PositiveSmallIntegerField year
+  +CharField isbn
+  +TextField abstract
+  +CharField keywords
+  +FileField file
+  +FileField cover
+  +CharField external_url
+  +CharField access_level
+  +PositiveIntegerField download_count
+  +PositiveIntegerField view_count
+  +User uploaded_by
+  +BooleanField is_featured
+  +CharField status
+  +PositiveSmallIntegerField quantity
+  +PositiveSmallIntegerField available_quantity
+  +CharField location
+  +CharField publisher
+  +CharField edition
+  +PositiveSmallIntegerField pages
+  +CharField language
+  +DecimalField rating
+  +PositiveIntegerField rating_count
+  +JSONField tags
+  +JSONField related_courses
+}
+class library_Borrowing["Borrowing"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +LibraryDocument document
+  +User borrower
+  +DateTimeField borrowed_at
+  +DateField due_date
+  +DateTimeField returned_at
+  +CharField status
+  +PositiveSmallIntegerField late_days
+  +DecimalField penalty_amount
+  +BooleanField penalty_paid
+  +TextField borrower_notes
+  +TextField librarian_notes
+}
+class library_Reservation["Reservation"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +LibraryDocument document
+  +User user
+  +DateTimeField reserved_at
+  +DateTimeField available_at
+  +DateTimeField expires_at
+  +CharField status
+  +PositiveSmallIntegerField position
+  +BooleanField notified
+}
+class library_DocumentRating["DocumentRating"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +LibraryDocument document
+  +User user
+  +PositiveSmallIntegerField rating
+  +TextField comment
+}
+class library_ReadingList["ReadingList"] {
+  +DateTimeField created_at
+  +DateTimeField updated_at
+  +UUIDField id
+  +BooleanField is_active
+  +User user
+  +CharField name
+  +TextField description
+  +BooleanField is_public
+  +LibraryDocument documents
+}
+class accounts_User["User"]
+  library_LibraryDocument "*" --> "1" accounts_User : uploaded_by
+  library_Borrowing "*" --> "1" library_LibraryDocument : document
+  library_Borrowing "*" --> "1" accounts_User : borrower
+  library_Reservation "*" --> "1" library_LibraryDocument : document
+  library_Reservation "*" --> "1" accounts_User : user
+  library_DocumentRating "*" --> "1" library_LibraryDocument : document
+  library_DocumentRating "*" --> "1" accounts_User : user
+  library_ReadingList "*" --> "1" accounts_User : user
+  library_ReadingList "*" --> "*" library_LibraryDocument : documents
