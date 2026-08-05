@@ -25,6 +25,23 @@ def _can_manage_thesis(user, thesis):
     return _is_academic_manager(user) or thesis.supervisor_id == user.id or thesis.co_supervisor_id == user.id
 
 
+MAX_UPLOAD_SIZE_MB = 20
+ALLOWED_UPLOAD_EXTENSIONS = ('pdf', 'doc', 'docx')
+
+
+def _validate_upload(file):
+    """Rapport de stage / mémoire final : aucune validation de taille/type
+    n'existait sur ces FileField, n'importe quel fichier pouvait être
+    déposé. Retourne un message d'erreur, ou None si le fichier est valide."""
+    max_size = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+    if file.size > max_size:
+        return f'Fichier trop volumineux (max {MAX_UPLOAD_SIZE_MB} Mo).'
+    extension = file.name.rsplit('.', 1)[-1].lower() if '.' in file.name else ''
+    if extension not in ALLOWED_UPLOAD_EXTENSIONS:
+        return f"Format non autorisé (formats acceptés : {', '.join(ALLOWED_UPLOAD_EXTENSIONS)})."
+    return None
+
+
 class InternshipViewSet(viewsets.ModelViewSet):
     queryset = Internship.objects.all().select_related('student', 'academic_year')
     serializer_class = InternshipSerializer
@@ -95,6 +112,9 @@ class InternshipViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'detail': 'Rapport requis.'}, status=400)
+        upload_error = _validate_upload(file)
+        if upload_error:
+            return Response({'detail': upload_error}, status=400)
         internship.report_file = file
         internship.report_submitted_at = timezone.now()
         internship.status = 'rapport_soumis'
@@ -239,6 +259,9 @@ class ThesisViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'detail': 'Fichier requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        upload_error = _validate_upload(file)
+        if upload_error:
+            return Response({'detail': upload_error}, status=status.HTTP_400_BAD_REQUEST)
         thesis.final_file = file
         thesis.status = 'depose'
         thesis.submitted_at = timezone.now()

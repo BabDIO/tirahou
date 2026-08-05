@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db import transaction as db_transaction
 from django.db.models import Q
 from django.utils import timezone
 from .models import MarketplaceCourse, CourseLesson, CoursePurchase, LessonCompletion, CourseReview
@@ -191,20 +192,29 @@ class CoursePurchaseViewSet(viewsets.ReadOnlyModelViewSet):
         from decimal import Decimal
         price = Decimal('0') if course.is_free else Decimal(str(course.price))
 
-        if price > 0:
-            from apps.analytics_app.extensions_models import Wallet, WalletTransaction
-            wallet, _ = Wallet.objects.get_or_create(student=student)
-            if wallet.balance < price:
-                return Response({'detail': f'Solde insuffisant. Il vous manque {price - wallet.balance:.0f} points.'}, status=400)
-            WalletTransaction.objects.create(
-                wallet=wallet, type='purchase', amount=price,
-                description=f'Achat du cours « {course.title} »',
-            )
-            wallet.balance -= price
-            wallet.total_spent += price
-            wallet.save(update_fields=['balance', 'total_spent', 'updated_at'])
+        # select_for_update() + revérification du solde/de la propriété DANS
+        # la section verrouillée : un double-clic pouvait auparavant lancer
+        # deux requêtes concurrentes qui lisent toutes deux le solde avant
+        # que l'une des deux ne débite, permettant un achat double pour un
+        # seul débit (ou un solde négatif).
+        with db_transaction.atomic():
+            if price > 0:
+                from apps.analytics_app.extensions_models import Wallet, WalletTransaction
+                wallet, _ = Wallet.objects.get_or_create(student=student)
+                wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+                if CoursePurchase.objects.filter(student=student, course=course).exists():
+                    return Response({'detail': 'Vous possédez déjà ce cours.'}, status=400)
+                if wallet.balance < price:
+                    return Response({'detail': f'Solde insuffisant. Il vous manque {price - wallet.balance:.0f} points.'}, status=400)
+                WalletTransaction.objects.create(
+                    wallet=wallet, type='purchase', amount=price,
+                    description=f'Achat du cours « {course.title} »',
+                )
+                wallet.balance -= price
+                wallet.total_spent += price
+                wallet.save(update_fields=['balance', 'total_spent', 'updated_at'])
 
-        purchase = CoursePurchase.objects.create(student=student, course=course, price_paid=price)
+            purchase = CoursePurchase.objects.create(student=student, course=course, price_paid=price)
         return Response(CoursePurchaseSerializer(purchase, context={'request': request}).data, status=201)
 
 

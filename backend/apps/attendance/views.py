@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -6,6 +8,8 @@ from django.utils import timezone
 from .models import AttendanceSheet, AttendanceRecord, AbsenceSummary
 from .serializers import AttendanceSheetSerializer, AttendanceRecordSerializer, AbsenceSummarySerializer
 from .attendance_service import AttendanceService
+
+logger = logging.getLogger(__name__)
 
 
 class AttendanceSheetViewSet(viewsets.ModelViewSet):
@@ -78,7 +82,10 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
                     defaults={'status': 'absent', 'method': 'manuel'}
                 )
         except Exception:
-            pass
+            # Si le marquage automatique des absents échoue (EC/inscriptions
+            # malformées...), la feuille se fermait quand même sans qu'aucun
+            # absent ne soit marqué, sans log ni indication pour la scolarité.
+            logger.warning("Marquage automatique des absents impossible pour la feuille %s", sheet.id, exc_info=True)
         return Response({'detail': 'Feuille fermée.'})
 
     @action(detail=True, methods=['post'])

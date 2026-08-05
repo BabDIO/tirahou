@@ -40,6 +40,7 @@ ANALYTICS_MANAGER_ROLES = (
 
 def _is_analytics_manager(user):
     return user.is_superuser or user.roles.filter(name__in=ANALYTICS_MANAGER_ROLES).exists()
+from django.db import transaction as db_transaction
 from django.db.models import Count, Sum, Avg
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import LearningActivity, EngagementScore, DashboardStat
@@ -187,7 +188,7 @@ class WalletViewSet(viewsets.ReadOnlyModelViewSet):
         except Student.DoesNotExist:
             return Response({'detail': 'Étudiant introuvable.'}, status=404)
 
-        wallet, _ = Wallet.objects.get_or_create(student=student)
+        Wallet.objects.get_or_create(student=student)
         # Bug corrigé : abs(float(amount)) laissait `amount` (et donc
         # transaction.amount juste après .create(), avant tout aller-retour
         # DB) en float — un += / -= avec wallet.balance (Decimal) levait
@@ -196,16 +197,21 @@ class WalletViewSet(viewsets.ReadOnlyModelViewSet):
         # créée mais le solde jamais mis à jour).
         from decimal import Decimal
         amount = abs(Decimal(str(amount)))
-        transaction = WalletTransaction.objects.create(
-            wallet=wallet, type=tx_type, amount=amount, description=description,
-        )
-        if tx_type in ('credit', 'reward'):
-            wallet.balance += transaction.amount
-            wallet.total_earned += transaction.amount
-        else:
-            wallet.balance -= transaction.amount
-            wallet.total_spent += transaction.amount
-        wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
+        # select_for_update() : deux crédits/débits concomitants sur le même
+        # portefeuille (lecture-puis-écriture non protégée) pouvaient
+        # s'écraser l'un l'autre et perdre du solde.
+        with db_transaction.atomic():
+            wallet = Wallet.objects.select_for_update().get(student=student)
+            tx = WalletTransaction.objects.create(
+                wallet=wallet, type=tx_type, amount=amount, description=description,
+            )
+            if tx_type in ('credit', 'reward'):
+                wallet.balance += tx.amount
+                wallet.total_earned += tx.amount
+            else:
+                wallet.balance -= tx.amount
+                wallet.total_spent += tx.amount
+            wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
         return Response(WalletSerializer(wallet).data, status=201)
 
 
@@ -233,15 +239,16 @@ class WalletTransactionViewSet(viewsets.ModelViewSet):
         # acheter des cours payants sur le marketplace. Confirmé en direct.
         if not _is_wallet_manager(self.request.user):
             raise PermissionDenied("Réservé à l'administration.")
-        transaction = serializer.save()
-        wallet = transaction.wallet
-        if transaction.type in ('credit', 'reward'):
-            wallet.balance += transaction.amount
-            wallet.total_earned += transaction.amount
-        else:
-            wallet.balance -= transaction.amount
-            wallet.total_spent += transaction.amount
-        wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
+        with db_transaction.atomic():
+            tx = serializer.save()
+            wallet = Wallet.objects.select_for_update().get(pk=tx.wallet_id)
+            if tx.type in ('credit', 'reward'):
+                wallet.balance += tx.amount
+                wallet.total_earned += tx.amount
+            else:
+                wallet.balance -= tx.amount
+                wallet.total_spent += tx.amount
+            wallet.save(update_fields=['balance', 'total_earned', 'total_spent', 'updated_at'])
 
     def perform_update(self, serializer):
         if not _is_wallet_manager(self.request.user):

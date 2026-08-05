@@ -1,6 +1,8 @@
 """
 Analyses avancées et prédictions pour le tableau de bord
 """
+import logging
+
 from django.conf import settings
 from django.db.models import Avg, Count, Q, F, Sum
 from django.utils import timezone
@@ -11,6 +13,8 @@ from apps.evaluation.models import SemesterResult, Grade
 from apps.attendance.models import AttendanceRecord
 from apps.lms.models import StudentProgress, AssignmentSubmission
 from .models import EngagementScore
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_PREDICTION_WEIGHTS = {
     'avg_grade': 0.4, 'attendance_rate': 0.3, 'engagement': 0.2, 'completion': 0.1,
@@ -157,9 +161,9 @@ def _calculate_retention_rate(academic_year_id):
             
             if previous_students > 0:
                 return round((current_students / previous_students) * 100, 2)
-    except:
-        pass
-    
+    except Exception:
+        logger.warning("Calcul du taux de rétention impossible pour l'année %s", academic_year_id, exc_info=True)
+
     return 0
 
 

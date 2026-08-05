@@ -53,16 +53,25 @@ def send_password_expiry_reminders():
     """
     Envoie des rappels pour les mots de passe qui expirent bientôt
     (Si la politique de mot de passe est activée)
+
+    Non branchée dans config/celery.py:beat_schedule (jamais exécutée en
+    prod) : `User` (AbstractBaseUser + BaseModel, pas AbstractUser) n'a
+    aucun champ `last_password_change` — filtrer dessus lève un FieldError
+    immédiat dès qu'on tente de l'activer. Tant qu'un vrai suivi de date de
+    changement de mot de passe n'est pas ajouté au modèle, cette tâche est
+    un no-op explicite plutôt qu'un crash silencieusement caché.
     """
+    return {'skipped': True, 'reason': "User n'a pas de champ last_password_change — fonctionnalité non implémentée."}
+
     from django.contrib.auth import get_user_model
     from apps.communication.models import Notification
-    
+
     User = get_user_model()
-    
+
     # Supposons une expiration de mot de passe à 90 jours
     ninety_days_ago = timezone.now() - timedelta(days=90)
     seven_days_from_expiry = timezone.now() - timedelta(days=83)
-    
+
     users_to_remind = User.objects.filter(
         last_password_change__lte=seven_days_from_expiry,
         last_password_change__gt=ninety_days_ago,
@@ -142,12 +151,15 @@ def generate_user_activity_report():
     ).values('user').distinct().count()
     
     # Nouveaux utilisateurs
+    # `date_joined` n'existe pas sur ce User (AbstractBaseUser + BaseModel,
+    # pas AbstractUser) — cette tâche levait un FieldError à chaque
+    # exécution. `created_at` (BaseModel) en est l'équivalent réel.
     new_users_week = User.objects.filter(
-        date_joined__gte=week_ago
+        created_at__gte=week_ago
     ).count()
-    
+
     new_users_month = User.objects.filter(
-        date_joined__gte=month_ago
+        created_at__gte=month_ago
     ).count()
     
     # Total utilisateurs

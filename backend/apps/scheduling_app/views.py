@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import Room, ScheduledSession, Timetable
@@ -101,14 +102,26 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
         # existe (utilisée par l'action conflicts ci-dessous) mais n'était
         # jamais appelée à la création, un même enseignant pouvait donc être
         # planifié sur deux séances qui se chevauchent.
+        # select_for_update() sur la salle/l'enseignant : le test
+        # "exists() puis save()" n'était protégé par aucun verrou — deux
+        # créations concurrentes sur le même créneau pouvaient toutes deux
+        # passer le test avant qu'aucune ne soit enregistrée (double
+        # réservation). Verrouiller la ligne Room/User cible sérialise les
+        # requêtes concurrentes visant la même salle/le même enseignant.
         room = data.get('room')
-        if room and detect_room_conflicts(data.get('ec'), data['start_datetime'], data['end_datetime'], room).exists():
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({'room': 'Conflit de salle détecté.'})
-        if teacher and detect_teacher_conflicts(teacher, data['start_datetime'], data['end_datetime']).exists():
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({'teacher': 'Cet enseignant a déjà une séance sur ce créneau.'})
-        serializer.save()
+        with transaction.atomic():
+            if room:
+                room = Room.objects.select_for_update().get(pk=room.pk)
+            if teacher:
+                from apps.accounts.models import User
+                teacher = User.objects.select_for_update().get(pk=teacher.pk)
+            if room and detect_room_conflicts(data.get('ec'), data['start_datetime'], data['end_datetime'], room).exists():
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'room': 'Conflit de salle détecté.'})
+            if teacher and detect_teacher_conflicts(teacher, data['start_datetime'], data['end_datetime']).exists():
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'teacher': 'Cet enseignant a déjà une séance sur ce créneau.'})
+            serializer.save()
 
     def perform_update(self, serializer):
         # Faille confirmée en direct sur cancel() ci-dessous (même absence
@@ -126,13 +139,19 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
         end = data.get('end_datetime', instance.end_datetime)
         room = data.get('room', instance.room)
         teacher = data.get('teacher', instance.teacher)
-        if room and detect_room_conflicts(data.get('ec', instance.ec), start, end, room, exclude_session_id=instance.id).exists():
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({'room': 'Conflit de salle détecté.'})
-        if teacher and detect_teacher_conflicts(teacher, start, end, exclude_session_id=instance.id).exists():
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({'teacher': 'Cet enseignant a déjà une séance sur ce créneau.'})
-        serializer.save()
+        with transaction.atomic():
+            if room:
+                room = Room.objects.select_for_update().get(pk=room.pk)
+            if teacher:
+                from apps.accounts.models import User
+                teacher = User.objects.select_for_update().get(pk=teacher.pk)
+            if room and detect_room_conflicts(data.get('ec', instance.ec), start, end, room, exclude_session_id=instance.id).exists():
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'room': 'Conflit de salle détecté.'})
+            if teacher and detect_teacher_conflicts(teacher, start, end, exclude_session_id=instance.id).exists():
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'teacher': 'Cet enseignant a déjà une séance sur ce créneau.'})
+            serializer.save()
 
     def perform_destroy(self, instance):
         if not _can_manage_session(self.request.user, instance):
