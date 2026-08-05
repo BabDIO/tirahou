@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
-import { Badge, Card, EmptyState, Loading, StatTile, colors } from '../../components/ui'
+import { Badge, Card, EmptyState, Icon, Loading, StatTile, colors } from '../../components/ui'
 
 interface Grade {
   id: string
@@ -17,13 +17,17 @@ export default function StudentGrades() {
   const [grades, setGrades] = useState<Grade[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const { data } = await api.get('/evaluation/student/grades/')
       setGrades(data ?? [])
+      setError(false)
     } catch {
-      setGrades([])
+      // Sans ce indicateur, un échec réseau vidait grades[] et affichait
+      // "Aucune note disponible" — indiscernable d'une vraie absence de notes.
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -55,8 +59,21 @@ export default function StudentGrades() {
     >
       <Text style={styles.title}>Mes Notes</Text>
 
+      {error && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Certaines données n'ont pas pu être chargées. Tirez vers le bas pour réessayer.
+            </Text>
+          </View>
+        </Card>
+      )}
+
       <View style={styles.statsRow}>
-        <StatTile label="Moyenne" value={`${average}/20`} tone={Number(average) >= 10 ? 'success' : 'danger'} icon="stats-chart-outline" />
+        {/* valid.length === 0 -> average vaut '—' (pas encore de notes) : Number('—') est NaN,
+            donc sans ce garde le tile passait à tort en "danger" au lieu d'un ton neutre. */}
+        <StatTile label="Moyenne" value={`${average}/20`} tone={valid.length === 0 ? 'default' : Number(average) >= 10 ? 'success' : 'danger'} icon="stats-chart-outline" />
         <StatTile label="EC validés" value={`${successCount}/${valid.length}`} icon="checkmark-done-outline" />
       </View>
 

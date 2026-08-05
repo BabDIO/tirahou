@@ -10,6 +10,7 @@ class Internship(BaseModel):
         ('en_recherche', 'En recherche'),
         ('convention_signee', 'Convention signée'),
         ('en_cours', 'En cours'),
+        ('rapport_soumis', 'Rapport soumis'),
         ('termine', 'Terminé'),
         ('valide', 'Validé'),
         ('abandonne', 'Abandonné'),
@@ -29,6 +30,7 @@ class Internship(BaseModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_recherche')
     convention_file = models.FileField(upload_to='internships/conventions/', null=True, blank=True)
     report_file = models.FileField(upload_to='internships/reports/', null=True, blank=True)
+    report_submitted_at = models.DateTimeField(null=True, blank=True)
     grade = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
     class Meta:
@@ -49,6 +51,7 @@ class Thesis(BaseModel):
     STATUS_CHOICES = [
         ('sujet_propose', 'Sujet proposé'),
         ('sujet_valide', 'Sujet validé'),
+        ('sujet_rejete', 'Sujet rejeté'),
         ('en_redaction', 'En rédaction'),
         ('depose', 'Déposé'),
         ('soutenu', 'Soutenu'),
@@ -65,8 +68,10 @@ class Thesis(BaseModel):
     supervisor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='supervised_theses')
     co_supervisor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='co_supervised_theses')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sujet_propose')
+    progress_percentage = models.PositiveSmallIntegerField(default=0)
     validated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='validated_theses')
     validated_at = models.DateTimeField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
     final_file = models.FileField(upload_to='theses/final/', null=True, blank=True)
     plagiarism_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     plagiarism_analysis_id = models.CharField(max_length=100, blank=True)

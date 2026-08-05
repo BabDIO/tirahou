@@ -22,6 +22,7 @@ export default function StudentAttendance() {
   const [stats, setStats] = useState<AttendanceStats>({ rate: 0, present: 0, absent: 0 })
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -31,8 +32,12 @@ export default function StudentAttendance() {
       ])
       setRecords(recRes.data ?? [])
       setStats(statsRes.data ?? { rate: 0, present: 0, absent: 0 })
+      setError(false)
     } catch {
-      setRecords([])
+      // records est vidé mais stats gardait sa valeur précédente sans
+      // aucune indication d'échec — l'étudiant ne sait pas que les
+      // chiffres affichés peuvent être obsolètes.
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -59,6 +64,17 @@ export default function StudentAttendance() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <Text style={styles.title}>Mon Assiduité</Text>
+
+      {error && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Certaines données n'ont pas pu être chargées. Tirez vers le bas pour réessayer.
+            </Text>
+          </View>
+        </Card>
+      )}
 
       <View style={styles.statsGrid}>
         <StatTile label="Taux de présence" value={`${stats.rate}%`} tone={stats.rate >= 75 ? 'success' : 'danger'} icon="pie-chart-outline" />

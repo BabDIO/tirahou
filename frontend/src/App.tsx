@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import ConfirmDialog from './components/ui/ConfirmDialog'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { ThemeProvider } from './contexts/ThemeContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
@@ -79,10 +80,30 @@ import GradesValidationPage from './pages/responsable/GradesValidationPage'
 // Pages bibliothécaire
 import BibliothecairePage from './pages/bibliothecaire/BibliothecairePage'
 
+function extractMutationErrorMessage(error: unknown): string {
+  const e = error as { response?: { data?: { detail?: string; message?: string; error?: string } }; isNetworkError?: boolean }
+  if (e?.isNetworkError || !e?.response) return 'Serveur inaccessible. Vérifiez votre connexion.'
+  return e.response?.data?.detail ?? e.response?.data?.message ?? e.response?.data?.error ?? 'Une erreur est survenue.'
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 1000 * 60 * 5, refetchOnWindowFocus: false },
   },
+  // Filet de sécurité global : un audit a trouvé des dizaines de useMutation
+  // sans onError à travers l'appli (échec silencieux — l'utilisateur ne
+  // sait jamais qu'une action a échoué). Plutôt que corriger un par un dans
+  // chaque page, ce handler affiche un toast d'erreur générique pour TOUTE
+  // mutation qui échoue ET n'a pas déjà son propre onError (les pages qui
+  // gèrent déjà leur erreur — souvent avec un message plus précis — ne sont
+  // pas affectées, `mutation.options.onError` est alors défini).
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      if (!mutation.options.onError) {
+        toast.error(extractMutationErrorMessage(error))
+      }
+    },
+  }),
 })
 
 // Groupes de rôles utilisés par <RoleBasedRoute allowedRoles={...}> ci-dessous

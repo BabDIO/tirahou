@@ -96,18 +96,18 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
         if not (is_manager or (teacher and teacher.id == user.id)):
             raise PermissionDenied("Vous ne pouvez pas planifier cette séance.")
 
-        # Vérification de conflit de salle
+        # Vérification de conflit de salle ET d'enseignant — seul le
+        # conflit de salle était vérifié ici ; detect_teacher_conflicts
+        # existe (utilisée par l'action conflicts ci-dessous) mais n'était
+        # jamais appelée à la création, un même enseignant pouvait donc être
+        # planifié sur deux séances qui se chevauchent.
         room = data.get('room')
-        if room:
-            conflict = ScheduledSession.objects.filter(
-                room=room,
-                start_datetime__lt=data['end_datetime'],
-                end_datetime__gt=data['start_datetime'],
-                status__in=['planifie', 'confirme'],
-            ).exists()
-            if conflict:
-                from rest_framework.exceptions import ValidationError
-                raise ValidationError({'room': 'Conflit de salle détecté.'})
+        if room and detect_room_conflicts(data.get('ec'), data['start_datetime'], data['end_datetime'], room).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'room': 'Conflit de salle détecté.'})
+        if teacher and detect_teacher_conflicts(teacher, data['start_datetime'], data['end_datetime']).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'teacher': 'Cet enseignant a déjà une séance sur ce créneau.'})
         serializer.save()
 
     def perform_update(self, serializer):
@@ -115,8 +115,23 @@ class ScheduledSessionViewSet(viewsets.ModelViewSet):
         # de contrôle) : un étudiant, dont get_queryset() l'autorise à VOIR
         # les séances de son groupe, pouvait aussi les modifier/annuler
         # directement — HTTP 200 sur un vrai cours du jeu de démonstration.
-        if not _can_manage_session(self.request.user, serializer.instance):
+        instance = serializer.instance
+        if not _can_manage_session(self.request.user, instance):
             raise PermissionDenied("Vous ne gérez pas cette séance.")
+        # Aucune revérification de conflit n'existait à la modification
+        # (seulement à la création) : déplacer une séance (horaire/salle/
+        # enseignant) pouvait donc créer un double-booking silencieux.
+        data = serializer.validated_data
+        start = data.get('start_datetime', instance.start_datetime)
+        end = data.get('end_datetime', instance.end_datetime)
+        room = data.get('room', instance.room)
+        teacher = data.get('teacher', instance.teacher)
+        if room and detect_room_conflicts(data.get('ec', instance.ec), start, end, room, exclude_session_id=instance.id).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'room': 'Conflit de salle détecté.'})
+        if teacher and detect_teacher_conflicts(teacher, start, end, exclude_session_id=instance.id).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'teacher': 'Cet enseignant a déjà une séance sur ce créneau.'})
         serializer.save()
 
     def perform_destroy(self, instance):

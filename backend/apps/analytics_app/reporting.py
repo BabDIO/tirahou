@@ -10,6 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+from .views import _is_analytics_manager
 from apps.people.models import Student, Teacher
 from apps.enrollment.models import AdminEnrollment
 from apps.finance.models import Invoice, Payment
@@ -40,6 +41,13 @@ def _excel_header_style(ws, row, headers, fill_color='1E3A8A'):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def export_students_excel(request):
+    # Exporté depuis AnalyticsPage.tsx ET depuis le bouton "Exporter" de
+    # StudentsPage.tsx (rôles plus larges : scolarité + financier en plus
+    # des gestionnaires analytics) — vérifier _is_analytics_manager seul
+    # aurait cassé ce dernier bouton.
+    user = request.user
+    if not (user.is_superuser or _is_analytics_manager(user) or user.roles.filter(name__in=('admin_scolarite', 'admin_financier')).exists()):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     academic_year_id = request.query_params.get('academic_year')
     program_id = request.query_params.get('program')
 
@@ -89,6 +97,8 @@ def export_students_excel(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def export_grades_excel(request):
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     session_id = request.query_params.get('session')
     ec_id = request.query_params.get('ec')
 
@@ -136,6 +146,13 @@ def export_grades_excel(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def export_payments_csv(request):
+    # Exporté depuis FinancePage.tsx (bouton "Export"), accessible aux rôles
+    # FINANCE (super_admin/admin_institutionnel/admin_financier) — pas
+    # seulement aux gestionnaires analytics, sinon le bouton que je viens de
+    # brancher pour l'équipe financière serait cassé par ce même correctif.
+    user = request.user
+    if not (user.is_superuser or _is_analytics_manager(user) or user.roles.filter(name='admin_financier').exists()):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     academic_year_id = request.query_params.get('academic_year')
 
     qs = Payment.objects.filter(status='valide').select_related('invoice__student__user', 'invoice__academic_year')
@@ -167,6 +184,8 @@ def export_payments_csv(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def global_report(request):
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     academic_year_id = request.query_params.get('academic_year')
 
     year_filter = {}

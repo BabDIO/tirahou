@@ -24,6 +24,7 @@ export default function TeacherAttendance() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -34,8 +35,13 @@ export default function TeacherAttendance() {
       const allSessions: ScheduledSession[] = sessionsRes.data?.results ?? sessionsRes.data ?? []
       setSessions(allSessions.slice(0, 10))
       setSheets(sheetsRes.data?.results ?? sheetsRes.data ?? [])
+      setError(false)
     } catch {
+      // createAndOpen/toggleSheet affichent déjà une Alert en cas d'échec,
+      // mais le chargement initial restait silencieux — incohérence dans
+      // le même fichier.
       setSessions([])
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -88,6 +94,17 @@ export default function TeacherAttendance() {
     >
       <Text style={styles.title}>Présence</Text>
       <Text style={styles.hint}>Ouvrez une feuille pour une séance, puis communiquez le code à vos étudiants.</Text>
+
+      {error && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Erreur de chargement. Tirez vers le bas pour réessayer.
+            </Text>
+          </View>
+        </Card>
+      )}
 
       {sessions.length === 0 ? (
         <EmptyState label="Aucune séance récente." icon="calendar-outline" />

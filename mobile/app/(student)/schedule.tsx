@@ -20,13 +20,17 @@ export default function StudentSchedule() {
   const [sessions, setSessions] = useState<ScheduledSession[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const { data } = await api.get('/sessions/', { params: { ordering: 'start_datetime' } })
       setSessions(data?.results ?? data ?? [])
+      setError(false)
     } catch {
-      setSessions([])
+      // Sans ceci, un échec réseau vidait sessions[] et affichait "Aucune
+      // séance planifiée" — l'étudiant croit n'avoir aucun cours.
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -58,6 +62,17 @@ export default function StudentSchedule() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <Text style={styles.title}>Mon Emploi du temps</Text>
+
+      {error && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Erreur de chargement. Tirez vers le bas pour réessayer.
+            </Text>
+          </View>
+        </Card>
+      )}
 
       {sessions.length === 0 ? (
         <EmptyState label="Aucune séance planifiée." icon="calendar-outline" />

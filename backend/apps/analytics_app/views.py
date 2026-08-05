@@ -24,6 +24,22 @@ GAMIFICATION_MANAGER_ROLES = (
 
 def _is_gamification_manager(user):
     return user.is_superuser or user.roles.filter(name__in=GAMIFICATION_MANAGER_ROLES).exists()
+
+
+# Rôles habilités à consulter les tableaux de bord/exports institutionnels
+# (mêmes rôles que la route frontend /analytics, App.tsx : "ADMIN + Responsable
+# pédagogique"). Ces vues (dashboard global, stats de présence/LMS, prédiction
+# de décrochage, étudiants à risque, exports Excel/CSV) n'avaient QUE
+# IsAuthenticated — n'importe quel étudiant connecté pouvait exporter les PII
+# de tous les étudiants, toutes les notes, tous les paiements et le rapport
+# financier global de l'université.
+ANALYTICS_MANAGER_ROLES = (
+    'super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement',
+)
+
+
+def _is_analytics_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=ANALYTICS_MANAGER_ROLES).exists()
 from django.db.models import Count, Sum, Avg
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import LearningActivity, EngagementScore, DashboardStat
@@ -351,6 +367,8 @@ class StudentCertificationViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def global_dashboard(request):
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from apps.people.models import Student, Teacher
     from apps.enrollment.models import AdminEnrollment
     from apps.finance.models import Invoice
@@ -424,6 +442,8 @@ def _get_enrollment_trend():
 @permission_classes([permissions.IsAuthenticated])
 def attendance_stats(request):
     """Statistiques d'assiduité globales réelles."""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from apps.attendance.models import AbsenceSummary, AttendanceRecord
     from django.db.models import Avg, Count
 
@@ -460,6 +480,8 @@ def attendance_stats(request):
 @permission_classes([permissions.IsAuthenticated])
 def lms_stats(request):
     """Stats LMS réelles : progression, activité, complétion."""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from apps.lms.models import CourseSpace, StudentProgress, AssignmentSubmission, QuizAttempt
     from apps.virtual_class.models import VirtualClassSession
     from django.db.models import Avg, Count, Sum
@@ -496,6 +518,8 @@ def lms_stats(request):
 @permission_classes([permissions.IsAuthenticated])
 def predict_student_success(request):
     """AMÉLIORATION: Prédiction de réussite basée sur EngagementScore"""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     student_id = request.query_params.get('student_id')
     if not student_id:
         return Response({'error': 'student_id requis'}, status=400)
@@ -543,6 +567,8 @@ def predict_student_success(request):
 @permission_classes([permissions.IsAuthenticated])
 def students_at_risk(request):
     """Liste détaillée des étudiants à risque de décrochage."""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     at_risk = EngagementScore.objects.filter(
         dropout_risk__in=['eleve', 'critique']
     ).select_related('student__user', 'course_space').order_by('-dropout_risk', 'engagement_score')
@@ -587,6 +613,8 @@ def students_at_risk(request):
 @permission_classes([permissions.IsAuthenticated])
 def predict_success(request):
     """Prédiction de réussite pour un étudiant"""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from .advanced_analytics import predict_student_success
     
     student_id = request.query_params.get('student_id')
@@ -605,6 +633,8 @@ def predict_success(request):
 @permission_classes([permissions.IsAuthenticated])
 def cohort_analysis(request):
     """Analyse comparative des cohortes"""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from .advanced_analytics import get_cohort_analysis
     
     academic_year_id = request.query_params.get('academic_year')
@@ -617,6 +647,8 @@ def cohort_analysis(request):
 @permission_classes([permissions.IsAuthenticated])
 def performance_trends(request):
     """Tendances de performance sur N jours"""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from .advanced_analytics import get_performance_trends
     
     days = int(request.query_params.get('days', 30))
@@ -629,6 +661,8 @@ def performance_trends(request):
 @permission_classes([permissions.IsAuthenticated])
 def top_performers(request):
     """Top étudiants par performance"""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from .advanced_analytics import get_top_performers
     
     limit = int(request.query_params.get('limit', 10))
@@ -641,6 +675,8 @@ def top_performers(request):
 @permission_classes([permissions.IsAuthenticated])
 def at_risk_detailed(request):
     """Liste détaillée des étudiants à risque avec recommandations"""
+    if not _is_analytics_manager(request.user):
+        return Response({'detail': "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
     from .advanced_analytics import get_at_risk_students_detailed
     
     data = get_at_risk_students_detailed()

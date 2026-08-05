@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import api from '../../lib/api'
-import { Button, Card, EmptyState, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
+import { Button, Card, EmptyState, Icon, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
 
 interface Ec {
   id: string
@@ -44,6 +44,7 @@ export default function TeacherGrades() {
   const [entries, setEntries] = useState<Record<string, Entry>>({})
   const [stats, setStats] = useState<{ average?: number; success_rate?: number } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [loadingTable, setLoadingTable] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [tableError, setTableError] = useState(false)
@@ -54,6 +55,12 @@ export default function TeacherGrades() {
         const [ecsRes, sessionsRes] = await Promise.all([api.get('/ecs/'), api.get('/exam-sessions/')])
         setEcs(ecsRes.data?.results ?? ecsRes.data ?? [])
         setSessions(sessionsRes.data?.results ?? sessionsRes.data ?? [])
+        setLoadError(false)
+      } catch {
+        // Absence de catch ici : une erreur réseau devenait un rejet de
+        // promesse non géré, les listes EC/session restaient vides sans
+        // aucun message — l'écran devenait inutilisable sans explication.
+        setLoadError(true)
       } finally {
         setLoading(false)
       }
@@ -139,6 +146,17 @@ export default function TeacherGrades() {
     <ScrollView style={styles.screen} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.title}>Saisie des Notes</Text>
 
+      {loadError && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Impossible de charger les EC/sessions. Vérifiez votre connexion et relancez l'app.
+            </Text>
+          </View>
+        </Card>
+      )}
+
       <SectionTitle icon="layers-outline">Élément Constitutif</SectionTitle>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
         {ecs.map((ec) => (
@@ -180,7 +198,7 @@ export default function TeacherGrades() {
             const final = entry.isAbsent ? 0 : !entry.cc && !entry.exam ? null : Math.min(20, Math.max(0, ccVal * 0.4 + examVal * 0.6))
             return (
               <Card key={s.id}>
-                <Text style={styles.studentName}>{s.user.first_name} {s.user.last_name}</Text>
+                <Text style={styles.studentName}>{s.user ? `${s.user.first_name} ${s.user.last_name}` : 'Étudiant'}</Text>
                 <Text style={styles.studentId}>{s.student_id}</Text>
                 <View style={styles.inputRow}>
                   <View style={styles.inputCol}>

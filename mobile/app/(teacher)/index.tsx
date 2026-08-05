@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import { Card, EmptyState, HeroBanner, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
+import { Card, EmptyState, HeroBanner, Icon, Loading, SectionTitle, StatTile, colors } from '../../components/ui'
 
 interface CourseSpace {
   id: string
@@ -27,6 +27,7 @@ export default function TeacherHome() {
   const [pendingCount, setPendingCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -44,8 +45,13 @@ export default function TeacherHome() {
       )
       const grades: PendingGrade[] = gradesRes.data?.results ?? gradesRes.data ?? []
       setPendingCount(grades.length)
+      setError(false)
     } catch {
-      // le dashboard reste utilisable même en cas d'échec partiel
+      // Le dashboard reste utilisable même en cas d'échec (contrairement à
+      // (student)/index.tsx, ce catch ne signalait rien : les stats à 0
+      // (cours, notes en attente) étaient indiscernables de vraies valeurs
+      // à zéro).
+      setError(true)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -73,6 +79,17 @@ export default function TeacherHome() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <HeroBanner eyebrow={`${greeting},`} title={user?.first_name ?? user?.full_name ?? ''} subtitle="Bon retour dans votre espace" icon="easel-outline" />
+
+      {error && (
+        <Card style={{ borderColor: colors.danger, borderWidth: 1, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="cloud-offline-outline" size={18} color={colors.danger} />
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', flex: 1 }}>
+              Certaines données n'ont pas pu être chargées. Tirez vers le bas pour réessayer.
+            </Text>
+          </View>
+        </Card>
+      )}
 
       <View style={styles.statsGrid}>
         <StatTile label="Cours" value={courses.length} icon="book-outline" />

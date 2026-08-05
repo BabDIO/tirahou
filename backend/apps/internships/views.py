@@ -44,11 +44,20 @@ class InternshipViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        try:
-            student = self.request.user.student_profile
-            serializer.save(student=student)
-        except Exception:
-            serializer.save()
+        # Un utilisateur SANS student_profile (n'importe quel compte, y
+        # compris un enseignant sans lien avec le stage) tombait dans le
+        # except et sauvegardait tel quel les données envoyées — student ET
+        # supervisor arbitraires. Il pouvait ainsi créer un Internship pour
+        # N'IMPORTE QUEL étudiant en se désignant lui-même supervisor, puis
+        # légitimement appeler validate()/add_evaluation() dessus.
+        user = self.request.user
+        if hasattr(user, 'student_profile'):
+            serializer.save(student=user.student_profile)
+            return
+        if not _is_academic_manager(user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas créer de stage.")
+        serializer.save()
 
     def perform_destroy(self, instance):
         if not _can_manage_internship(self.request.user, instance):
@@ -127,11 +136,17 @@ class ThesisViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        try:
-            student = self.request.user.student_profile
-            serializer.save(student=student)
-        except Exception:
-            serializer.save()
+        # Même faille que InternshipViewSet.perform_create ci-dessus : un
+        # utilisateur sans student_profile pouvait créer une Thesis pour
+        # n'importe quel étudiant en se désignant supervisor.
+        user = self.request.user
+        if hasattr(user, 'student_profile'):
+            serializer.save(student=user.student_profile)
+            return
+        if not _is_academic_manager(user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas créer de mémoire.")
+        serializer.save()
 
     def perform_update(self, serializer):
         # Comme pour Internship : aucun read_only_fields n'existait, un
@@ -205,8 +220,15 @@ class ThesisViewSet(viewsets.ModelViewSet):
         serializer = ThesisProgressSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(thesis=thesis, logged_by=request.user)
-            # Mettre à jour le % de progression
-            thesis.progress_percentage = request.data.get('percentage', thesis.progress_percentage)
+            # `progress_percentage` n'existait pas sur le modèle (ajouté
+            # ci-dessus) : cette action plantait systématiquement en 500.
+            # Bornage [0, 100] car la valeur vient du client.
+            raw_percentage = request.data.get('percentage')
+            if raw_percentage is not None:
+                try:
+                    thesis.progress_percentage = max(0, min(100, int(raw_percentage)))
+                except (TypeError, ValueError):
+                    return Response({'detail': 'percentage doit être un entier entre 0 et 100.'}, status=status.HTTP_400_BAD_REQUEST)
             thesis.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

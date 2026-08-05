@@ -173,6 +173,27 @@ class UserListCreateView(generics.ListCreateAPIView):
         log_action(self.request.user, 'create', 'accounts', 'User', user.id, f"Création utilisateur {user.email}", self.request)
 
 
+
+# UserUpdateSerializer expose is_locked/is_active/is_verified (commentés
+# "Champs de gestion admin") sans read_only_fields, et has_object_permission
+# de HasModulePermission laisse passer tout PATCH où `obj == user` (pour
+# permettre l'auto-édition du profil, ex: page Profil) — combinés, ces deux
+# points laissaient n'importe quel utilisateur authentifié déverrouiller
+# son propre compte (is_locked=false, remet aussi failed_login_attempts à
+# 0 via UserUpdateSerializer.update()) et s'auto-vérifier (is_verified=true)
+# via PATCH /accounts/users/<son-id>/ ou /accounts/auth/me/.
+ADMIN_ACCOUNT_ROLES = ('super_admin', 'admin_institutionnel')
+_PRIVILEGED_ACCOUNT_FIELDS = ('is_locked', 'is_active', 'is_verified')
+
+
+def _strip_privileged_fields_if_not_admin(request, serializer):
+    user = request.user
+    is_admin = user.is_superuser or user.roles.filter(name__in=ADMIN_ACCOUNT_ROLES).exists()
+    if not is_admin:
+        for field in _PRIVILEGED_ACCOUNT_FIELDS:
+            serializer.validated_data.pop(field, None)
+
+
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.IsAuthenticated, HasModulePermission]
@@ -182,6 +203,7 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         return UserUpdateSerializer if self.request.method in ['PUT', 'PATCH'] else UserSerializer
 
     def perform_update(self, serializer):
+        _strip_privileged_fields_if_not_admin(self.request, serializer)
         user = serializer.save()
         log_action(self.request.user, 'update', 'accounts', 'User', user.id, request=self.request)
 
@@ -200,6 +222,10 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     def get_serializer_class(self):
         return UserUpdateSerializer if self.request.method in ['PUT', 'PATCH'] else UserSerializer
+
+    def perform_update(self, serializer):
+        _strip_privileged_fields_if_not_admin(self.request, serializer)
+        serializer.save()
 
 
 class ChangePasswordView(APIView):
@@ -243,6 +269,14 @@ class AuditLogListView(generics.ListAPIView):
         return AuditLog.objects.select_related('user').all()
 
 
+# Rôles à plus haut privilège : IsRoleManager autorise déjà 5 rôles à
+# appeler assign_roles (nécessaire pour AdminUsersPage.tsx), mais rien
+# n'empêchait ensuite un simple chef_departement/responsable_pedagogique
+# d'attribuer super_admin (à lui-même ou à quiconque), contournant tout le
+# RBAC — élévation de privilèges verticale confirmée par lecture du code.
+TOP_LEVEL_ROLES = ('super_admin', 'admin_institutionnel')
+
+
 @extend_schema(request={'application/json': {'type': 'object', 'properties': {'role_ids': {'type': 'array', 'items': {'type': 'string'}}}}}, responses={200: OpenApiResponse(description='Rôles assignés')})
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated, IsRoleManager])
@@ -250,7 +284,15 @@ def assign_roles(request, user_id):
     try:
         user = User.objects.get(id=user_id)
         role_ids = request.data.get('role_ids', [])
-        user.roles.set(Role.objects.filter(id__in=role_ids))
+        roles = Role.objects.filter(id__in=role_ids)
+        requester = request.user
+        is_top_level = requester.is_superuser or requester.roles.filter(name__in=TOP_LEVEL_ROLES).exists()
+        if not is_top_level and roles.filter(name__in=TOP_LEVEL_ROLES).exists():
+            return Response(
+                {'detail': "Seul un administrateur institutionnel peut attribuer ce rôle."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        user.roles.set(roles)
         log_action(request.user, 'update', 'accounts', 'User', user_id, f"Rôles mis à jour", request)
         return Response({'detail': 'Rôles assignés avec succès.'})
     except User.DoesNotExist:

@@ -33,6 +33,28 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
             return qs.filter(student=user.student_profile)
         return qs
 
+    def perform_create(self, serializer):
+        # Aucune restriction n'existait ici (contrairement à perform_update/
+        # perform_destroy juste en dessous) : le frontend étudiant n'expose
+        # pas ce formulaire, mais un POST direct sur /admin-enrollments/
+        # permettait à n'importe quel utilisateur authentifié de créer une
+        # inscription pour N'IMPORTE QUEL étudiant, avec le statut de son
+        # choix.
+        if not _is_enrollment_manager(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé à la scolarité.")
+        # apps.core.validators.validate_enrollment existe (double inscription,
+        # programme actif, capacité, période d'inscription) mais n'était
+        # jamais appelée nulle part dans le code — Program.capacity n'était
+        # donc appliqué par rien : la scolarité pouvait inscrire un nombre
+        # illimité d'étudiants dans un programme. La ValidationError Django
+        # levée est convertie en 400 par le exception_handler global (voir
+        # apps/core/exceptions.py).
+        from apps.core.validators import validate_enrollment
+        data = serializer.validated_data
+        validate_enrollment(data['student'], data['program'], data['academic_year'])
+        serializer.save()
+
     def perform_update(self, serializer):
         # AdminEnrollmentSerializer n'a que enrollment_number en
         # read_only_fields : status/payment_validated/validated_by/

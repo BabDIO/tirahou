@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import api from '../lib/api'
 import { Badge, Card, EmptyState, IconName, Loading, ScreenHeader, colors } from '../components/ui'
 
@@ -72,7 +72,9 @@ export default function NotificationsScreen() {
       await api.post('/notifications/mark_all_read/')
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
     } catch {
-      // best-effort
+      // Le bouton s'arrêtait juste de charger sans aucun indice que l'action
+      // avait échoué — l'utilisateur croit ses notifications marquées lues.
+      Alert.alert('Erreur', "Impossible de marquer les notifications comme lues. Réessayez.")
     } finally {
       setMarkingAll(false)
     }
