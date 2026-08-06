@@ -101,6 +101,9 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             decision = serializer.save(application=app, decided_by=request.user)
             app.status = decision.decision if decision.decision != 'admis_attente' else 'admis_liste_attente'
             app.save()
+            converted = False
+            if decision.decision == 'admis':
+                converted = self._auto_convert_to_enrollment(app)
             try:
                 from apps.core.tasks import dispatch_webhook
                 dispatch_webhook('admission.decided', {
@@ -109,8 +112,60 @@ class ApplicationViewSet(viewsets.ModelViewSet):
                 })
             except Exception:
                 pass
-            return Response(AdmissionDecisionSerializer(decision).data)
+            data = AdmissionDecisionSerializer(decision).data
+            data['converted'] = converted
+            return Response(data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def _auto_convert_to_enrollment(self, app):
+        """
+        Crée automatiquement l'inscription administrative (AdminEnrollment)
+        correspondant à une candidature admise, pour éviter une double
+        saisie manuelle par la scolarité. Ne fonctionne que si le candidat
+        a déjà un profil Student : la candidature ne collecte pas les
+        champs obligatoires du profil (genre, date de naissance, contact
+        d'urgence...), donc on ne peut pas créer ce profil ici sans données
+        inventées. Si le profil n'existe pas encore, la candidature reste
+        au statut 'admis' — la scolarité complète le profil puis convertit
+        manuellement (comme avant cette fonctionnalité).
+        """
+        student = getattr(app.applicant, 'student_profile', None)
+        if student is None:
+            return False
+
+        from django.core.exceptions import ValidationError
+        from apps.core.validators import validate_enrollment
+        from apps.enrollment.models import AdminEnrollment
+        try:
+            validate_enrollment(student, app.program, app.academic_year)
+        except ValidationError:
+            return False
+
+        enrollment = AdminEnrollment.objects.create(
+            student=student, program=app.program, academic_year=app.academic_year,
+            type='premiere_inscription',
+        )
+        app.status = 'converti'
+        app.save(update_fields=['status'])
+
+        try:
+            from apps.communication.notification_service import NotificationService
+            NotificationService.send_notification(
+                recipient_id=app.applicant.id,
+                title='Candidature convertie en inscription',
+                message=f"Votre admission à {app.program.name} a été automatiquement convertie en inscription "
+                        f"({enrollment.enrollment_number}). Finalisez le paiement pour la valider.",
+                notif_type='inscription',
+                priority='high',
+                channel='both',
+                action_url='/my-enrollment',
+                action_label='Voir mon inscription',
+                icon='check-circle',
+                color='green',
+            )
+        except Exception:
+            pass
+        return True
 
     @action(detail=False, methods=['post'])
     def publish_decisions(self, request):

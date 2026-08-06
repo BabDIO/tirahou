@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { GraduationCap, BookMarked, CheckCircle, Users, Calendar, BookOpen, Send } from 'lucide-react'
+import { GraduationCap, BookMarked, CheckCircle, Users, Calendar, BookOpen, Send, RefreshCw } from 'lucide-react'
 import { Card, Spinner, Badge, Empty, Alert, Progress, Button } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
 import { programsApi, enrollmentApi } from '../../api'
@@ -31,6 +31,9 @@ interface PedaEnrollment {
 }
 
 export default function MyEnrollmentPage() {
+  const qc = useQueryClient()
+  const toast = useToast()
+
   const { data: adminEnrollments, isLoading: loadAdmin } = useQuery({
     queryKey: ['my-admin-enrollments'],
     queryFn: () => api.get('/admin-enrollments/').then(r => r.data),
@@ -60,11 +63,28 @@ export default function MyEnrollmentPage() {
   const progressSteps = [adminValidated, paymentOk, pedaConfirmed]
   const progressPct = Math.round((progressSteps.filter(Boolean).length / progressSteps.length) * 100)
 
+  const reenrollMut = useMutation({
+    mutationFn: () => enrollmentApi.reenroll(),
+    onSuccess: () => {
+      toast.success('Demande de réinscription envoyée — en attente de validation par la scolarité.')
+      qc.invalidateQueries({ queryKey: ['my-admin-enrollments'] })
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la demande de réinscription'),
+  })
+
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="page-title">Mon Inscription</h1>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Détails de votre inscription administrative et pédagogique</p>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="page-title">Mon Inscription</h1>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Détails de votre inscription administrative et pédagogique</p>
+        </div>
+        {adminValidated && (
+          <Button variant="secondary" icon={<RefreshCw className="w-4 h-4" />}
+            loading={reenrollMut.isPending} onClick={() => reenrollMut.mutate()}>
+            Demander ma réinscription
+          </Button>
+        )}
       </div>
 
       {isLoading ? <Spinner text="Chargement de votre inscription..." /> : !adminList.length ? (

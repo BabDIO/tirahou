@@ -1,7 +1,9 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError
 from django.utils import timezone
+from apps.academic.models import AcademicYear
 from .models import AdminEnrollment, PedaEnrollment, UEEnrollment
 from .serializers import AdminEnrollmentSerializer, PedaEnrollmentSerializer, UEEnrollmentSerializer
 
@@ -184,6 +186,51 @@ class AdminEnrollmentViewSet(viewsets.ModelViewSet):
         if not enrollment:
             return Response({'detail': 'Aucune inscription active.'}, status=404)
         return Response(AdminEnrollmentSerializer(enrollment).data)
+
+    @action(detail=False, methods=['post'])
+    def reenroll(self, request):
+        """
+        Réinscription en libre-service : un étudiant ayant déjà une
+        inscription administrative validée peut demander lui-même son
+        inscription pour l'année académique suivante (même programme),
+        sans passer par une nouvelle candidature ni par une saisie manuelle
+        de la scolarité. La demande créée reste au statut 'en_attente' —
+        la validation (paiement, etc.) suit le circuit habituel via
+        validate()/validate_payment() ci-dessus.
+        """
+        if not hasattr(request.user, 'student_profile'):
+            return Response({'detail': 'Profil étudiant requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        student = request.user.student_profile
+
+        last_enrollment = AdminEnrollment.objects.filter(
+            student=student, status='validee'
+        ).select_related('program', 'academic_year').order_by('-academic_year__start_date').first()
+        if not last_enrollment:
+            return Response(
+                {'detail': "Aucune inscription validée trouvée — impossible de faire une demande de réinscription."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        next_year = AcademicYear.objects.filter(
+            start_date__gt=last_enrollment.academic_year.start_date
+        ).order_by('start_date').first()
+        if not next_year:
+            return Response(
+                {'detail': "L'année académique suivante n'a pas encore été créée par la scolarité — réessayez plus tard."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        program = last_enrollment.program
+        from apps.core.validators import validate_enrollment
+        try:
+            validate_enrollment(student, program, next_year)
+        except ValidationError as e:
+            return Response({'detail': e.messages[0] if e.messages else str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        enrollment = AdminEnrollment.objects.create(
+            student=student, program=program, academic_year=next_year, type='reinscription',
+        )
+        return Response(AdminEnrollmentSerializer(enrollment).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def stats(self, request):

@@ -134,6 +134,7 @@ export const enrollmentApi = {
     api.get<PaginatedResponse<AdminEnrollment>>('/admin-enrollments/', { params }),
   getEnrollment: (id: string) => api.get<AdminEnrollment>(`/admin-enrollments/${id}/`),
   createEnrollment: (data: object) => api.post<AdminEnrollment>('/admin-enrollments/', data),
+  reenroll: () => api.post<AdminEnrollment>('/admin-enrollments/reenroll/'),
   validateEnrollment: (id: string) => api.post(`/admin-enrollments/${id}/validate/`),
   validatePayment: (id: string) => api.post(`/admin-enrollments/${id}/validate_payment/`),
   getPedaEnrollments: (params?: object) => api.get('/peda-enrollments/', { params }),

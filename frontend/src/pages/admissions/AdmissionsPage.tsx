@@ -29,7 +29,11 @@ export default function AdmissionsPage() {
   const decide = useMutation({
     mutationFn: ({ id, decision }: { id: string; decision: string }) =>
       admissionsApi.decide(id, { decision }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['applications'] }); setSelected(null) },
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      setSelected(null)
+      if (res?.data?.converted) toast.success('Candidat admis — inscription créée automatiquement.')
+    },
     onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la décision'),
   })
 
