@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, MessageSquare, User, Bell, Sparkles } from 'lucide-react'
+import { CheckCircle, MessageSquare, User, Bell, Sparkles, FileText } from 'lucide-react'
 import { Card } from '../../components/ui'
 import { useAuthStore } from '../../store/authStore'
 
@@ -42,7 +42,15 @@ export default function SimpleDashboard() {
       </Card>
 
       <Card title="Accès rapide" subtitle="Fonctionnalités disponibles pour votre profil">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <button
+            onClick={() => navigate('/my-applications')}
+            className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4 text-left hover:bg-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 dark:border-emerald-700/30 dark:hover:bg-emerald-800/30 transition-colors"
+          >
+            <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-2" />
+            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Mes candidatures</p>
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">Suivre mes dossiers</p>
+          </button>
           <button
             onClick={() => navigate('/profile')}
             className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 text-left hover:bg-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700/30 dark:hover:bg-blue-800/30 transition-colors"

@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useState } from 'react'
 import {
   Mail, Lock, Eye, EyeOff, ArrowRight,
@@ -288,6 +288,10 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <p className="mt-5 text-center text-sm text-gray-500 dark:text-gray-400">
+            Pas encore de compte ? <Link to="/register" className="text-blue-600 font-semibold hover:underline">Créer un compte</Link>
+          </p>
 
           {/* Demo */}
           <div className="mt-5">

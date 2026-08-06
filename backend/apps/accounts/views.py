@@ -10,9 +10,10 @@ from .models import User, Role, AuditLog
 from .serializers import (
     UserSerializer, UserCreateSerializer, UserUpdateSerializer,
     RoleSerializer, AuditLogSerializer, ChangePasswordSerializer,
-    CustomTokenObtainSerializer,
+    CustomTokenObtainSerializer, PublicRegisterSerializer,
 )
 from .permissions import HasModulePermission
+from apps.core.throttling import RegisterRateThrottle
 
 # Même périmètre que UserListCreateView.get_queryset() ci-dessous (les
 # rôles qui gèrent déjà les comptes utilisateurs) : AdminUsersPage.tsx
@@ -72,6 +73,30 @@ class LoginView(TokenObtainPairView):
             except User.DoesNotExist:
                 pass
         return response
+
+
+class PublicRegisterView(generics.CreateAPIView):
+    """
+    Auto-inscription publique (candidat externe) — voir
+    PublicRegisterSerializer. Renvoie directement des tokens JWT comme
+    LoginView, pour que le candidat atterrisse connecté sur /my-applications
+    sans étape de connexion séparée.
+    """
+    serializer_class = PublicRegisterSerializer
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [RegisterRateThrottle]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        log_action(user, 'create', 'accounts', 'User', user.id, "Auto-inscription candidat", request)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data,
+        }, status=status.HTTP_201_CREATED)
 
 
 class LogoutView(APIView):

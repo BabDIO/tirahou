@@ -6,6 +6,13 @@ class LoginRateThrottle(AnonRateThrottle):
     scope = 'login'
 
 
+class RegisterRateThrottle(AnonRateThrottle):
+    """Limite les créations de compte public (inscription candidat) par IP —
+    endpoint AllowAny, donc particulièrement exposé à la création de comptes
+    en masse sans cette limite."""
+    scope = 'register'
+
+
 class BurstRateThrottle(UserRateThrottle):
     """Limite les requêtes en rafale pour les utilisateurs authentifiés."""
     scope = 'burst'

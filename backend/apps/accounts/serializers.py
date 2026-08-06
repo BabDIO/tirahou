@@ -72,6 +72,52 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class PublicRegisterSerializer(serializers.ModelSerializer):
+    """
+    Auto-inscription d'un candidat externe (aucun compte requis au
+    préalable) — crée un compte avec le rôle 'invite' (accès minimal :
+    déposer/suivre une candidature, consulter son profil ; aucun droit
+    RBAC sur les données de l'établissement). L'instruction de la
+    candidature reste ensuite un acte humain de la scolarité
+    (AdmissionsPage), inchangé.
+    """
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'phone', 'password']
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("Un compte existe déjà avec cet email — connectez-vous plutôt.")
+        return value
+
+    def validate_password(self, value):
+        # Endpoint AllowAny le plus exposé du projet : contrairement à
+        # UserCreateSerializer/ChangePasswordSerializer (min_length=8 seul),
+        # on applique ici la politique complète (AUTH_PASSWORD_VALIDATORS :
+        # similarité avec les attributs du compte, mots de passe courants).
+        from django.contrib.auth.password_validation import validate_password
+        validate_password(value)
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        base_username = validated_data['email'].split('@')[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+        user = User(username=username, is_active=True, **validated_data)
+        user.set_password(password)
+        user.save()
+        role, _ = Role.objects.get_or_create(name='invite', defaults={'description': 'Invité'})
+        user.roles.add(role)
+        return user
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
     new_password = serializers.CharField(write_only=True, min_length=8)

@@ -18,6 +18,8 @@ import type {
 export const authApi = {
   login: (data: LoginCredentials) =>
     api.post<AuthTokens & { user: User }>('/auth/login/', data),
+  register: (data: { email: string; first_name: string; last_name: string; phone?: string; password: string }) =>
+    api.post<AuthTokens & { user: User }>('/auth/register/', data),
   logout: (refresh: string) =>
     api.post('/auth/logout/', { refresh }),
   me: () => api.get<User>('/auth/me/'),

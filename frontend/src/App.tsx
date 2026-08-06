@@ -8,6 +8,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/auth/LoginPage'
+import RegisterPage from './pages/auth/RegisterPage'
 import UnauthorizedPage from './pages/UnauthorizedPage'
 import NotFoundPage from './pages/NotFoundPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
@@ -119,6 +120,9 @@ const PEDA = ['super_admin', 'admin_institutionnel', 'admin_scolarite', 'respons
 const RESP = ['super_admin', 'admin_institutionnel', 'responsable_pedagogique', 'chef_departement'] as const
 const STAFF = ['super_admin', 'admin_institutionnel', 'admin_scolarite', 'admin_financier', 'responsable_pedagogique', 'chef_departement', 'enseignant', 'tuteur', 'bibliothecaire'] as const
 const ALL = [...STAFF, 'etudiant', 'doctorant'] as const
+// 'invite' = candidat auto-inscrit (voir RegisterPage) — n'a accès qu'au dépôt
+// de sa propre candidature, donc ajouté seulement ici et pas à ALL.
+const APPLICANT = [...ALL, 'invite'] as const
 const TEACHER = ['enseignant', 'tuteur', 'super_admin', 'admin_institutionnel'] as const
 const STUDENT = ['etudiant', 'doctorant'] as const
 const BIBLIO = ['super_admin', 'admin_institutionnel', 'bibliothecaire'] as const
@@ -134,6 +138,7 @@ export default function App() {
             {/* ── Public ── */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/verify" element={<VerifyDocumentPage />} />
             <Route path="/verify/:code" element={<VerifyDocumentPage />} />
@@ -155,7 +160,7 @@ export default function App() {
               </Route>
 
               {/* Candidatures — tous (n'importe quel compte peut déposer une candidature) */}
-              <Route element={<ProtectedRoute allowedRoles={[...ALL]} />}>
+              <Route element={<ProtectedRoute allowedRoles={[...APPLICANT]} />}>
                 <Route path="/my-applications" element={<MyApplicationsPage />} />
               </Route>
 

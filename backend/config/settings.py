@@ -205,6 +205,7 @@ else:
 # ── DRF ──────────────────────────────────────────────────────────────────────
 # En développement, seuil login plus haut pour tests multi-rôles / démo (sinon 429 après ~5 comptes / IP).
 _LOGIN_THROTTLE = '120/minute' if DEBUG else '5/minute'
+_REGISTER_THROTTLE = '60/minute' if DEBUG else '5/hour'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -229,6 +230,7 @@ REST_FRAMEWORK = {
         'anon': '20/minute',
         'user': '200/minute',
         'login': _LOGIN_THROTTLE,
+        'register': _REGISTER_THROTTLE,
     },
     'EXCEPTION_HANDLER': 'apps.core.exceptions.custom_exception_handler',
 }
