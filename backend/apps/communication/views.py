@@ -26,6 +26,24 @@ def _can_send_notification(user):
     return user.is_superuser or user.roles.filter(name__in=NOTIFICATION_SENDER_ROLES).exists()
 
 
+# Announcement/Message/ForumPost.attachment n'avaient aucune limite de
+# taille ni de format, contrairement aux uploads équivalents ailleurs dans
+# le projet (documents d'identité, rendus LMS, rapports de stage).
+MAX_ATTACHMENT_MB = 15
+ALLOWED_ATTACHMENT_EXTENSIONS = ('pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'zip')
+
+
+def _validate_attachment(f):
+    if not f:
+        return None
+    if f.size > MAX_ATTACHMENT_MB * 1024 * 1024:
+        return f'Pièce jointe trop volumineuse (max {MAX_ATTACHMENT_MB} Mo).'
+    ext = f.name.rsplit('.', 1)[-1].lower() if '.' in f.name else ''
+    if ext not in ALLOWED_ATTACHMENT_EXTENSIONS:
+        return f"Format non autorisé (extensions acceptées : {', '.join(ALLOWED_ATTACHMENT_EXTENSIONS)})."
+    return None
+
+
 # Rôles pédagogiques/administratifs habilités à gérer les annonces et forums
 # indépendamment d'en être l'auteur (mêmes rôles déjà utilisés par
 # publish/pin/toggle_status). Aucun perform_update/perform_destroy n'existait
@@ -151,6 +169,9 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         return qs.filter(is_published=True).order_by('-is_pinned', '-published_at')
 
     def perform_create(self, serializer):
+        error = _validate_attachment(self.request.FILES.get('attachment'))
+        if error:
+            raise serializers.ValidationError({'attachment': error})
         serializer.save(author=self.request.user)
 
     def perform_update(self, serializer):
@@ -206,6 +227,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         ).select_related('sender', 'recipient').order_by('-created_at')
 
     def perform_create(self, serializer):
+        error = _validate_attachment(self.request.FILES.get('attachment'))
+        if error:
+            raise serializers.ValidationError({'attachment': error})
         serializer.save(sender=self.request.user)
 
     def perform_update(self, serializer):
@@ -323,6 +347,9 @@ class ForumPostViewSet(viewsets.ModelViewSet):
         forum = serializer.validated_data['forum']
         if not forum.is_open:
             raise serializers.ValidationError('Ce forum est fermé.')
+        error = _validate_attachment(self.request.FILES.get('attachment'))
+        if error:
+            raise serializers.ValidationError({'attachment': error})
         serializer.save(author=self.request.user)
 
     def perform_update(self, serializer):

@@ -10,6 +10,12 @@ import { formatDate, cn } from '../../lib/utils'
 import { libraryApi } from '../../api'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '../../store/authStore'
+
+// Doit rester synchronisé avec LIBRARY_CATALOG_MANAGER_ROLES (backend,
+// apps/library/views.py) — sinon le bouton de dépôt reste visible pour des
+// rôles que l'API refusera désormais (403).
+const CATALOG_MANAGER_ROLES = ['bibliothecaire', 'super_admin', 'admin_institutionnel', 'enseignant']
 
 const docTypeColor: Record<string, string> = {
   livre: 'badge-blue', memoire: 'badge-purple', these: 'badge-yellow',
@@ -27,6 +33,8 @@ interface LibraryDoc {
 }
 
 export default function LibraryPage() {
+  const { user } = useAuthStore()
+  const canManageCatalog = (user?.roles ?? []).some(r => CATALOG_MANAGER_ROLES.includes(r.name))
   const [searchParams] = useSearchParams()
   const [tab, setTab] = useState<'catalog' | 'borrowings' | 'reservations' | 'lists'>('catalog')
   const [search, setSearch] = useState(searchParams.get('q') ?? '')
@@ -127,7 +135,7 @@ export default function LibraryPage() {
           <h1 className="page-title">Bibliothèque Numérique</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">{data?.count ?? 0} ressource(s) disponible(s)</p>
         </div>
-        {tab === 'catalog' && (
+        {tab === 'catalog' && canManageCatalog && (
           <Button icon={<Upload className="w-4 h-4" />} size="sm" onClick={() => setUploadOpen(true)}>
             Déposer une ressource
           </Button>
@@ -190,8 +198,8 @@ export default function LibraryPage() {
           {isLoading ? <Spinner text="Chargement de la bibliothèque..." /> :
             !docs.length ? (
               <Empty message="Aucune ressource trouvée" icon={<BookOpen className="w-8 h-8" />}
-                description="Déposez la première ressource de la bibliothèque"
-                action={<Button size="sm" icon={<Upload className="w-4 h-4" />} onClick={() => setUploadOpen(true)}>Déposer</Button>}
+                description={canManageCatalog ? "Déposez la première ressource de la bibliothèque" : undefined}
+                action={canManageCatalog ? <Button size="sm" icon={<Upload className="w-4 h-4" />} onClick={() => setUploadOpen(true)}>Déposer</Button> : undefined}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

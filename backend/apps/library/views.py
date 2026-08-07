@@ -1,6 +1,8 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
@@ -9,6 +11,31 @@ from .serializers import (
     LibraryDocumentSerializer, BorrowingSerializer,
     ReservationSerializer, DocumentRatingSerializer, ReadingListSerializer,
 )
+
+
+# Rôles habilités à gérer le catalogue (ajout/modification/suppression
+# d'une entrée) — un enseignant peut y déposer un support de cours, mais
+# la gestion reste sous la responsabilité de la bibliothèque/administration.
+LIBRARY_CATALOG_MANAGER_ROLES = ('bibliothecaire', 'super_admin', 'admin_institutionnel', 'enseignant')
+MAX_LIBRARY_FILE_MB = 25
+MAX_LIBRARY_COVER_MB = 5
+ALLOWED_LIBRARY_EXTENSIONS = ('pdf', 'doc', 'docx', 'epub')
+ALLOWED_COVER_EXTENSIONS = ('jpg', 'jpeg', 'png', 'webp')
+
+
+def _is_catalog_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=LIBRARY_CATALOG_MANAGER_ROLES).exists()
+
+
+def _validate_library_upload(f, allowed_extensions, max_mb):
+    if not f:
+        return None
+    if f.size > max_mb * 1024 * 1024:
+        return f'Fichier trop volumineux (max {max_mb} Mo).'
+    ext = f.name.rsplit('.', 1)[-1].lower() if '.' in f.name else ''
+    if ext not in allowed_extensions:
+        return f"Format non autorisé (extensions acceptées : {', '.join(allowed_extensions)})."
+    return None
 
 
 class LibraryDocumentViewSet(viewsets.ModelViewSet):
@@ -40,7 +67,31 @@ class LibraryDocumentViewSet(viewsets.ModelViewSet):
         return qs.exclude(access_level='restricted')
 
     def perform_create(self, serializer):
+        # Aucune restriction n'existait ici : n'importe quel compte
+        # authentifié (y compris un étudiant) pouvait ajouter une entrée
+        # au catalogue, avec un fichier de n'importe quelle taille/format —
+        # ni perform_update/perform_destroy ci-dessous n'existaient non
+        # plus, laissant modification/suppression du catalogue ouvertes à
+        # tous.
+        if not _is_catalog_manager(self.request.user):
+            raise PermissionDenied("Réservé au personnel de la bibliothèque.")
+        error = _validate_library_upload(self.request.FILES.get('file'), ALLOWED_LIBRARY_EXTENSIONS, MAX_LIBRARY_FILE_MB)
+        if error:
+            raise serializers.ValidationError({'file': error})
+        error = _validate_library_upload(self.request.FILES.get('cover'), ALLOWED_COVER_EXTENSIONS, MAX_LIBRARY_COVER_MB)
+        if error:
+            raise serializers.ValidationError({'cover': error})
         serializer.save(uploaded_by=self.request.user)
+
+    def perform_update(self, serializer):
+        if not _is_catalog_manager(self.request.user):
+            raise PermissionDenied("Réservé au personnel de la bibliothèque.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_catalog_manager(self.request.user):
+            raise PermissionDenied("Réservé au personnel de la bibliothèque.")
+        instance.delete()
 
     @action(detail=True, methods=['post'])
     def download(self, request, pk=None):
@@ -74,32 +125,43 @@ class LibraryDocumentViewSet(viewsets.ModelViewSet):
     def borrow(self, request, pk=None):
         """Emprunter un document"""
         document = self.get_object()
-        
-        if not document.is_available():
-            return Response({'error': 'Document non disponible'}, status=400)
-        
-        # Vérifier si l'utilisateur a déjà emprunté ce document
-        active_borrowing = Borrowing.objects.filter(
-            document=document,
-            borrower=request.user,
-            status='en_cours'
-        ).exists()
-        
-        if active_borrowing:
-            return Response({'error': 'Vous avez déjà emprunté ce document'}, status=400)
-        
-        # Créer l'emprunt
-        due_date = timezone.now().date() + timedelta(days=14)  # 2 semaines
-        
-        borrowing = Borrowing.objects.create(
-            document=document,
-            borrower=request.user,
-            due_date=due_date
-        )
-        
-        # Mettre à jour la disponibilité
-        document.borrow()
-        
+
+        # Deux requêtes concurrentes sur le dernier exemplaire disponible
+        # passaient toutes les deux le check is_available() (lu avant tout
+        # verrou), puis document.borrow() décrémentait chacune depuis la
+        # même valeur en mémoire — available_quantity pouvait finir négatif
+        # (plus d'emprunts actifs que d'exemplaires réels). Verrouillage de
+        # la ligne + re-vérification à l'intérieur de la transaction, comme
+        # pour les autres compteurs partagés du projet (wallet, capacité de
+        # programme, salle de cours).
+        with transaction.atomic():
+            document = LibraryDocument.objects.select_for_update().get(pk=document.pk)
+
+            if not document.is_available():
+                return Response({'error': 'Document non disponible'}, status=400)
+
+            # Vérifier si l'utilisateur a déjà emprunté ce document
+            active_borrowing = Borrowing.objects.filter(
+                document=document,
+                borrower=request.user,
+                status='en_cours'
+            ).exists()
+
+            if active_borrowing:
+                return Response({'error': 'Vous avez déjà emprunté ce document'}, status=400)
+
+            # Créer l'emprunt
+            due_date = timezone.now().date() + timedelta(days=14)  # 2 semaines
+
+            borrowing = Borrowing.objects.create(
+                document=document,
+                borrower=request.user,
+                due_date=due_date
+            )
+
+            # Mettre à jour la disponibilité
+            document.borrow()
+
         # Notification
         from apps.communication.models import Notification
         Notification.objects.create(
@@ -266,6 +328,13 @@ class LibraryDocumentViewSet(viewsets.ModelViewSet):
         return Response(LibraryDocumentSerializer(docs, many=True, context={'request': request}).data)
 
 
+LIBRARY_STAFF_ROLES = ('super_admin', 'admin_institutionnel', 'bibliothecaire')
+
+
+def _is_library_staff(user):
+    return user.is_superuser or user.roles.filter(name__in=LIBRARY_STAFF_ROLES).exists()
+
+
 class BorrowingViewSet(viewsets.ModelViewSet):
     """Gestion des emprunts — bibliothécaire + emprunts propres"""
     serializer_class = BorrowingSerializer
@@ -302,6 +371,11 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def mark_penalty_paid(self, request, pk=None):
+        # get_queryset() laisse un emprunteur voir SON PROPRE emprunt —
+        # sans ce contrôle de rôle, il pouvait donc effacer lui-même sa
+        # pénalité de retard via un simple POST, sans jamais l'avoir payée.
+        if not _is_library_staff(request.user):
+            return Response({'detail': 'Permission refusée.'}, status=403)
         borrowing = self.get_object()
         borrowing.penalty_paid = True
         borrowing.save(update_fields=['penalty_paid'])

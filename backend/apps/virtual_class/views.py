@@ -4,7 +4,11 @@ from rest_framework.response import Response
 from django.utils import timezone
 from .models import VirtualClassSession, SessionParticipant
 from .serializers import VirtualClassSessionSerializer, SessionParticipantSerializer
-from .permissions import IsInstructorOrStaff
+from .permissions import IsInstructorOrStaff, STAFF_ROLES
+
+
+def _is_instructor_or_staff(user):
+    return user.is_superuser or hasattr(user, 'teacher_profile') or user.roles.filter(name__in=STAFF_ROLES).exists()
 
 
 class VirtualClassSessionViewSet(viewsets.ModelViewSet):
@@ -35,7 +39,29 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
         return qs.none()
 
     def perform_create(self, serializer):
+        # Aucune restriction n'existait ici : seules start/end/cancel
+        # portaient IsInstructorOrStaff, mais la création/modification/
+        # suppression génériques (POST/PATCH/DELETE /virtual-sessions/)
+        # retombaient sur IsAuthenticated — un étudiant inscrit à un
+        # course_space (donc visible dans son get_queryset()) pouvait créer
+        # une session pour ce cours, ou modifier/supprimer une session
+        # existante (join_url, mot de passe modérateur, horaire...).
+        if not _is_instructor_or_staff(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé aux enseignants et au personnel pédagogique.")
         serializer.save(created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        if not _is_instructor_or_staff(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé aux enseignants et au personnel pédagogique.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _is_instructor_or_staff(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Réservé aux enseignants et au personnel pédagogique.")
+        instance.delete()
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsInstructorOrStaff])
     def start(self, request, pk=None):

@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 
 from rest_framework.test import APIClient
 
-from apps.accounts.models import User
+from apps.accounts.models import User, Role
 from apps.library.models import LibraryDocument
 
 _TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix='tirahou_test_media_')
@@ -36,6 +36,12 @@ class MultipartIsActiveRegressionTests(TestCase):
             email='bib.test@tirahou.edu', username='bib_test',
             first_name='Biblio', last_name='Test', password='Test@2024',
         )
+        # Depuis la restriction perform_create() aux rôles de gestion du
+        # catalogue (voir apps.library.views), ce test doit représenter un
+        # membre du personnel réel — sinon il ne teste plus la régression
+        # is_active mais la restriction d'accès elle-même.
+        role, _ = Role.objects.get_or_create(name='bibliothecaire')
+        self.user.roles.add(role)
         self.client.force_authenticate(self.user)
 
     def test_multipart_create_stays_active(self):

@@ -12,6 +12,27 @@ from .serializers import (
 )
 from apps.accounts.permissions import HasModulePermission
 
+# Les endpoints ci-dessous (enter_grade, validate_grades_bulk,
+# calculate_ue_results, calculate_semester_results, publish_semester_results,
+# class_statistics) sont des @api_view autonomes, PAS des actions de
+# ViewSet — HasModulePermission (qui lit view.action/view.permission_module,
+# des attributs de ViewSet) ne s'y applique donc pas et ils ne portaient
+# que IsAuthenticated : n'importe quel compte authentifié (y compris un
+# étudiant) pouvait saisir/modifier des notes pour n'importe quel autre
+# étudiant, valider des notes en masse, ou publier les résultats officiels
+# d'un semestre. Rôles alignés sur les docstrings déjà présentes
+# ("ENSEIGNANT" / "RESPONSABLE PÉDA" / "ADMIN SCOLARITÉ").
+GRADE_ENTRY_ROLES = ('enseignant', 'tuteur', 'super_admin', 'admin_institutionnel', 'admin_scolarite')
+RESULT_MANAGER_ROLES = ('responsable_pedagogique', 'chef_departement', 'admin_scolarite', 'super_admin', 'admin_institutionnel')
+
+
+def _is_grade_entry_staff(user):
+    return user.is_superuser or user.roles.filter(name__in=GRADE_ENTRY_ROLES).exists()
+
+
+def _is_result_manager(user):
+    return user.is_superuser or user.roles.filter(name__in=RESULT_MANAGER_ROLES).exists()
+
 
 def _get_university_name():
     from apps.academic.models import University
@@ -440,6 +461,8 @@ def teacher_grades(request):
 @permission_classes([permissions.IsAuthenticated])
 def class_statistics(request):
     """Statistiques d'une classe (ENSEIGNANT)"""
+    if not (_is_grade_entry_staff(request.user) or _is_result_manager(request.user)):
+        return Response({'error': 'Permission refusée.'}, status=403)
     from .services import GradeService
     from apps.programs.models import EC
     ec_id = request.query_params.get('ec')
@@ -462,6 +485,8 @@ def class_statistics(request):
 @permission_classes([permissions.IsAuthenticated])
 def enter_grade(request):
     """Saisir une note (ENSEIGNANT)"""
+    if not _is_grade_entry_staff(request.user):
+        return Response({'error': 'Permission refusée.'}, status=403)
     from apps.people.models import Student
     from apps.programs.models import EC
     from .services import GradeService
@@ -493,6 +518,8 @@ def enter_grade(request):
 @permission_classes([permissions.IsAuthenticated])
 def validate_grades_bulk(request):
     """Valider des notes en masse (RESPONSABLE PÉDA)"""
+    if not _is_result_manager(request.user):
+        return Response({'error': 'Permission refusée.'}, status=403)
     from .services import GradeService
     grade_ids = request.data.get('grade_ids', [])
     if not grade_ids:
@@ -506,6 +533,8 @@ def validate_grades_bulk(request):
 @permission_classes([permissions.IsAuthenticated])
 def calculate_ue_results(request):
     """Calculer les résultats d'UE (RESPONSABLE PÉDA)"""
+    if not _is_result_manager(request.user):
+        return Response({'error': 'Permission refusée.'}, status=403)
     from .services import ResultService
     exam_session_id = request.data.get('exam_session_id')
     if not exam_session_id:
@@ -523,6 +552,8 @@ def calculate_ue_results(request):
 @permission_classes([permissions.IsAuthenticated])
 def calculate_semester_results(request):
     """Calculer les résultats semestriels (RESPONSABLE PÉDA)"""
+    if not _is_result_manager(request.user):
+        return Response({'error': 'Permission refusée.'}, status=403)
     from .services import ResultService
     exam_session_id = request.data.get('exam_session_id')
     if not exam_session_id:
@@ -540,6 +571,8 @@ def calculate_semester_results(request):
 @permission_classes([permissions.IsAuthenticated])
 def publish_semester_results(request):
     """Publier les résultats (ADMIN SCOLARITÉ)"""
+    if not _is_result_manager(request.user):
+        return Response({'error': 'Permission refusée.'}, status=403)
     from .services import ResultService
     exam_session_id = request.data.get('exam_session_id')
     if not exam_session_id:

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -17,6 +17,24 @@ DOCUMENT_MANAGER_ROLES = (
 
 def _is_document_manager(user):
     return user.is_superuser or user.roles.filter(name__in=DOCUMENT_MANAGER_ROLES).exists()
+
+
+# Pièces d'identité, diplômes, relevés de notes... aucune limite de taille
+# ni de format n'était appliquée sur cet upload (contrairement à
+# apps/internships qui a le même genre de contrôle).
+MAX_DOCUMENT_UPLOAD_MB = 10
+ALLOWED_DOCUMENT_EXTENSIONS = ('pdf', 'jpg', 'jpeg', 'png')
+
+
+def _validate_document_upload(f):
+    if not f:
+        return None
+    if f.size > MAX_DOCUMENT_UPLOAD_MB * 1024 * 1024:
+        return f'Fichier trop volumineux (max {MAX_DOCUMENT_UPLOAD_MB} Mo).'
+    ext = f.name.rsplit('.', 1)[-1].lower() if '.' in f.name else ''
+    if ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+        return f"Format non autorisé (extensions acceptées : {', '.join(ALLOWED_DOCUMENT_EXTENSIONS)})."
+    return None
 
 
 class DocumentCategoryViewSet(viewsets.ModelViewSet):
@@ -64,6 +82,9 @@ class StudentDocumentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         file = self.request.FILES.get('file')
+        error = _validate_document_upload(file)
+        if error:
+            raise serializers.ValidationError({'file': error})
         serializer.save(
             student=self.request.user.student_profile,
             uploaded_by=self.request.user,
