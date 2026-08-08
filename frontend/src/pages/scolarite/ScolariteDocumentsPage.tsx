@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, FileText, CheckCircle, XCircle, Eye, Shield } from 'lucide-react'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Alert } from '../../components/ui'
 import { documentsApi } from '../../api'
-import { formatDate } from '../../lib/utils'
+import { formatDate, openProtectedFile } from '../../lib/utils'
 
 const statusColor: Record<string, string> = {
   depose: 'badge-yellow', en_verification: 'badge-blue',
@@ -95,9 +95,8 @@ export default function ScolariteDocumentsPage() {
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
                           {doc.file && (
-                            <a href={doc.file} target="_blank" rel="noreferrer">
-                              <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />} />
-                            </a>
+                            <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
+                              onClick={() => openProtectedFile(doc.file!)} />
                           )}
                           {doc.status === 'depose' && (
                             <>

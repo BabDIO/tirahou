@@ -5,10 +5,22 @@ Ce fichier extend settings.py avec la configuration production.
 from .settings import *
 import os
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # ── Sécurité ──────────────────────────────────────────────────────────────────
 DEBUG = False
-SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-insecure-key-replace-me-in-render')
+
+# Un SECRET_KEY par défaut ici serait un secret PUBLIC (visible dans ce
+# dépôt Git) : si la variable d'environnement SECRET_KEY n'est pas définie
+# sur Render, l'app démarrait quand même, en signant sessions/JWT avec une
+# clé que n'importe qui peut lire sur GitHub — falsification de token et
+# désérialisation de session triviales. On échoue au démarrage à la place.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "La variable d'environnement SECRET_KEY est requise en production "
+        "(aucune valeur par défaut ne doit être commise dans le dépôt)."
+    )
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS',

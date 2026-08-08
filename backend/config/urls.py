@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as static_serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from apps.core.views import protected_media_serve
 
 API_V1 = 'api/v1/'
 
@@ -94,6 +95,15 @@ urlpatterns = [
     path(API_V1, include('apps.core.urls')),
 ]
 
+# Pièces d'identité, diplômes, certificats médicaux, documents de
+# candidature : servis avec vérification d'accès (propriétaire ou
+# personnel habilité), quel que soit DEBUG — même en local, ces fichiers
+# ne doivent pas être accessibles par simple connaissance de l'URL.
+urlpatterns += [
+    re_path(r'^media/(?P<path>(?:ged/students|admissions/documents|attendance/justifications)/.*)$',
+            protected_media_serve),
+]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
@@ -101,8 +111,9 @@ elif not getattr(settings, 'USE_S3', False):
     # django.conf.urls.static.static() refuse de servir quoi que ce soit dès
     # que DEBUG=False (par design) — WhiteNoise ne sert que STATIC_ROOT, pas
     # MEDIA_ROOT, donc sans ce fallback aucun fichier uploadé (bibliothèque,
-    # ressources de cours, documents, PDF générés...) n'est accessible en
-    # production tant que le stockage S3 (USE_S3=True) n'est pas configuré.
+    # ressources de cours, PDF générés...) n'est accessible en production
+    # tant que le stockage S3 (USE_S3=True) n'est pas configuré. Les
+    # préfixes sensibles ci-dessus sont interceptés avant d'arriver ici.
     urlpatterns += [
         re_path(r'^media/(?P<path>.*)$', static_serve, {'document_root': settings.MEDIA_ROOT}),
     ]

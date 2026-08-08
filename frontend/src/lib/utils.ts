@@ -1,8 +1,23 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import api from './axios'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+// Les documents sensibles (pièces d'identité, diplômes, justificatifs
+// d'absence...) sont désormais servis par une vue authentifiée côté
+// backend (voir apps/core/views.py protected_media_serve) — un simple
+// <a href>/window.open ne fonctionne plus car le navigateur n'envoie pas
+// le token JWT (stocké en localStorage, injecté seulement par l'intercepteur
+// axios). On récupère donc le fichier via `api` (qui porte le token), puis
+// on ouvre l'URL blob obtenue.
+export async function openProtectedFile(url: string) {
+  const res = await api.get(url, { responseType: 'blob' })
+  const blobUrl = URL.createObjectURL(res.data)
+  window.open(blobUrl, '_blank')
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
 }
 
 export function formatDate(date: string | null, options?: Intl.DateTimeFormatOptions) {

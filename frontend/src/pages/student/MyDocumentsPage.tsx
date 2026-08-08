@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileText, Download, QrCode, Plus, Upload, Eye, Shield } from 'lucide-react'
 import { Card, Spinner, Badge, Empty, Modal, Alert } from '../../components/ui'
-import { formatDate } from '../../lib/utils'
+import { formatDate, openProtectedFile } from '../../lib/utils'
 import { getDocumentStatus } from '../../lib/statusHelpers'
 import { DOCUMENT_TYPES } from '../../lib/constants'
 import { documentsApi } from '../../api'
@@ -185,10 +185,10 @@ export default function MyDocumentsPage() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge label={getDocumentStatus(doc.status).label} className={getDocumentStatus(doc.status).badge} />
-                    <a href={doc.file} target="_blank" rel="noopener noreferrer"
+                    <button onClick={() => openProtectedFile(doc.file)}
                       className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                       <Eye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </Card>

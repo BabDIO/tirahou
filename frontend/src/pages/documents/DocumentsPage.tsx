@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, FileText, Upload, CheckCircle, XCircle, Eye, Download, Plus, QrCode, Shield, Archive } from 'lucide-react'
 import { documentsApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
-import { formatDate } from '../../lib/utils'
+import { formatDate, openProtectedFile } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import { saveAs } from 'file-saver'
 import type { StudentDocument, GeneratedDocument } from '../../types'
@@ -295,7 +295,7 @@ export default function DocumentsPage() {
             )}
             {selected.file && (
               <Button variant="secondary" className="w-full" icon={<Download className="w-4 h-4" />}
-                onClick={() => window.open(selected.file, '_blank')}>
+                onClick={() => openProtectedFile(selected.file!)}>
                 Télécharger le document
               </Button>
             )}

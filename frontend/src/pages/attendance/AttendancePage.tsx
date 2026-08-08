@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, QrCode, Users, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Eye, FileCheck, FileText, X } from 'lucide-react'
 import { attendanceApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs, Progress } from '../../components/ui'
-import { formatDate, statusColor } from '../../lib/utils'
+import { formatDate, statusColor, openProtectedFile } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import type { AttendanceSheet, AbsenceSummary } from '../../types'
 
@@ -336,10 +336,10 @@ export default function AttendancePage() {
                     )}
                     {pj.justification && <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{pj.justification}</p>}
                     {pj.justification_file && (
-                      <a href={pj.justification_file} target="_blank" rel="noreferrer"
+                      <button onClick={() => openProtectedFile(pj.justification_file!)}
                         className="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:underline mt-1.5">
                         <FileText className="w-3.5 h-3.5" /> Voir la pièce jointe
-                      </a>
+                      </button>
                     )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
