@@ -1,9 +1,17 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Upload, Plus, Users, FileText, HelpCircle, CheckCircle2 } from 'lucide-react'
+import { BookOpen, Upload, Plus, Users, FileText, HelpCircle, CheckCircle2, Trash2, Send } from 'lucide-react'
 import { Card, Spinner, Badge, Empty, Modal, Progress, Button, Input } from '../../components/ui'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
+
+const QUESTION_TYPES = [
+  { value: 'qcm', label: 'QCM (choix unique)', needsChoices: true },
+  { value: 'qcm_multiple', label: 'QCM (choix multiple)', needsChoices: true },
+  { value: 'vrai_faux', label: 'Vrai / Faux', needsChoices: true },
+  { value: 'reponse_courte', label: 'Réponse courte', needsChoices: false },
+  { value: 'reponse_longue', label: 'Réponse longue', needsChoices: false },
+]
 
 export default function TeacherCoursesPage() {
   const qc = useQueryClient()
@@ -35,6 +43,8 @@ export default function TeacherCoursesPage() {
   })
 
   const [gradingQuizId, setGradingQuizId] = useState<string | null>(null)
+  const [quizBuilderOpen, setQuizBuilderOpen] = useState(false)
+  const [editingQuiz, setEditingQuiz] = useState<{ id: string; title: string } | null>(null)
 
   const publishMut = useMutation({
     mutationFn: (id: string) => api.post(`/course-spaces/${id}/publish/`),
@@ -159,6 +169,10 @@ export default function TeacherCoursesPage() {
                   className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition">
                   <Upload className="w-4 h-4" /> Déposer une ressource
                 </button>
+                <button onClick={() => setQuizBuilderOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-violet-600 text-white rounded-xl text-sm font-semibold hover:bg-violet-700 transition">
+                  <HelpCircle className="w-4 h-4" /> Créer un quiz
+                </button>
               </div>
 
               {/* Modules */}
@@ -203,19 +217,19 @@ export default function TeacherCoursesPage() {
 
               {/* Quiz */}
               {quizList.length > 0 && (
-                <Card title="Quiz" subtitle="Correction des réponses libres">
+                <Card title="Quiz" subtitle="Cliquez pour continuer un brouillon ou corriger les réponses libres">
                   <div className="space-y-2">
                     {quizList.map((q: { id: string; title: string; is_published: boolean }) => (
                       <button
                         key={q.id}
-                        onClick={() => setGradingQuizId(q.id)}
+                        onClick={() => q.is_published ? setGradingQuizId(q.id) : setEditingQuiz(q)}
                         className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition text-left"
                       >
                         <div className="flex items-center gap-2">
                           <HelpCircle className="w-4 h-4 text-primary-600 flex-shrink-0" />
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{q.title}</span>
                         </div>
-                        <Badge label={q.is_published ? 'Publié' : 'Brouillon'} className={q.is_published ? 'badge-green' : 'badge-gray'} />
+                        <Badge label={q.is_published ? 'Publié' : 'Brouillon — cliquez pour continuer'} className={q.is_published ? 'badge-green' : 'badge-gray'} />
                       </button>
                     ))}
                   </div>
@@ -309,6 +323,243 @@ export default function TeacherCoursesPage() {
       <Modal open={!!gradingQuizId} onClose={() => setGradingQuizId(null)} title="Correction des réponses libres" size="lg">
         {gradingQuizId && <QuizGrading quizId={gradingQuizId} />}
       </Modal>
+
+      {/* Modal création de quiz */}
+      <Modal open={quizBuilderOpen} onClose={() => setQuizBuilderOpen(false)} title="Créer un quiz" size="lg">
+        {selectedSpace && (
+          <QuizBuilder courseSpaceId={selectedSpace}
+            onClose={() => setQuizBuilderOpen(false)}
+            onDone={() => { setQuizBuilderOpen(false); qc.invalidateQueries({ queryKey: ['teacher-quizzes', selectedSpace] }) }} />
+        )}
+      </Modal>
+
+      {/* Modal poursuite d'un brouillon de quiz */}
+      <Modal open={!!editingQuiz} onClose={() => setEditingQuiz(null)} title={`Modifier « ${editingQuiz?.title} »`} size="lg">
+        {selectedSpace && editingQuiz && (
+          <QuizBuilder courseSpaceId={selectedSpace} existingQuiz={editingQuiz}
+            onClose={() => setEditingQuiz(null)}
+            onDone={() => { setEditingQuiz(null); qc.invalidateQueries({ queryKey: ['teacher-quizzes', selectedSpace] }) }} />
+        )}
+      </Modal>
+    </div>
+  )
+}
+
+interface BuilderQuestion {
+  id: string
+  text: string
+  type: string
+  points: string
+  choices: { id: string; text: string; is_correct: boolean }[]
+}
+
+function QuizBuilder({ courseSpaceId, existingQuiz, onClose, onDone }: {
+  courseSpaceId: string
+  existingQuiz?: { id: string; title: string }
+  onClose: () => void
+  onDone: () => void
+}) {
+  const [quiz, setQuiz] = useState<{ id: string; title: string } | null>(existingQuiz ?? null)
+  const [quizForm, setQuizForm] = useState({
+    title: '', instructions: '', duration_minutes: 30, max_grade: 20,
+    max_attempts: 1, randomize_questions: true, show_results_immediately: false,
+  })
+  const [qForm, setQForm] = useState({ text: '', type: 'qcm', points: 1 })
+  const [choiceDraft, setChoiceDraft] = useState('')
+
+  const { data: questions, refetch, isLoading: loadingQuestions } = useQuery({
+    queryKey: ['quiz-builder-questions', quiz?.id],
+    queryFn: () => api.get('/questions/', { params: { quiz: quiz!.id } }).then(r => (r.data.results ?? r.data) as BuilderQuestion[]),
+    enabled: !!quiz,
+  })
+
+  const createQuizMut = useMutation({
+    mutationFn: () => api.post('/quizzes/', { course_space: courseSpaceId, ...quizForm }),
+    onSuccess: (res) => { setQuiz(res.data); toast.success('Quiz créé — ajoutez des questions ci-dessous') },
+    onError: () => toast.error('Erreur lors de la création du quiz'),
+  })
+
+  const addQuestionMut = useMutation({
+    mutationFn: () => api.post('/questions/', {
+      quiz: quiz!.id, text: qForm.text, type: qForm.type, points: qForm.points,
+      order: questions?.length ?? 0,
+    }),
+    onSuccess: () => { setQForm({ text: '', type: 'qcm', points: 1 }); toast.success('Question ajoutée'); refetch() },
+    onError: () => toast.error("Erreur lors de l'ajout de la question"),
+  })
+
+  const deleteQuestionMut = useMutation({
+    mutationFn: (id: string) => api.delete(`/questions/${id}/`),
+    onSuccess: () => { toast.success('Question supprimée'); refetch() },
+  })
+
+  const addChoiceMut = useMutation({
+    mutationFn: ({ questionId, text, isCorrect, order }: { questionId: string; text: string; isCorrect: boolean; order: number }) =>
+      api.post('/question-choices/', { question: questionId, text, is_correct: isCorrect, order }),
+    onSuccess: () => refetch(),
+    onError: () => toast.error("Erreur lors de l'ajout du choix"),
+  })
+
+  const deleteChoiceMut = useMutation({
+    mutationFn: (id: string) => api.delete(`/question-choices/${id}/`),
+    onSuccess: () => refetch(),
+  })
+
+  const publishMut = useMutation({
+    mutationFn: () => api.patch(`/quizzes/${quiz!.id}/`, { is_published: true }),
+    onSuccess: () => { toast.success('Quiz publié — visible par les étudiants'); onDone() },
+    onError: () => toast.error('Erreur lors de la publication'),
+  })
+
+  // Étape 1 : le quiz n'existe pas encore — formulaire de métadonnées.
+  if (!quiz) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="label">Titre *</label>
+          <input className="input" value={quizForm.title}
+            onChange={e => setQuizForm(f => ({ ...f, title: e.target.value }))} placeholder="Contrôle continu n°1" />
+        </div>
+        <div>
+          <label className="label">Consignes</label>
+          <textarea className="input min-h-[70px]" value={quizForm.instructions}
+            onChange={e => setQuizForm(f => ({ ...f, instructions: e.target.value }))} />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="label">Durée (min)</label>
+            <input type="number" min={1} className="input" value={quizForm.duration_minutes}
+              onChange={e => setQuizForm(f => ({ ...f, duration_minutes: Number(e.target.value) }))} />
+          </div>
+          <div>
+            <label className="label">Barème</label>
+            <input type="number" min={1} className="input" value={quizForm.max_grade}
+              onChange={e => setQuizForm(f => ({ ...f, max_grade: Number(e.target.value) }))} />
+          </div>
+          <div>
+            <label className="label">Tentatives max</label>
+            <input type="number" min={1} className="input" value={quizForm.max_attempts}
+              onChange={e => setQuizForm(f => ({ ...f, max_attempts: Number(e.target.value) }))} />
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={quizForm.randomize_questions}
+              onChange={e => setQuizForm(f => ({ ...f, randomize_questions: e.target.checked }))} />
+            Mélanger les questions
+          </label>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={quizForm.show_results_immediately}
+              onChange={e => setQuizForm(f => ({ ...f, show_results_immediately: e.target.checked }))} />
+            Résultat immédiat
+          </label>
+        </div>
+        <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Annuler</Button>
+          <Button className="flex-1" disabled={!quizForm.title} loading={createQuizMut.isPending}
+            onClick={() => createQuizMut.mutate()}>
+            Créer et ajouter des questions
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Étape 2 : le quiz existe — gestion des questions/choix.
+  const questionList = questions ?? []
+  const currentType = QUESTION_TYPES.find(t => t.value === qForm.type)
+
+  return (
+    <div className="space-y-5 max-h-[70vh] overflow-y-auto">
+      <div className="space-y-3 border border-gray-100 dark:border-gray-700 rounded-xl p-3">
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ajouter une question</p>
+        <textarea className="input min-h-[60px]" placeholder="Énoncé de la question..."
+          value={qForm.text} onChange={e => setQForm(f => ({ ...f, text: e.target.value }))} />
+        <div className="grid grid-cols-2 gap-3">
+          <select className="input" value={qForm.type} onChange={e => setQForm(f => ({ ...f, type: e.target.value }))}>
+            {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <input type="number" min={0.5} step={0.5} className="input" placeholder="Points"
+            value={qForm.points} onChange={e => setQForm(f => ({ ...f, points: Number(e.target.value) }))} />
+        </div>
+        <Button size="sm" icon={<Plus className="w-3.5 h-3.5" />} disabled={!qForm.text} loading={addQuestionMut.isPending}
+          onClick={() => addQuestionMut.mutate()}>
+          Ajouter la question
+        </Button>
+      </div>
+
+      {loadingQuestions ? <Spinner /> : (
+        <div className="space-y-3">
+          {questionList.map((q, qi) => {
+            const type = QUESTION_TYPES.find(t => t.value === q.type)
+            return (
+              <div key={q.id} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    <span className="text-gray-400 dark:text-gray-500">{qi + 1}.</span> {q.text}
+                    <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">({q.points} pts — {type?.label})</span>
+                  </p>
+                  <button onClick={() => deleteQuestionMut.mutate(q.id)} className="text-gray-400 dark:text-gray-500 hover:text-red-600 flex-shrink-0">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {type?.needsChoices && (
+                  <div className="mt-2 ml-4 space-y-1.5">
+                    {q.choices.map(c => (
+                      <div key={c.id} className="flex items-center gap-2 text-sm">
+                        <span className={c.is_correct ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-400'}>
+                          {c.is_correct ? '✓' : '○'} {c.text}
+                        </span>
+                        <button onClick={() => deleteChoiceMut.mutate(c.id)} className="text-gray-300 hover:text-red-500">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {q.choices.length < 8 && (
+                      <AddChoiceRow
+                        onAdd={(text, isCorrect) => addChoiceMut.mutate({ questionId: q.id, text, isCorrect, order: q.choices.length })}
+                        loading={addChoiceMut.isPending}
+                      />
+                    )}
+                    {q.choices.length > 0 && !q.choices.some(c => c.is_correct) && (
+                      <p className="text-xs text-amber-600">⚠ Aucun choix marqué comme correct pour l'instant.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {!questionList.length && (
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Aucune question pour l'instant.</p>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+        <Button variant="secondary" className="flex-1" onClick={onClose}>Fermer (garder en brouillon)</Button>
+        <Button className="flex-1" icon={<Send className="w-4 h-4" />}
+          disabled={!questionList.length} loading={publishMut.isPending}
+          onClick={() => publishMut.mutate()}>
+          Publier le quiz
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function AddChoiceRow({ onAdd, loading }: { onAdd: (text: string, isCorrect: boolean) => void; loading: boolean }) {
+  const [text, setText] = useState('')
+  const [isCorrect, setIsCorrect] = useState(false)
+  return (
+    <div className="flex items-center gap-2">
+      <input type="checkbox" checked={isCorrect} onChange={e => setIsCorrect(e.target.checked)} title="Choix correct" />
+      <input className="input flex-1 py-1 text-sm" placeholder="Texte du choix..." value={text}
+        onChange={e => setText(e.target.value)} />
+      <Button size="sm" variant="ghost" disabled={!text.trim() || loading}
+        onClick={() => { onAdd(text.trim(), isCorrect); setText(''); setIsCorrect(false) }}>
+        Ajouter
+      </Button>
     </div>
   )
 }

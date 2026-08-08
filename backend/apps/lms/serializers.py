@@ -98,6 +98,24 @@ class QuizSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# Variantes non masquées (is_correct visible/modifiable), réservées à
+# QuestionViewSet/QuestionChoiceViewSet (auteur du quiz) — jamais utilisées
+# par le circuit de passation étudiant (QuizSerializer/QuestionSerializer
+# ci-dessus, qui masquent volontairement is_correct).
+class QuestionChoiceTeacherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionChoice
+        fields = '__all__'
+
+
+class QuestionTeacherSerializer(serializers.ModelSerializer):
+    choices = QuestionChoiceTeacherSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = '__all__'
+
+
 class QuizAttemptSerializer(serializers.ModelSerializer):
     time_remaining_seconds = serializers.IntegerField(read_only=True)
 

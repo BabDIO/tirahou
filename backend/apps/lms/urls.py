@@ -9,6 +9,8 @@ router.register('course-resources', views.CourseResourceViewSet)
 router.register('assignments', views.AssignmentViewSet)
 router.register('assignment-submissions', views.AssignmentSubmissionViewSet, basename='assignment-submissions')
 router.register('quizzes', views.QuizViewSet)
+router.register('questions', views.QuestionViewSet, basename='questions')
+router.register('question-choices', views.QuestionChoiceViewSet, basename='question-choices')
 router.register('quiz-attempts', views.QuizAttemptViewSet, basename='quiz-attempts')
 router.register('student-progress', views.StudentProgressViewSet, basename='student-progress')
 

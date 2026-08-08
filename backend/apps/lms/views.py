@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db.models import Q
 from .models import (
     CourseSpace, CourseModule, CourseResource, Assignment,
-    AssignmentSubmission, Quiz, Question, QuizAttempt, StudentAnswer, StudentProgress,
+    AssignmentSubmission, Quiz, Question, QuestionChoice, QuizAttempt, StudentAnswer, StudentProgress,
     ResourceCompletion,
 )
 from .serializers import (
@@ -14,6 +14,7 @@ from .serializers import (
     CourseResourceSerializer, AssignmentSerializer, AssignmentSubmissionSerializer,
     QuizSerializer, QuestionSerializer, QuizAttemptSerializer, StudentProgressSerializer,
     StudentAnswerSerializer, QuizAttemptDetailSerializer,
+    QuestionTeacherSerializer, QuestionChoiceTeacherSerializer,
 )
 
 # Rôles habilités à administrer un espace de cours (création/édition/suppression)
@@ -444,6 +445,82 @@ class QuizViewSet(viewsets.ModelViewSet):
             question_order=[str(qid) for qid in question_ids],
         )
         return Response(QuizAttemptSerializer(attempt).data, status=status.HTTP_201_CREATED)
+
+
+class QuestionViewSet(viewsets.ModelViewSet):
+    """
+    Création/édition des questions d'un quiz — réservé à l'enseignant du
+    cours (ou personnel LMS habilité). Utilise QuestionTeacherSerializer,
+    qui expose `choices` avec `is_correct` — contrairement à l'imbrication
+    en lecture seule dans QuizSerializer (côté passation étudiant), get_queryset()
+    ci-dessous exclut donc explicitement tout compte étudiant.
+    """
+    queryset = Question.objects.all().select_related('quiz__course_space')
+    serializer_class = QuestionTeacherSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['quiz']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Question.objects.none()
+        user = self.request.user
+        qs = Question.objects.select_related('quiz__course_space').prefetch_related('choices')
+        if user.is_superuser or user.roles.filter(name__in=LMS_MANAGER_ROLES).exists():
+            return qs
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(quiz__course_space__teachers=user)
+        return qs.none()
+
+    def perform_create(self, serializer):
+        quiz = serializer.validated_data.get('quiz')
+        if not quiz or not _can_manage_course_space(self.request.user, quiz.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce quiz.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance.quiz.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce quiz.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance.quiz.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce quiz.")
+        instance.delete()
+
+
+class QuestionChoiceViewSet(viewsets.ModelViewSet):
+    """Choix de réponse (QCM/Vrai-Faux) — mêmes règles d'accès que QuestionViewSet."""
+    queryset = QuestionChoice.objects.all().select_related('question__quiz__course_space')
+    serializer_class = QuestionChoiceTeacherSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['question']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return QuestionChoice.objects.none()
+        user = self.request.user
+        qs = QuestionChoice.objects.select_related('question__quiz__course_space')
+        if user.is_superuser or user.roles.filter(name__in=LMS_MANAGER_ROLES).exists():
+            return qs
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(question__quiz__course_space__teachers=user)
+        return qs.none()
+
+    def perform_create(self, serializer):
+        question = serializer.validated_data.get('question')
+        if not question or not _can_manage_course_space(self.request.user, question.quiz.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce quiz.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if not _can_manage_course_space(self.request.user, serializer.instance.question.quiz.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce quiz.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not _can_manage_course_space(self.request.user, instance.question.quiz.course_space):
+            raise PermissionDenied("Vous ne gérez pas ce quiz.")
+        instance.delete()
 
 
 class QuizAttemptViewSet(viewsets.ReadOnlyModelViewSet):
