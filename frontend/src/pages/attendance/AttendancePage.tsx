@@ -1,13 +1,24 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, QrCode, Users, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Eye } from 'lucide-react'
+import { Search, QrCode, Users, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Eye, FileCheck, FileText, X } from 'lucide-react'
 import { attendanceApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs, Progress } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import type { AttendanceSheet, AbsenceSummary } from '../../types'
 
-type Tab = 'sheets' | 'records' | 'summaries'
+type Tab = 'sheets' | 'records' | 'summaries' | 'justifications'
+
+interface PendingJustification {
+  id: string
+  student_name: string
+  status: string
+  status_display: string
+  justification: string
+  justification_reason: string
+  justification_file: string | null
+  justification_status: string
+}
 
 const alertLevelColor: Record<string, string> = {
   none: 'badge-gray',
@@ -42,6 +53,24 @@ export default function AttendancePage() {
     queryKey: ['absence-summaries', page],
     queryFn: () => attendanceApi.getAbsenceSummaries({ page }).then(r => r.data),
     enabled: tab === 'summaries',
+  })
+
+  const { data: pendingJustifications, isLoading: justificationsLoading } = useQuery({
+    queryKey: ['pending-justifications'],
+    queryFn: () => attendanceApi.getPendingJustifications().then(r => r.data as PendingJustification[]),
+    enabled: tab === 'justifications',
+  })
+
+  const approveJustification = useMutation({
+    mutationFn: ({ id, comment }: { id: string; comment?: string }) => attendanceApi.approveJustification(id, comment),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['pending-justifications'] }); toast.success('Justificatif approuvé') },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la validation'),
+  })
+
+  const rejectJustification = useMutation({
+    mutationFn: ({ id, comment }: { id: string; comment?: string }) => attendanceApi.rejectJustification(id, comment),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['pending-justifications'] }); toast.success('Justificatif rejeté') },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors du rejet'),
   })
 
   const openSheet = useMutation({
@@ -88,6 +117,7 @@ export default function AttendancePage() {
           { key: 'sheets', label: 'Feuilles de présence', icon: <QrCode className="w-4 h-4" /> },
           { key: 'records', label: 'Enregistrements', icon: <CheckCircle className="w-4 h-4" /> },
           { key: 'summaries', label: 'Résumés assiduité', icon: <AlertTriangle className="w-4 h-4" />, count: atRisk },
+          { key: 'justifications', label: 'Justificatifs', icon: <FileCheck className="w-4 h-4" />, count: pendingJustifications?.length },
         ]}
         active={tab} onChange={k => { setTab(k as Tab); setPage(1) }} variant="underline"
       />
@@ -282,6 +312,54 @@ export default function AttendancePage() {
               </div>
               <Pagination page={page} total={summaries.count} pageSize={20} onChange={setPage} />
             </>
+          )}
+        </Card>
+      )}
+
+      {/* Justifications */}
+      {tab === 'justifications' && (
+        <Card noPadding>
+          {justificationsLoading ? <Spinner text="Chargement des justificatifs..." /> : !pendingJustifications?.length ? (
+            <Empty message="Aucun justificatif en attente" icon={<FileCheck className="w-8 h-8" />}
+              description="Les demandes de justification d'absence soumises par les étudiants apparaîtront ici." />
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {pendingJustifications.map(pj => (
+                <div key={pj.id} className="px-5 py-4 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{pj.student_name}</p>
+                      <Badge label={pj.status_display} className={statusColor(pj.status)} />
+                    </div>
+                    {pj.justification_reason && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Motif : {pj.justification_reason}</p>
+                    )}
+                    {pj.justification && <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{pj.justification}</p>}
+                    {pj.justification_file && (
+                      <a href={pj.justification_file} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:underline mt-1.5">
+                        <FileText className="w-3.5 h-3.5" /> Voir la pièce jointe
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button size="sm" variant="secondary" icon={<CheckCircle className="w-3.5 h-3.5" />}
+                      loading={approveJustification.isPending}
+                      onClick={() => approveJustification.mutate({ id: pj.id })}>
+                      Approuver
+                    </Button>
+                    <Button size="sm" variant="danger" icon={<X className="w-3.5 h-3.5" />}
+                      loading={rejectJustification.isPending}
+                      onClick={() => {
+                        const comment = window.prompt('Motif du rejet (optionnel) :') ?? ''
+                        rejectJustification.mutate({ id: pj.id, comment })
+                      }}>
+                      Rejeter
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </Card>
       )}

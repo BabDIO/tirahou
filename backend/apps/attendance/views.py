@@ -11,6 +11,23 @@ from .attendance_service import AttendanceService
 
 logger = logging.getLogger(__name__)
 
+# Certificat médical, justificatif familial... aucune limite de taille ni
+# de format n'était appliquée sur cet upload (voir apps/documents pour le
+# même contrôle déjà en place sur les pièces d'identité/diplômes).
+MAX_JUSTIFICATION_UPLOAD_MB = 10
+ALLOWED_JUSTIFICATION_EXTENSIONS = ('pdf', 'jpg', 'jpeg', 'png')
+
+
+def _validate_justification_file(f):
+    if not f:
+        return None
+    if f.size > MAX_JUSTIFICATION_UPLOAD_MB * 1024 * 1024:
+        return f'Fichier trop volumineux (max {MAX_JUSTIFICATION_UPLOAD_MB} Mo).'
+    ext = f.name.rsplit('.', 1)[-1].lower() if '.' in f.name else ''
+    if ext not in ALLOWED_JUSTIFICATION_EXTENSIONS:
+        return f"Format non autorisé (extensions acceptées : {', '.join(ALLOWED_JUSTIFICATION_EXTENSIONS)})."
+    return None
+
 
 class AttendanceSheetViewSet(viewsets.ModelViewSet):
     queryset = AttendanceSheet.objects.all().select_related('session')
@@ -185,11 +202,17 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         record = self.get_object()
         if record.status not in ['absent', 'retard']:
             return Response({'detail': 'Seules les absences peuvent être justifiées.'}, status=400)
+        if record.justification_status in ('pending', 'approved'):
+            return Response({'detail': 'Un justificatif est déjà en attente ou a déjà été approuvé.'}, status=400)
+        upload = request.FILES.get('justification_file')
+        error = _validate_justification_file(upload)
+        if error:
+            return Response({'detail': error}, status=400)
         record.justification = request.data.get('justification', '')
         record.justification_reason = request.data.get('reason', '')
         record.justification_status = 'pending'
-        if 'justification_file' in request.FILES:
-            record.justification_file = request.FILES['justification_file']
+        if upload:
+            record.justification_file = upload
         record.save()
         return Response({'detail': 'Justificatif soumis. En attente de validation.'})
 
@@ -299,6 +322,16 @@ def student_attendance(request):
             'status_display': r.get_status_display(),
             'date': session.start_datetime.strftime('%d/%m/%Y'),
             'time': session.start_datetime.strftime('%H:%M'),
+            'justification_status': r.justification_status,
+            'justification_status_display': r.get_justification_status_display(),
+            'justification_reason': r.justification_reason,
+            'justification': r.justification,
+            'justification_file_url': r.justification_file.url if r.justification_file else None,
+            'reviewer_comment': r.reviewer_comment,
+            # Justifiable seulement si l'absence n'est pas déjà approuvée ou
+            # en attente de validation (un nouvel envoi écraserait sinon
+            # silencieusement une décision déjà prise ou en cours).
+            'can_justify': r.status in ('absent', 'retard') and r.justification_status in ('not_required', 'rejected'),
         })
     return Response(data)
 

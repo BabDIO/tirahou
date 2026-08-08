@@ -312,6 +312,13 @@ export const attendanceApi = {
   getRecords: (params?: object) => api.get('/attendance-records/', { params }),
   createRecord: (data: object) => api.post('/attendance-records/', data),
   getAbsenceSummaries: (params?: object) => api.get('/absence-summaries/', { params }),
+  justify: (id: string, data: FormData) =>
+    api.post(`/attendance-records/${id}/justify/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  approveJustification: (id: string, comment?: string) =>
+    api.post(`/attendance-records/${id}/approve_justification/`, { comment }),
+  rejectJustification: (id: string, comment?: string) =>
+    api.post(`/attendance-records/${id}/reject_justification/`, { comment }),
+  getPendingJustifications: () => api.get('/attendance-records/pending_justifications/'),
 }
 
 // ── Planning ──────────────────────────────────────────────────────────────────
