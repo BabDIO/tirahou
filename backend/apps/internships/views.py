@@ -350,7 +350,11 @@ class DefenseViewSet(viewsets.ModelViewSet):
         if not _can_manage_thesis(request.user, defense.thesis):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         defense.scheduled_date = request.data.get('date')
-        defense.location = request.data.get('location', '')
+        # `defense.location` n'est pas un champ du modèle (voir `room` sur
+        # Defense) — l'affectation se contentait de créer un attribut Python
+        # éphémère, jamais persisté par .save() : la salle saisie via cette
+        # action était silencieusement perdue au premier rechargement.
+        defense.room = request.data.get('location', '')
         defense.status = 'planifiee'
         defense.save()
         # Notification à l'étudiant
@@ -358,7 +362,7 @@ class DefenseViewSet(viewsets.ModelViewSet):
         NotificationService.send_notification(
             recipient_id=defense.thesis.student.user.id,
             title='Soutenance planifiée',
-            message=f'Votre soutenance est planifiée le {defense.scheduled_date} à {defense.location}.',
+            message=f'Votre soutenance est planifiée le {defense.scheduled_date} à {defense.room}.',
             notif_type='rappel',
             priority='urgent',
             action_url='/my-internship',
@@ -379,7 +383,7 @@ class DefenseViewSet(viewsets.ModelViewSet):
             pdf_buf = generate_convocation(
                 student.user.get_full_name(),
                 f"Soutenance — {defense.thesis.title}",
-                str(defense.scheduled_date), defense.location,
+                str(defense.scheduled_date), defense.room,
                 university_name, verification_code,
             )
             doc = GeneratedDocument.objects.create(
@@ -410,8 +414,14 @@ class DefenseViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Permission refusée.'}, status=status.HTTP_403_FORBIDDEN)
         defense.grade = request.data.get('grade')
         defense.mention = request.data.get('mention', '')
-        defense.jury_comments = request.data.get('comments', '')
-        defense.status = 'terminee'
+        # `jury_comments` n'existe pas sur le modèle (voir `notes`) et
+        # `status='terminee'` n'est pas une valeur de STATUS_CHOICES (voir
+        # 'realisee') — les deux étaient silencieusement acceptés par Django
+        # (choices n'est pas contraint en base) : le commentaire du jury
+        # n'était jamais enregistré, et le statut affiché ne correspondait à
+        # aucun libellé connu côté frontend.
+        defense.notes = request.data.get('comments', '')
+        defense.status = 'realisee'
         defense.save()
         # Mettre à jour le statut de la thèse
         thesis = defense.thesis

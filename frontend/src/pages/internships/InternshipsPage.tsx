@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, BookOpen, Plus, Eye, CheckCircle, Calendar, Users, FileText, Upload } from 'lucide-react'
+import { Search, BookOpen, Plus, Eye, CheckCircle, XCircle, Calendar, Users, FileText, Upload, ShieldAlert, Award } from 'lucide-react'
 import { Button, Input, Badge, Spinner, Empty, Card, StatsCard, Modal, Alert, Tabs } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
-import { studentsApi, academicApi } from '../../api'
+import { studentsApi, academicApi, internshipsApi } from '../../api'
+import { useToast } from '../../hooks/useToast'
 import api from '../../lib/axios'
 
 type Tab = 'internships' | 'memoires' | 'soutenances'
@@ -13,11 +14,27 @@ const statusColors: Record<string, string> = {
   rejete: 'badge-red', archive: 'badge-gray', planifie: 'badge-blue', realise: 'badge-green',
 }
 
+interface ThesisRow {
+  id: string; student_name: string; title: string; type: string;
+  director_name: string; final_submission_date: string | null;
+  status: string; status_display: string;
+  plagiarism_score: string | null; plagiarism_analysis_id: string; plagiarism_report_url: string;
+}
+
+interface DefenseRow {
+  id: string; student_name: string; memoire_title: string;
+  scheduled_date: string; room: string; jury_count: number;
+  status: string; status_display: string; grade: string | null; mention: string; notes: string;
+}
+
 export default function InternshipsPage() {
   const [tab, setTab] = useState<Tab>('internships')
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
+  const [thesisDetail, setThesisDetail] = useState<ThesisRow | null>(null)
+  const [gradeDefense, setGradeDefense] = useState<DefenseRow | null>(null)
   const queryClient = useQueryClient()
+  const toast = useToast()
 
   const { data: internships, isLoading: intLoading } = useQuery({
     queryKey: ['internships', search],
@@ -40,6 +57,34 @@ export default function InternshipsPage() {
   const validateMemoire = useMutation({
     mutationFn: (id: string) => api.post(`/theses/${id}/validate_subject/`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['memoires'] }),
+    onError: () => toast.error('Erreur lors de la validation du sujet'),
+  })
+
+  const rejectMemoire = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => internshipsApi.rejectSubject(id, reason),
+    onSuccess: () => { toast.success('Sujet rejeté'); queryClient.invalidateQueries({ queryKey: ['memoires'] }) },
+    onError: () => toast.error('Erreur lors du rejet du sujet'),
+  })
+
+  const checkPlagiarism = useMutation({
+    mutationFn: (id: string) => internshipsApi.checkPlagiarism(id),
+    onSuccess: (res) => {
+      toast.success('Analyse anti-plagiat mise à jour')
+      queryClient.invalidateQueries({ queryKey: ['memoires'] })
+      setThesisDetail(prev => prev ? { ...prev, ...res.data } : prev)
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.error ?? 'Erreur lors de la vérification anti-plagiat'),
+  })
+
+  const recordGrade = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { grade: string; mention?: string; comments?: string } }) =>
+      internshipsApi.recordGrade(id, data),
+    onSuccess: () => {
+      toast.success('Note de soutenance enregistrée')
+      queryClient.invalidateQueries({ queryKey: ['soutenances'] })
+      setGradeDefense(null)
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la saisie de la note'),
   })
 
   const intCount = internships?.count ?? 0
@@ -135,11 +180,7 @@ export default function InternshipsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {memoires.results.map((m: {
-                    id: string; student_name: string; title: string; type: string;
-                    director_name: string; final_submission_date: string | null;
-                    status: string; status_display: string
-                  }) => (
+                  {memoires.results.map((m: ThesisRow) => (
                     <tr key={m.id}>
                       <td className="font-semibold text-sm">{m.student_name}</td>
                       <td className="text-sm max-w-[200px] truncate font-medium">{m.title}</td>
@@ -149,11 +190,24 @@ export default function InternshipsPage() {
                       <td><Badge label={m.status_display} className={statusColors[m.status] ?? 'badge-gray'} dot /></td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}>Voir</Button>
-                          {m.status === 'soumis' && (
-                            <Button size="sm" variant="success" icon={<CheckCircle className="w-3.5 h-3.5" />}
-                              loading={validateMemoire.isPending}
-                              onClick={() => validateMemoire.mutate(m.id)}>Valider</Button>
+                          <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
+                            onClick={() => setThesisDetail(m)}>Voir</Button>
+                          {/* Le sujet nouvellement déposé porte le statut 'sujet_propose' —
+                              le contrôle précédent comparait à 'soumis', une valeur qui
+                              n'existe pas dans STATUS_CHOICES : le bouton Valider n'apparaissait
+                              donc jamais, quel que soit le mémoire. */}
+                          {m.status === 'sujet_propose' && (
+                            <>
+                              <Button size="sm" variant="success" icon={<CheckCircle className="w-3.5 h-3.5" />}
+                                loading={validateMemoire.isPending}
+                                onClick={() => validateMemoire.mutate(m.id)}>Valider</Button>
+                              <Button size="sm" variant="danger" icon={<XCircle className="w-3.5 h-3.5" />}
+                                loading={rejectMemoire.isPending}
+                                onClick={() => {
+                                  const reason = window.prompt('Motif du rejet du sujet :') ?? ''
+                                  rejectMemoire.mutate({ id: m.id, reason })
+                                }}>Rejeter</Button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -179,11 +233,7 @@ export default function InternshipsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {soutenances.results.map((s: {
-                    id: string; student_name: string; memoire_title: string;
-                    scheduled_date: string; room: string; jury_count: number;
-                    status: string; status_display: string
-                  }) => (
+                  {soutenances.results.map((s: DefenseRow) => (
                     <tr key={s.id}>
                       <td className="font-semibold text-sm">{s.student_name}</td>
                       <td className="text-sm max-w-[180px] truncate">{s.memoire_title}</td>
@@ -194,9 +244,15 @@ export default function InternshipsPage() {
                           <Users className="w-3 h-3" /> {s.jury_count} membres
                         </span>
                       </td>
-                      <td><Badge label={s.status_display} className={statusColors[s.status] ?? 'badge-gray'} dot /></td>
+                      <td>
+                        <Badge label={s.status_display} className={statusColors[s.status] ?? 'badge-gray'} dot />
+                        {s.grade && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{s.grade}/20 {s.mention && `— ${s.mention}`}</p>}
+                      </td>
                       <td className="text-right">
-                        <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}>PV</Button>
+                        <Button size="sm" variant={s.grade ? 'ghost' : 'success'} icon={<Award className="w-3.5 h-3.5" />}
+                          onClick={() => setGradeDefense(s)}>
+                          {s.grade ? 'Modifier la note' : 'Noter'}
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -214,6 +270,94 @@ export default function InternshipsPage() {
         {tab === 'memoires' && <MemoireForm onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['memoires'] }) }} />}
         {tab === 'soutenances' && <SoutenanceForm onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['soutenances'] }) }} />}
       </Modal>
+
+      {/* Détail mémoire — anti-plagiat */}
+      <Modal open={!!thesisDetail} onClose={() => setThesisDetail(null)} title="Détail du mémoire" size="md">
+        {thesisDetail && (
+          <div className="space-y-4">
+            <div>
+              <p className="font-bold text-gray-900 dark:text-gray-50">{thesisDetail.title}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{thesisDetail.student_name} — {thesisDetail.director_name}</p>
+            </div>
+            <Badge label={thesisDetail.status_display} className={statusColors[thesisDetail.status] ?? 'badge-gray'} dot />
+
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldAlert className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Analyse anti-plagiat</p>
+              </div>
+              {thesisDetail.plagiarism_score != null ? (
+                <div className="flex items-center justify-between">
+                  <p className={`text-2xl font-black ${Number(thesisDetail.plagiarism_score) >= 25 ? 'text-red-600' : Number(thesisDetail.plagiarism_score) >= 10 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {Number(thesisDetail.plagiarism_score).toFixed(1)}% de similarité
+                  </p>
+                  {thesisDetail.plagiarism_report_url && (
+                    <a href={thesisDetail.plagiarism_report_url} target="_blank" rel="noreferrer" className="text-xs text-primary-600 hover:underline">
+                      Voir le rapport complet
+                    </a>
+                  )}
+                </div>
+              ) : thesisDetail.plagiarism_analysis_id ? (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Analyse en cours...</p>
+                  <Button size="sm" variant="secondary" loading={checkPlagiarism.isPending}
+                    onClick={() => checkPlagiarism.mutate(thesisDetail.id)}>
+                    Actualiser
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 dark:text-gray-500">Aucune analyse — le mémoire n'a pas encore été déposé (submit_final) ou le service anti-plagiat n'est pas configuré.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Notation de soutenance */}
+      <Modal open={!!gradeDefense} onClose={() => setGradeDefense(null)} title="Noter la soutenance" size="sm">
+        {gradeDefense && (
+          <GradeDefenseForm defense={gradeDefense}
+            loading={recordGrade.isPending}
+            onSubmit={data => recordGrade.mutate({ id: gradeDefense.id, data })} />
+        )}
+      </Modal>
+    </div>
+  )
+}
+
+function GradeDefenseForm({ defense, loading, onSubmit }: {
+  defense: DefenseRow; loading: boolean;
+  onSubmit: (data: { grade: string; mention: string; comments: string }) => void
+}) {
+  const [grade, setGrade] = useState(defense.grade ?? '')
+  const [mention, setMention] = useState(defense.mention ?? '')
+  const [comments, setComments] = useState(defense.notes ?? '')
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm">
+        <p className="font-semibold text-gray-900 dark:text-gray-50">{defense.student_name}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">{defense.memoire_title}</p>
+      </div>
+      <div>
+        <label className="label">Note (sur 20) *</label>
+        <input type="number" min={0} max={20} step={0.25} className="input"
+          value={grade} onChange={e => setGrade(e.target.value)} />
+      </div>
+      <div>
+        <label className="label">Mention</label>
+        <input className="input" value={mention} onChange={e => setMention(e.target.value)}
+          placeholder="Ex: Très bien" />
+      </div>
+      <div>
+        <label className="label">Commentaires du jury</label>
+        <textarea className="input min-h-[80px]" value={comments} onChange={e => setComments(e.target.value)} />
+      </div>
+      <Button className="w-full" icon={<Award className="w-4 h-4" />} loading={loading}
+        disabled={!grade}
+        onClick={() => onSubmit({ grade, mention, comments })}>
+        Enregistrer la note
+      </Button>
     </div>
   )
 }

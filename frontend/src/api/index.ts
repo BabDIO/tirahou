@@ -345,14 +345,18 @@ export const internshipsApi = {
   getTheses: (params?: object) => api.get('/theses/', { params }),
   createThesis: (data: object) => api.post('/theses/', data),
   validateSubject: (id: string) => api.post(`/theses/${id}/validate_subject/`),
+  rejectSubject: (id: string, reason: string) => api.post(`/theses/${id}/reject_subject/`, { reason }),
   addProgress: (id: string, data: object) => api.post(`/theses/${id}/add_progress/`, data),
   submitFinal: (id: string, file: File) => {
     const fd = new FormData(); fd.append('file', file)
     return api.post(`/theses/${id}/submit_final/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
+  checkPlagiarism: (id: string) => api.get(`/theses/${id}/check_plagiarism/`),
   getDefenses: (params?: object) => api.get('/defenses/', { params }),
   createDefense: (data: object) => api.post('/defenses/', data),
   updateDefense: (id: string, data: object) => api.patch(`/defenses/${id}/`, data),
+  recordGrade: (id: string, data: { grade: string; mention?: string; comments?: string }) =>
+    api.post(`/defenses/${id}/record_grade/`, data),
 }
 
 // ── Communication ─────────────────────────────────────────────────────────────
