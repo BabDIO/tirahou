@@ -25,6 +25,16 @@ PEOPLE_ADMIN_ROLES = (
     'super_admin', 'admin_institutionnel', 'admin_scolarite', 'responsable_pedagogique',
 )
 
+# Rôles autorisés à CONSULTER (lecture seule) l'annuaire complet des
+# étudiants/enseignants sans pouvoir le modifier — distinct de
+# PEOPLE_ADMIN_ROLES (écriture), aligné sur les rôles réellement admis
+# par le frontend sur /students et /teachers (voir App.tsx :
+# StudentsPage inclut aussi admin_financier/chef_departement,
+# TeachersPage inclut aussi chef_departement). Utilisé uniquement pour
+# le fallback en lecture de get_queryset() ci-dessous.
+STUDENT_DIRECTORY_VIEWER_ROLES = PEOPLE_ADMIN_ROLES + ('admin_financier', 'chef_departement')
+TEACHER_DIRECTORY_VIEWER_ROLES = PEOPLE_ADMIN_ROLES + ('chef_departement',)
+
 
 class IsPeopleAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -74,8 +84,17 @@ class StudentViewSet(viewsets.ModelViewSet):
             ).distinct()
             return qs.filter(id__in=student_ids)
 
-        # Admin, scolarité, responsable : tous les étudiants
-        return qs.order_by('id')
+        # Admin, scolarité, responsable : tous les étudiants — RIEN ne
+        # vérifiait ce rôle malgré le commentaire : n'importe quel compte
+        # authentifié sans profil étudiant/enseignant (personnel finance,
+        # bibliothèque, informatique...) recevait la liste COMPLÈTE des
+        # étudiants actifs (national_id, date de naissance, adresse,
+        # contact d'urgence). IsPeopleAdmin ne protège que les écritures
+        # (SAFE_METHODS toujours autorisées), donc rien d'autre ne bloquait
+        # cette fuite en lecture.
+        if user.is_superuser or user.roles.filter(name__in=STUDENT_DIRECTORY_VIEWER_ROLES).exists():
+            return qs.order_by('id')
+        return Student.objects.none()
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -156,7 +175,11 @@ class TeacherViewSet(viewsets.ModelViewSet):
         # Enseignant : seulement son propre profil
         if hasattr(user, 'teacher_profile'):
             return qs.filter(user=user)
-        return qs
+        # Même faille que StudentViewSet ci-dessus : n'importe quel autre
+        # compte authentifié recevait l'annuaire complet des enseignants.
+        if user.is_superuser or user.roles.filter(name__in=TEACHER_DIRECTORY_VIEWER_ROLES).exists():
+            return qs
+        return Teacher.objects.none()
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -229,6 +252,21 @@ class AdminStaffViewSet(viewsets.ModelViewSet):
     filterset_fields = ['service']
     search_fields = ['staff_id', 'user__first_name', 'user__last_name']
 
+    def get_queryset(self):
+        # Aucun get_queryset() n'existait ici : le queryset de classe
+        # (annuaire complet — email, téléphone, rôles) était renvoyé tel
+        # quel à N'IMPORTE QUEL compte authentifié (étudiant compris),
+        # IsPeopleAdmin ne bloquant que les écritures.
+        if getattr(self, 'swagger_fake_view', False):
+            return AdminStaff.objects.none()
+        user = self.request.user
+        qs = AdminStaff.objects.filter(is_active=True).select_related('user')
+        if user.is_superuser or user.roles.filter(name__in=PEOPLE_ADMIN_ROLES).exists():
+            return qs.order_by('id')
+        if hasattr(user, 'admin_profile'):
+            return qs.filter(user=user)
+        return AdminStaff.objects.none()
+
     def get_serializer_class(self):
         if self.action == 'create':
             return AdminStaffCreateSerializer
@@ -261,10 +299,17 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'student_profile'):
             return qs.filter(student=user.student_profile)
         
-        # Admin scolarité, direction : voir tous
-        if user.has_role(['admin_scolarite', 'admin_institutionnel', 'super_admin']):
+        # Admin scolarité, direction : voir tous — `has_role()` prend UN
+        # SEUL nom de rôle (`self.roles.filter(name=role_name)`), pas une
+        # liste : appelé avec une liste, le filtre ne correspond jamais à
+        # aucun rôle réel et retombe silencieusement sur `qs.none()`
+        # ci-dessous. Résultat : même un super_admin ne pouvait jamais
+        # lister aucun contact parent/tuteur via cet endpoint (aucune
+        # exception levée, juste un résultat vide — bug fonctionnel resté
+        # invisible faute de crash).
+        if user.is_superuser or user.roles.filter(name__in=['admin_scolarite', 'admin_institutionnel', 'super_admin']).exists():
             return qs
-        
+
         return qs.none()
 
     def perform_create(self, serializer):
@@ -273,11 +318,17 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
         # pouvait s'ajouter (ou ajouter un complice) comme "parent/tuteur"
         # d'un AUTRE étudiant, avec is_primary_contact/
         # can_receive_notifications=True, détournant ainsi les
-        # notifications scolaires de ce dernier.
+        # notifications scolaires de ce dernier. Le `else: serializer.save()`
+        # d'origine couvrait aussi tout compte SANS profil étudiant (un
+        # enseignant, un AdminStaff hors scolarité...) : le `student` de la
+        # requête passait tel quel, sans aucune vérification de rôle.
         user = self.request.user
         if hasattr(user, 'student_profile'):
             serializer.save(student=user.student_profile)
             return
+        if not (user.is_superuser or user.roles.filter(name__in=['admin_scolarite', 'admin_institutionnel', 'super_admin']).exists()):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas créer de contact parent/tuteur pour un autre étudiant.")
         serializer.save()
 
     def perform_update(self, serializer):
@@ -287,6 +338,9 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'student_profile'):
             serializer.save(student=user.student_profile)
             return
+        if not (user.is_superuser or user.roles.filter(name__in=['admin_scolarite', 'admin_institutionnel', 'super_admin']).exists()):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous ne pouvez pas modifier ce contact parent/tuteur.")
         serializer.save()
 
     @action(detail=False, methods=['get'], url_path='by-student/(?P<student_id>[^/.]+)')

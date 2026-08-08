@@ -610,5 +610,15 @@ class StudentProgressViewSet(viewsets.ReadOnlyModelViewSet):
         qs = StudentProgress.objects.select_related('student__user', 'course_space__ue')
         user = self.request.user
         if hasattr(user, 'student_profile'):
-            qs = qs.filter(student=user.student_profile)
-        return qs
+            return qs.filter(student=user.student_profile)
+        # Aucune restriction ne s'appliquait ici pour les non-étudiants :
+        # un enseignant sans lien avec le cours, ou tout autre compte
+        # authentifié, pouvait lister la progression de TOUS les
+        # étudiants sur TOUS les cours (contrairement à chaque autre
+        # ViewSet de ce fichier, qui filtre les enseignants sur leurs
+        # propres course_space via _can_manage_course_space).
+        if user.is_superuser or user.roles.filter(name__in=LMS_MANAGER_ROLES).exists():
+            return qs
+        if hasattr(user, 'teacher_profile'):
+            return qs.filter(course_space__teachers=user)
+        return StudentProgress.objects.none()
