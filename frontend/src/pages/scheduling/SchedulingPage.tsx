@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Calendar, Plus, Eye, MapPin, Clock, Users, CheckCircle, X } from 'lucide-react'
+import { Search, Calendar, Plus, Eye, MapPin, Clock, Users, CheckCircle, X, Pencil, Trash2, AlertTriangle } from 'lucide-react'
 import { schedulingApi, academicApi, programsApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
@@ -31,6 +31,7 @@ export default function SchedulingPage() {
   const [modeFilter, setModeFilter] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [createRoomOpen, setCreateRoomOpen] = useState(false)
+  const [editRoom, setEditRoom] = useState<Room | null>(null)
   const [selectedSession, setSelectedSession] = useState<ScheduledSession | null>(null)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelId, setCancelId] = useState<string | null>(null)
@@ -68,6 +69,12 @@ export default function SchedulingPage() {
   const publishTimetable = useMutation({
     mutationFn: (id: string) => schedulingApi.publishTimetable(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['timetables'] }); toast.success('Emploi du temps publié') },
+  })
+
+  const deleteRoom = useMutation({
+    mutationFn: (id: string) => schedulingApi.deleteRoom(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['rooms'] }); toast.success('Salle supprimée') },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la suppression'),
   })
 
   const planifiees = sessions?.results?.filter(s => s.status === 'planifie').length ?? 0
@@ -236,10 +243,19 @@ export default function SchedulingPage() {
                   <span className="bg-gray-100 px-2 py-0.5 rounded-full">{room.building}</span>
                 )}
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 mb-3">
                 {room.has_projector && <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">📽 Projecteur</span>}
                 {room.has_computer && <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">💻 PC</span>}
                 {room.has_internet && <span className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full">🌐 Wifi</span>}
+              </div>
+              <div className="flex gap-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                  onClick={() => setEditRoom(room)}>Modifier</Button>
+                <Button variant="ghost" size="sm" icon={<Trash2 className="w-3.5 h-3.5" />}
+                  loading={deleteRoom.isPending}
+                  onClick={() => { if (window.confirm(`Supprimer la salle "${room.name}" ?`)) deleteRoom.mutate(room.id) }}>
+                  Supprimer
+                </Button>
               </div>
             </Card>
           )) : (
@@ -348,6 +364,17 @@ export default function SchedulingPage() {
           onCancel={() => setCreateRoomOpen(false)}
         />
       </Modal>
+
+      {/* Edit Room Modal */}
+      <Modal open={!!editRoom} onClose={() => setEditRoom(null)} title="Modifier la salle" size="md">
+        {editRoom && (
+          <RoomCreateForm
+            room={editRoom}
+            onSuccess={() => { setEditRoom(null); queryClient.invalidateQueries({ queryKey: ['rooms'] }) }}
+            onCancel={() => setEditRoom(null)}
+          />
+        )}
+      </Modal>
     </div>
   )
 }
@@ -379,10 +406,35 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     start_datetime: '', end_datetime: '',
   })
   const [loading, setLoading] = useState(false)
+  const [conflicts, setConflicts] = useState<{ room_conflicts: unknown[]; teacher_conflicts: unknown[] } | null>(null)
+  const [checkingConflicts, setCheckingConflicts] = useState(false)
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const { data: years } = useQuery({ queryKey: ['years-list'], queryFn: () => academicApi.getAcademicYears().then(r => r.data) })
   const { data: rooms } = useQuery({ queryKey: ['rooms-list'], queryFn: () => schedulingApi.getRooms({ page_size: 100 }).then(r => r.data) })
+
+  // Avertir avant soumission plutôt qu'après : le backend bloque déjà la
+  // création en cas de conflit (voir perform_create), mais l'utilisateur
+  // ne le découvrait qu'après avoir rempli tout le formulaire — l'action
+  // `conflicts` existait côté API sans jamais être appelée côté frontend.
+  useEffect(() => {
+    if (!form.start_datetime || !form.end_datetime || (!form.room && !form.teacher)) {
+      setConflicts(null)
+      return
+    }
+    const timer = setTimeout(() => {
+      setCheckingConflicts(true)
+      schedulingApi.getConflicts({
+        room: form.room || undefined,
+        teacher: form.teacher || undefined,
+        start: form.start_datetime,
+        end: form.end_datetime,
+      }).then(r => setConflicts(r.data)).finally(() => setCheckingConflicts(false))
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [form.room, form.teacher, form.start_datetime, form.end_datetime])
+
+  const hasConflicts = !!conflicts && (conflicts.room_conflicts.length > 0 || conflicts.teacher_conflicts.length > 0)
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault()
@@ -395,7 +447,11 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       await schedulingApi.createSession(form)
       toast.success('Séance créée')
       onSuccess()
-    } catch { toast.error('Erreur lors de la création') }
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: Record<string, string[] | string> } }
+      const msgs = Object.values(e?.response?.data ?? {}).flat().join(' ')
+      toast.error(msgs || 'Erreur lors de la création')
+    }
     finally { setLoading(false) }
   }
 
@@ -450,9 +506,26 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           </div>
         </div>
       </div>
+
+      {checkingConflicts && (
+        <p className="text-xs text-gray-400 dark:text-gray-500">Vérification des conflits...</p>
+      )}
+      {hasConflicts && (
+        <Alert type="error">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              {conflicts!.room_conflicts.length > 0 && <p>Cette salle est déjà occupée sur ce créneau.</p>}
+              {conflicts!.teacher_conflicts.length > 0 && <p>Cet enseignant a déjà une séance sur ce créneau.</p>}
+            </div>
+          </div>
+        </Alert>
+      )}
+
       <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
-        <Button className="flex-1" type="submit" loading={loading} icon={<Calendar className="w-4 h-4" />}>
+        <Button className="flex-1" type="submit" loading={loading} disabled={hasConflicts}
+          icon={<Calendar className="w-4 h-4" />}>
           Créer la séance
         </Button>
       </div>
@@ -460,9 +533,12 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
   )
 }
 
-function RoomCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+function RoomCreateForm({ room, onSuccess, onCancel }: { room?: Room; onSuccess: () => void; onCancel: () => void }) {
   const toast = useToast()
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(room ? {
+    name: room.name, code: room.code, type: room.type, capacity: room.capacity, building: room.building ?? '',
+    has_projector: room.has_projector, has_computer: room.has_computer, has_internet: room.has_internet, is_virtual: room.is_virtual,
+  } : {
     name: '', code: '', type: 'salle_cours', capacity: 30, building: '',
     has_projector: false, has_computer: false, has_internet: false, is_virtual: false,
   })
@@ -474,10 +550,11 @@ function RoomCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
     if (!form.name || !form.code) { toast.error('Nom et code requis'); return }
     setLoading(true)
     try {
-      await schedulingApi.createRoom(form)
-      toast.success('Salle créée')
+      if (room) await schedulingApi.updateRoom(room.id, form)
+      else await schedulingApi.createRoom(form)
+      toast.success(room ? 'Salle modifiée' : 'Salle créée')
       onSuccess()
-    } catch { toast.error('Erreur lors de la création') }
+    } catch { toast.error(room ? 'Erreur lors de la modification' : 'Erreur lors de la création') }
     finally { setLoading(false) }
   }
 
@@ -531,7 +608,7 @@ function RoomCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
       <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} icon={<MapPin className="w-4 h-4" />}>
-          Créer la salle
+          {room ? 'Enregistrer' : 'Créer la salle'}
         </Button>
       </div>
     </form>

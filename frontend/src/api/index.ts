@@ -331,8 +331,12 @@ export const schedulingApi = {
     api.post(`/sessions/${id}/cancel/`, { reason }),
   getRooms: (params?: object) => api.get('/rooms/', { params }),
   createRoom: (data: object) => api.post('/rooms/', data),
+  updateRoom: (id: string, data: object) => api.patch(`/rooms/${id}/`, data),
+  deleteRoom: (id: string) => api.delete(`/rooms/${id}/`),
   getAvailableRooms: (start: string, end: string) =>
     api.get('/rooms/available/', { params: { start, end } }),
+  getConflicts: (params: { room?: string; teacher?: string; start: string; end: string; exclude?: string }) =>
+    api.get('/sessions/conflicts/', { params }),
   getTimetables: (params?: object) => api.get('/timetables/', { params }),
   publishTimetable: (id: string) => api.post(`/timetables/${id}/publish/`),
 }
