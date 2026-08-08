@@ -342,6 +342,18 @@ class PaymentViewSet(viewsets.ModelViewSet):
             return Payment.objects.none()
         return qs.order_by('id')
 
+    def get_permissions(self):
+        # HasModulePermission exige la permission RBAC 'finance:view' même
+        # pour retrieve/receipt_pdf — un étudiant n'a jamais cette
+        # permission (réservée au personnel financier), donc consulter ou
+        # télécharger le reçu de SON PROPRE paiement renvoyait 403, alors
+        # que get_queryset() ci-dessus le restreint déjà correctement à ses
+        # propres paiements (aucune fuite possible en assouplissant ces deux
+        # actions en lecture seule).
+        if self.action in ('retrieve', 'receipt_pdf'):
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
+
     def perform_create(self, serializer):
         # `invoice` est en read_only_fields (voir PaymentSerializer) : un POST
         # direct ici sauvegardait sans facture et plantait en 500

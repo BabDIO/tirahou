@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { CreditCard, Clock, CheckCircle, Smartphone } from 'lucide-react'
+import { CreditCard, Clock, CheckCircle, Smartphone, FileText } from 'lucide-react'
 import { Card, StatsCard, Badge, Progress, Modal, Button, Spinner, Empty } from '../../components/ui'
 import { financeApi } from '../../api'
 import { formatCurrency, formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import type { Invoice } from '../../types'
+
+interface MyPayment {
+  id: string
+  amount: string
+  method_display: string
+  status: string
+  status_display: string
+  paid_at: string | null
+  receipt_number: string
+}
 
 const OPERATORS = [
   { value: 'OM', label: 'Orange Money' },
@@ -23,6 +33,26 @@ export default function MyFinancePage() {
   const { data, isLoading } = useQuery({
     queryKey: ['my-invoices'],
     queryFn: () => financeApi.getInvoices({ page_size: 100 }).then(r => r.data),
+  })
+
+  const { data: paymentsData } = useQuery({
+    queryKey: ['my-payments'],
+    queryFn: () => financeApi.getPayments({ page_size: 100 }).then(r => r.data),
+  })
+
+  const downloadReceiptMut = useMutation({
+    mutationFn: (id: string) => financeApi.downloadReceipt(id),
+    onSuccess: (res, id) => {
+      const payment = (paymentsData?.results ?? []).find((p: MyPayment) => p.id === id)
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${payment?.receipt_number || 'recu'}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    },
+    onError: () => toast.error('Erreur lors du téléchargement du reçu'),
   })
 
   const payMut = useMutation({
@@ -89,6 +119,33 @@ export default function MyFinancePage() {
           </div>
         )}
       </Card>
+
+      {!!paymentsData?.results?.length && (
+        <Card title="Mes paiements" noPadding>
+          <div className="divide-y divide-gray-50">
+            {(paymentsData.results as MyPayment[]).map(p => (
+              <div key={p.id} className="flex items-center justify-between gap-3 p-4 flex-wrap">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{formatCurrency(Number(p.amount))}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {p.method_display} {p.paid_at && `· ${formatDate(p.paid_at)}`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge label={p.status_display} className={statusColor(p.status)} dot />
+                  {p.status === 'valide' && (
+                    <Button size="sm" variant="ghost" icon={<FileText className="w-3.5 h-3.5" />}
+                      loading={downloadReceiptMut.isPending}
+                      onClick={() => downloadReceiptMut.mutate(p.id)}>
+                      Reçu
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <Modal open={!!payTarget} onClose={() => setPayTarget(null)} title="Paiement mobile money" subtitle={payTarget?.invoice_number} size="sm">
         {payTarget && (

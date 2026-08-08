@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { DollarSign, CheckCircle, Clock, Download } from 'lucide-react'
+import { DollarSign, CheckCircle, Clock, Download, XCircle, RotateCcw, FileText } from 'lucide-react'
 import { Card, Button, Badge, StatsCard, Tabs } from '../../components/ui'
 import DataTable, { Column } from '../../components/ui/DataTable'
-import { analyticsApi } from '../../api'
+import { analyticsApi, financeApi } from '../../api'
 import { formatCurrency } from '../../lib/utils'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
@@ -31,6 +31,40 @@ export default function PaymentsManagementPage() {
       qc.invalidateQueries({ queryKey: ['payments'] })
       qc.invalidateQueries({ queryKey: ['payment-stats'] })
     }
+  })
+
+  const rejectPaymentMut = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => financeApi.rejectPayment(id, reason),
+    onSuccess: () => {
+      toast.success('Paiement rejeté')
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['payment-stats'] })
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors du rejet'),
+  })
+
+  const refundPaymentMut = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => financeApi.refundPayment(id, reason),
+    onSuccess: () => {
+      toast.success('Paiement remboursé — facture réajustée')
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['payment-stats'] })
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors du remboursement'),
+  })
+
+  const downloadReceiptMut = useMutation({
+    mutationFn: (id: string) => financeApi.downloadReceipt(id),
+    onSuccess: (res) => {
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'recu.pdf')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    },
+    onError: () => toast.error('Erreur lors du téléchargement du reçu'),
   })
 
   const columns: Column<any>[] = [
@@ -76,15 +110,56 @@ export default function PaymentsManagementPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_, row) => row.status === 'en_attente' && (
-        <Button
-          size="xs"
-          onClick={() => validatePaymentMut.mutate(row.id)}
-          loading={validatePaymentMut.isPending}
-          icon={<CheckCircle className="w-3.5 h-3.5" />}
-        >
-          Valider
-        </Button>
+      render: (_, row) => (
+        <div className="flex items-center gap-1.5">
+          {row.status === 'en_attente' && (
+            <>
+              <Button
+                size="xs"
+                onClick={() => validatePaymentMut.mutate(row.id)}
+                loading={validatePaymentMut.isPending}
+                icon={<CheckCircle className="w-3.5 h-3.5" />}
+              >
+                Valider
+              </Button>
+              <Button
+                size="xs" variant="danger"
+                onClick={() => {
+                  const reason = window.prompt('Motif du rejet :') ?? ''
+                  rejectPaymentMut.mutate({ id: row.id, reason })
+                }}
+                loading={rejectPaymentMut.isPending}
+                icon={<XCircle className="w-3.5 h-3.5" />}
+              >
+                Rejeter
+              </Button>
+            </>
+          )}
+          {row.status === 'valide' && (
+            <>
+              <Button
+                size="xs" variant="ghost"
+                onClick={() => downloadReceiptMut.mutate(row.id)}
+                loading={downloadReceiptMut.isPending}
+                icon={<FileText className="w-3.5 h-3.5" />}
+              >
+                Reçu
+              </Button>
+              <Button
+                size="xs" variant="danger"
+                onClick={() => {
+                  if (!window.confirm('Rembourser ce paiement ? La facture sera automatiquement réajustée.')) return
+                  const reason = window.prompt('Motif du remboursement :') ?? ''
+                  refundPaymentMut.mutate({ id: row.id, reason })
+                }}
+                loading={refundPaymentMut.isPending}
+                icon={<RotateCcw className="w-3.5 h-3.5" />}
+              >
+                Rembourser
+              </Button>
+            </>
+          )}
+        </div>
       )
     }
   ]
