@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Plus, Store, BookOpen, Send, Archive, Trash2, GripVertical, X, ArrowLeft,
+  Plus, Store, BookOpen, Send, Archive, Trash2, GripVertical, X, ArrowLeft, Pencil,
 } from 'lucide-react'
 import { marketplaceApi } from '../../api'
 import { Card, Button, Input, Textarea, Select, Badge, Spinner, Modal } from '../../components/ui'
@@ -51,6 +51,8 @@ interface Lesson {
   title: string
   content_type: string
   content_type_display: string
+  content_url?: string
+  content_text?: string
   duration_minutes: number
   order: number
   is_preview: boolean
@@ -65,6 +67,10 @@ export default function MyMarketplaceCoursesPage() {
   const [courseForm, setCourseForm] = useState(EMPTY_COURSE_FORM)
   const [managingCourseId, setManagingCourseId] = useState<string | null>(null)
   const [lessonForm, setLessonForm] = useState(EMPTY_LESSON_FORM)
+  const [editCourse, setEditCourse] = useState<Course | null>(null)
+  const [editCourseForm, setEditCourseForm] = useState(EMPTY_COURSE_FORM)
+  const [editLesson, setEditLesson] = useState<Lesson | null>(null)
+  const [editLessonForm, setEditLessonForm] = useState(EMPTY_LESSON_FORM)
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ['my-marketplace-courses'],
@@ -86,6 +92,26 @@ export default function MyMarketplaceCoursesPage() {
       setCourseForm(EMPTY_COURSE_FORM)
     },
     onError: () => toast.error('Erreur lors de la création du cours'),
+  })
+
+  const updateCourseMutation = useMutation({
+    mutationFn: (id: string) => marketplaceApi.updateCourse(id, editCourseForm),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-marketplace-courses'] })
+      toast.success('Cours modifié')
+      setEditCourse(null)
+    },
+    onError: () => toast.error('Erreur lors de la modification du cours'),
+  })
+
+  const updateLessonMutation = useMutation({
+    mutationFn: (id: string) => marketplaceApi.updateLesson(id, editLessonForm),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace-lessons', managingCourseId] })
+      toast.success('Leçon modifiée')
+      setEditLesson(null)
+    },
+    onError: () => toast.error('Erreur lors de la modification de la leçon'),
   })
 
   const publishMutation = useMutation({
@@ -163,6 +189,18 @@ export default function MyMarketplaceCoursesPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">{l.content_type_display} • {l.duration_minutes} min</p>
                   </div>
                   {l.is_preview && <Badge label="Aperçu" className="badge-blue" />}
+                  <button
+                    onClick={() => {
+                      setEditLesson(l)
+                      setEditLessonForm({
+                        title: l.title, content_type: l.content_type,
+                        content_url: l.content_url ?? '', content_text: l.content_text ?? '',
+                        duration_minutes: l.duration_minutes, is_preview: l.is_preview,
+                      })
+                    }}
+                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 rounded">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
                   <button onClick={() => deleteLessonMutation.mutate(l.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -248,6 +286,17 @@ export default function MyMarketplaceCoursesPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="secondary" className="flex-1" onClick={() => setManagingCourseId(c.id)}>Gérer</Button>
+                <button
+                  onClick={() => {
+                    setEditCourse(c)
+                    setEditCourseForm({
+                      title: c.title, description: c.description, category: c.category, level: c.level,
+                      price: Number(c.price), is_free: c.is_free, duration_hours: c.duration_hours,
+                    })
+                  }}
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 rounded-lg" title="Modifier">
+                  <Pencil className="w-4 h-4" />
+                </button>
                 {c.status === 'published' ? (
                   <button onClick={() => archiveMutation.mutate(c.id)} className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 rounded-lg" title="Archiver">
                     <Archive className="w-4 h-4" />
@@ -287,6 +336,65 @@ export default function MyMarketplaceCoursesPage() {
               onClick={() => createCourseMutation.mutate()}
             >
               {createCourseMutation.isPending ? 'Création...' : 'Créer (brouillon)'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit course modal */}
+      <Modal open={!!editCourse} onClose={() => setEditCourse(null)} title="Modifier le cours">
+        <div className="space-y-4">
+          <Input label="Titre" value={editCourseForm.title} onChange={(e) => setEditCourseForm({ ...editCourseForm, title: e.target.value })} />
+          <Textarea label="Description" value={editCourseForm.description} onChange={(e) => setEditCourseForm({ ...editCourseForm, description: e.target.value })} rows={3} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Catégorie" value={editCourseForm.category} onChange={(e) => setEditCourseForm({ ...editCourseForm, category: e.target.value })} placeholder="Ex: Data Science" />
+            <Select label="Niveau" value={editCourseForm.level} onChange={(e) => setEditCourseForm({ ...editCourseForm, level: e.target.value })} options={LEVEL_OPTIONS} />
+          </div>
+          <Input label="Durée estimée (heures)" type="number" min="1" value={editCourseForm.duration_hours} onChange={(e) => setEditCourseForm({ ...editCourseForm, duration_hours: Number(e.target.value) })} />
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input type="checkbox" checked={editCourseForm.is_free} onChange={(e) => setEditCourseForm({ ...editCourseForm, is_free: e.target.checked })} />
+            Gratuit
+          </label>
+          {!editCourseForm.is_free && (
+            <Input label="Prix (points)" type="number" min="0" value={editCourseForm.price} onChange={(e) => setEditCourseForm({ ...editCourseForm, price: Number(e.target.value) })} />
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="secondary" icon={<X className="w-4 h-4" />} onClick={() => setEditCourse(null)}>Annuler</Button>
+            <Button
+              disabled={!editCourseForm.title || !editCourseForm.description || updateCourseMutation.isPending}
+              onClick={() => editCourse && updateCourseMutation.mutate(editCourse.id)}
+            >
+              {updateCourseMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit lesson modal */}
+      <Modal open={!!editLesson} onClose={() => setEditLesson(null)} title="Modifier la leçon">
+        <div className="space-y-4">
+          <Input label="Titre" value={editLessonForm.title} onChange={(e) => setEditLessonForm({ ...editLessonForm, title: e.target.value })} />
+          <div className="grid grid-cols-2 gap-4">
+            <Select label="Type de contenu" value={editLessonForm.content_type} onChange={(e) => setEditLessonForm({ ...editLessonForm, content_type: e.target.value })} options={CONTENT_TYPE_OPTIONS} />
+            <Input label="Durée (minutes)" type="number" min="1" value={editLessonForm.duration_minutes} onChange={(e) => setEditLessonForm({ ...editLessonForm, duration_minutes: Number(e.target.value) })} />
+          </div>
+          {(editLessonForm.content_type === 'video' || editLessonForm.content_type === 'document') && (
+            <Input label="URL du contenu" value={editLessonForm.content_url} onChange={(e) => setEditLessonForm({ ...editLessonForm, content_url: e.target.value })} placeholder="https://..." />
+          )}
+          {(editLessonForm.content_type === 'text' || editLessonForm.content_type === 'quiz') && (
+            <Textarea label="Contenu" value={editLessonForm.content_text} onChange={(e) => setEditLessonForm({ ...editLessonForm, content_text: e.target.value })} rows={3} />
+          )}
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input type="checkbox" checked={editLessonForm.is_preview} onChange={(e) => setEditLessonForm({ ...editLessonForm, is_preview: e.target.checked })} />
+            Aperçu gratuit (visible sans achat)
+          </label>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="secondary" icon={<X className="w-4 h-4" />} onClick={() => setEditLesson(null)}>Annuler</Button>
+            <Button
+              disabled={!editLessonForm.title || updateLessonMutation.isPending}
+              onClick={() => editLesson && updateLessonMutation.mutate(editLesson.id)}
+            >
+              {updateLessonMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
             </Button>
           </div>
         </div>

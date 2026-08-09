@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, Calendar, Plus, Eye, MapPin, Clock, Users, CheckCircle, X, Pencil, Trash2, AlertTriangle } from 'lucide-react'
-import { schedulingApi, academicApi, programsApi } from '../../api'
+import { schedulingApi, academicApi, programsApi, teachersApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
@@ -33,6 +33,7 @@ export default function SchedulingPage() {
   const [createRoomOpen, setCreateRoomOpen] = useState(false)
   const [editRoom, setEditRoom] = useState<Room | null>(null)
   const [selectedSession, setSelectedSession] = useState<ScheduledSession | null>(null)
+  const [editSession, setEditSession] = useState<ScheduledSession | null>(null)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelId, setCancelId] = useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -201,6 +202,8 @@ export default function SchedulingPage() {
                             <div className="flex justify-end gap-1">
                               <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
                                 onClick={() => setSelectedSession(session)} />
+                              <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                                onClick={() => setEditSession(session)} />
                               {session.status === 'planifie' && (
                                 <Button variant="ghost" size="sm" icon={<X className="w-3.5 h-3.5" />}
                                   onClick={() => { setCancelId(session.id); setCancelOpen(true) }} />
@@ -357,6 +360,17 @@ export default function SchedulingPage() {
         />
       </Modal>
 
+      {/* Edit Session Modal */}
+      <Modal open={!!editSession} onClose={() => setEditSession(null)} title="Modifier la séance" size="lg">
+        {editSession && (
+          <SessionCreateForm
+            session={editSession}
+            onSuccess={() => { setEditSession(null); queryClient.invalidateQueries({ queryKey: ['scheduled-sessions'] }) }}
+            onCancel={() => setEditSession(null)}
+          />
+        )}
+      </Modal>
+
       {/* Create Room Modal */}
       <Modal open={createRoomOpen} onClose={() => setCreateRoomOpen(false)} title="Nouvelle salle" size="md">
         <RoomCreateForm
@@ -399,9 +413,17 @@ function CancelForm({ onSubmit, onCancel, loading }: { onSubmit: (reason: string
   )
 }
 
-function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+// datetime-local attend "yyyy-MM-ddTHH:mm" — l'API renvoie un ISO complet
+// (secondes + fuseau) qu'il faut tronquer pour pré-remplir le formulaire.
+const toDatetimeLocal = (iso: string) => iso ? iso.slice(0, 16) : ''
+
+function SessionCreateForm({ session, onSuccess, onCancel }: { session?: ScheduledSession; onSuccess: () => void; onCancel: () => void }) {
   const toast = useToast()
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(session ? {
+    ec: session.ec, teacher: session.teacher ?? '', room: session.room ?? '',
+    academic_year: session.academic_year, mode: session.mode,
+    start_datetime: toDatetimeLocal(session.start_datetime), end_datetime: toDatetimeLocal(session.end_datetime),
+  } : {
     ec: '', teacher: '', room: '', academic_year: '', mode: 'presentiel',
     start_datetime: '', end_datetime: '',
   })
@@ -412,6 +434,8 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
 
   const { data: years } = useQuery({ queryKey: ['years-list'], queryFn: () => academicApi.getAcademicYears().then(r => r.data) })
   const { data: rooms } = useQuery({ queryKey: ['rooms-list'], queryFn: () => schedulingApi.getRooms({ page_size: 100 }).then(r => r.data) })
+  const { data: ecs } = useQuery({ queryKey: ['ecs-list'], queryFn: () => programsApi.getECs({ page_size: 300 }).then(r => r.data) })
+  const { data: teachers } = useQuery({ queryKey: ['teachers-list'], queryFn: () => teachersApi.getTeachers({ page_size: 300 }).then(r => r.data) })
 
   // Avertir avant soumission plutôt qu'après : le backend bloque déjà la
   // création en cas de conflit (voir perform_create), mais l'utilisateur
@@ -429,6 +453,7 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         teacher: form.teacher || undefined,
         start: form.start_datetime,
         end: form.end_datetime,
+        exclude: session?.id,
       }).then(r => setConflicts(r.data)).finally(() => setCheckingConflicts(false))
     }, 400)
     return () => clearTimeout(timer)
@@ -444,13 +469,14 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     }
     setLoading(true)
     try {
-      await schedulingApi.createSession(form)
-      toast.success('Séance créée')
+      if (session) await schedulingApi.updateSession(session.id, form)
+      else await schedulingApi.createSession(form)
+      toast.success(session ? 'Séance modifiée' : 'Séance créée')
       onSuccess()
     } catch (err: unknown) {
       const e = err as { response?: { data?: Record<string, string[] | string> } }
       const msgs = Object.values(e?.response?.data ?? {}).flat().join(' ')
-      toast.error(msgs || 'Erreur lors de la création')
+      toast.error(msgs || (session ? 'Erreur lors de la modification' : 'Erreur lors de la création'))
     }
     finally { setLoading(false) }
   }
@@ -459,12 +485,22 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label">ID de l'EC *</label>
-          <input className="input" value={form.ec} onChange={e => set('ec', e.target.value)} placeholder="UUID de l'EC" />
+          <label className="label">EC *</label>
+          <select className="input bg-white dark:bg-slate-900" value={form.ec} onChange={e => set('ec', e.target.value)}>
+            <option value="">— Sélectionner —</option>
+            {ecs?.results?.map((ec: { id: string; code: string; name: string }) => (
+              <option key={ec.id} value={ec.id}>{ec.code} — {ec.name}</option>
+            ))}
+          </select>
         </div>
         <div>
-          <label className="label">ID Enseignant</label>
-          <input className="input" value={form.teacher} onChange={e => set('teacher', e.target.value)} placeholder="UUID enseignant" />
+          <label className="label">Enseignant</label>
+          <select className="input bg-white dark:bg-slate-900" value={form.teacher} onChange={e => set('teacher', e.target.value)}>
+            <option value="">— Aucun —</option>
+            {teachers?.results?.map(t => (
+              <option key={t.id} value={t.user.id}>{t.user.full_name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="label">Année académique *</label>
@@ -526,7 +562,7 @@ function SessionCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={loading} disabled={hasConflicts}
           icon={<Calendar className="w-4 h-4" />}>
-          Créer la séance
+          {session ? 'Enregistrer' : 'Créer la séance'}
         </Button>
       </div>
     </form>

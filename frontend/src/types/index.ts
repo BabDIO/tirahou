@@ -536,6 +536,8 @@ export interface AttendanceSheet {
   id: string
   session: string
   session_code: string
+  ec_code?: string
+  session_start_datetime?: string | null
   qr_code?: string | null
   is_open: boolean
   opened_at: string | null
@@ -584,10 +586,15 @@ export interface Room {
 
 export interface ScheduledSession {
   id: string
+  ec: string
   ec_code: string
   ec_name: string
+  teacher: string | null
   teacher_name: string
+  room: string | null
   room_name: string
+  group: string | null
+  academic_year: string
   mode: string
   mode_display: string
   start_datetime: string

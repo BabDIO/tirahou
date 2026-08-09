@@ -32,6 +32,11 @@ export default function LMSPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['course-spaces'] }),
   })
 
+  const unpublish = useMutation({
+    mutationFn: (id: string) => lmsApi.unpublishCourseSpace(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['course-spaces'] }),
+  })
+
   const { data: detail } = useQuery({
     queryKey: ['course-space-detail', selected?.id],
     queryFn: () => lmsApi.getCourseSpace(selected!.id).then(r => r.data),
@@ -94,7 +99,9 @@ export default function LMSPage() {
                   space={space}
                   onView={() => setSelected(space)}
                   onPublish={() => publish.mutate(space.id)}
-                  publishing={publish.isPending}
+                  publishing={publish.isPending && publish.variables === space.id}
+                  onUnpublish={() => unpublish.mutate(space.id)}
+                  unpublishing={unpublish.isPending && unpublish.variables === space.id}
                 />
               ))}
             </div>
@@ -119,8 +126,9 @@ export default function LMSPage() {
   )
 }
 
-function CourseCard({ space, onView, onPublish, publishing }: {
+function CourseCard({ space, onView, onPublish, publishing, onUnpublish, unpublishing }: {
   space: CourseSpace; onView: () => void; onPublish: () => void; publishing: boolean
+  onUnpublish: () => void; unpublishing: boolean
 }) {
   const { data: progressData } = useQuery({
     queryKey: ['space-progress', space.id],
@@ -175,7 +183,8 @@ function CourseCard({ space, onView, onPublish, publishing }: {
           <Button size="sm" className="flex-1" loading={publishing}
             icon={<Globe className="w-3.5 h-3.5" />} onClick={onPublish}>Publier</Button>
         ) : (
-          <Button variant="ghost" size="sm" className="flex-1" icon={<Lock className="w-3.5 h-3.5" />}>
+          <Button variant="ghost" size="sm" className="flex-1" icon={<Lock className="w-3.5 h-3.5" />}
+            loading={unpublishing} onClick={onUnpublish}>
             Dépublier
           </Button>
         )}

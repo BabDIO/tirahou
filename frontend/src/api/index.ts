@@ -278,6 +278,7 @@ export const lmsApi = {
   getCourseSpace: (id: string) => api.get<CourseSpace>(`/course-spaces/${id}/`),
   createCourseSpace: (data: object) => api.post('/course-spaces/', data),
   publishCourseSpace: (id: string) => api.post(`/course-spaces/${id}/publish/`),
+  unpublishCourseSpace: (id: string) => api.patch(`/course-spaces/${id}/`, { is_published: false }),
   changeMode: (id: string, mode: string) => api.post(`/course-spaces/${id}/change_mode/`, { mode }),
   getMyProgress: (id: string) => api.get(`/course-spaces/${id}/my_progress/`),
   getStudentProgress: (params?: object) => api.get('/course-spaces/', { params }),
@@ -323,6 +324,8 @@ export const attendanceApi = {
     api.post(`/attendance-sheets/${id}/mark_by_code/`, { code }),
   getRecords: (params?: object) => api.get('/attendance-records/', { params }),
   createRecord: (data: object) => api.post('/attendance-records/', data),
+  updateRecord: (id: string, data: object) => api.patch(`/attendance-records/${id}/`, data),
+  deleteRecord: (id: string) => api.delete(`/attendance-records/${id}/`),
   getAbsenceSummaries: (params?: object) => api.get('/absence-summaries/', { params }),
   justify: (id: string, data: FormData) =>
     api.post(`/attendance-records/${id}/justify/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),

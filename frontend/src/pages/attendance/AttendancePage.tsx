@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, QrCode, Users, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Eye, FileCheck, FileText, X } from 'lucide-react'
-import { attendanceApi } from '../../api'
+import { attendanceApi, schedulingApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs, Progress } from '../../components/ui'
 import { formatDate, statusColor, openProtectedFile } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
@@ -34,6 +34,7 @@ export default function AttendancePage() {
   const [selected, setSelected] = useState<AttendanceSheet | null>(null)
   const [markOpen, setMarkOpen] = useState(false)
   const [markSheetId, setMarkSheetId] = useState<string | null>(null)
+  const [createSheetOpen, setCreateSheetOpen] = useState(false)
   const queryClient = useQueryClient()
   const toast = useToast()
 
@@ -83,6 +84,18 @@ export default function AttendancePage() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['attendance-sheets'] }); toast.success('Feuille fermée') },
   })
 
+  const updateRecordStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => attendanceApi.updateRecord(id, { status }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['attendance-records'] }); toast.success('Présence corrigée') },
+    onError: () => toast.error('Erreur lors de la correction'),
+  })
+
+  const deleteRecord = useMutation({
+    mutationFn: (id: string) => attendanceApi.deleteRecord(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['attendance-records'] }); toast.success('Enregistrement supprimé') },
+    onError: () => toast.error('Erreur lors de la suppression'),
+  })
+
   const openSheets = sheets?.results?.filter((s: AttendanceSheet) => s.is_open).length ?? 0
   const atRisk = (summaries?.results as AbsenceSummary[] | undefined)?.filter(
     s => (s as AbsenceSummary & { alert_level?: string }).alert_level !== 'none'
@@ -96,7 +109,7 @@ export default function AttendancePage() {
           <h1 className="page-title">Présences & Assiduité</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Feuilles de présence, émargement et suivi des absences</p>
         </div>
-        <Button size="sm" icon={<Plus className="w-4 h-4" />}>Nouvelle feuille</Button>
+        <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateSheetOpen(true)}>Nouvelle feuille</Button>
       </div>
 
       {/* Stats */}
@@ -149,7 +162,9 @@ export default function AttendancePage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">{sheet.session}</p>
+                            <p className="font-bold text-gray-900 dark:text-gray-50 text-sm">
+                              {sheet.ec_code ?? 'Séance'}{sheet.session_start_datetime ? ` — ${formatDate(sheet.session_start_datetime)}` : ''}
+                            </p>
                             <span className="font-mono text-xs bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-md">
                               {sheet.session_code}
                             </span>
@@ -212,6 +227,7 @@ export default function AttendancePage() {
                       <th>Méthode</th>
                       <th>Marqué le</th>
                       <th>Justification</th>
+                      <th className="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -240,6 +256,20 @@ export default function AttendancePage() {
                           ) : record.status === 'absent' ? (
                             <Badge label="Non justifiée" className="badge-gray" />
                           ) : '—'}
+                        </td>
+                        <td className="text-right">
+                          <div className="flex justify-end items-center gap-1">
+                            <select className="input !py-1 !text-xs w-28" value={record.status}
+                              onChange={e => updateRecordStatus.mutate({ id: record.id, status: e.target.value })}>
+                              <option value="present">Présent</option>
+                              <option value="absent">Absent</option>
+                              <option value="retard">En retard</option>
+                              <option value="excuse">Excusé</option>
+                            </select>
+                            <Button variant="ghost" size="sm" icon={<X className="w-3.5 h-3.5" />}
+                              loading={deleteRecord.isPending && deleteRecord.variables === record.id}
+                              onClick={() => { if (window.confirm('Supprimer cet enregistrement de présence ?')) deleteRecord.mutate(record.id) }} />
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -404,6 +434,55 @@ export default function AttendancePage() {
         title="Émargement par code" size="sm">
         <MarkByCodeForm sheetId={markSheetId ?? ''} onClose={() => { setMarkOpen(false); setMarkSheetId(null) }} />
       </Modal>
+
+      {/* Create Sheet Modal */}
+      <Modal open={createSheetOpen} onClose={() => setCreateSheetOpen(false)} title="Nouvelle feuille de présence" size="sm">
+        <CreateSheetForm onSuccess={() => { setCreateSheetOpen(false); queryClient.invalidateQueries({ queryKey: ['attendance-sheets'] }) }} />
+      </Modal>
+    </div>
+  )
+}
+
+function CreateSheetForm({ onSuccess }: { onSuccess: () => void }) {
+  const toast = useToast()
+  const [sessionId, setSessionId] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const { data: sessions } = useQuery({
+    queryKey: ['sessions-for-sheet'],
+    queryFn: () => schedulingApi.getSessions({ page_size: 100, ordering: '-start_datetime' }).then(r => r.data),
+  })
+
+  const handleSubmit = async () => {
+    if (!sessionId) { setError('Séance requise'); return }
+    setLoading(true); setError('')
+    try {
+      await attendanceApi.createSheet({ session: sessionId })
+      toast.success('Feuille créée')
+      onSuccess()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, string[]> } }
+      const msgs = Object.values(err?.response?.data ?? {}).flat().join(' ')
+      setError(msgs || 'Erreur — une feuille existe peut-être déjà pour cette séance.')
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <Alert type="error">{error}</Alert>}
+      <div>
+        <label className="label">Séance *</label>
+        <select className="input bg-white dark:bg-slate-900" value={sessionId} onChange={e => setSessionId(e.target.value)}>
+          <option value="">— Sélectionner une séance —</option>
+          {sessions?.results?.map(s => (
+            <option key={s.id} value={s.id}>{s.ec_code} — {formatDate(s.start_datetime)}</option>
+          ))}
+        </select>
+      </div>
+      <Button className="w-full" onClick={handleSubmit} loading={loading} icon={<QrCode className="w-4 h-4" />}>
+        Créer la feuille
+      </Button>
     </div>
   )
 }
