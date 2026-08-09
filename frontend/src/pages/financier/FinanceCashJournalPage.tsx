@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CreditCard, TrendingUp, Download, Calendar } from 'lucide-react'
-import { Card, StatsCard, Spinner, Empty, Alert, Badge } from '../../components/ui'
+import { Card, StatsCard, Spinner, Empty, Alert, Badge, DatePicker } from '../../components/ui'
 import { financeApi } from '../../api'
 import { formatCurrency, formatDate } from '../../lib/utils'
 
@@ -49,12 +49,10 @@ export default function FinanceCashJournalPage() {
       {/* Date filters */}
       <div className="card p-4 flex flex-col sm:flex-row gap-3 items-end">
         <div className="flex-1">
-          <label className="label">Date de début</label>
-          <input type="date" className="input" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <DatePicker label="Date de début" value={startDate} onChange={setStartDate} max={endDate} />
         </div>
         <div className="flex-1">
-          <label className="label">Date de fin</label>
-          <input type="date" className="input" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <DatePicker label="Date de fin" value={endDate} onChange={setEndDate} min={startDate} />
         </div>
         <div className="flex gap-2">
           {['Aujourd\'hui', 'Cette semaine', 'Ce mois'].map((label, i) => (

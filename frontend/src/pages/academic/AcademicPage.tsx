@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Building2, BookMarked, Calendar, Plus, Settings, CheckCircle, Edit } from 'lucide-react'
 import { academicApi } from '../../api'
-import { Card, Spinner, StatsCard, Badge, Button, Modal, Alert, Tabs } from '../../components/ui'
+import { Card, Spinner, StatsCard, Badge, Button, Modal, Alert, Tabs, DatePicker } from '../../components/ui'
 import { formatDate } from '../../lib/utils'
 import api from '../../lib/axios'
 import type { AcademicYear, Faculty, Department } from '../../types'
@@ -282,34 +282,16 @@ function CreateYearForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Choisissez les dates ci-dessous" />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Date de début</label>
-          <input type="date" className="input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Date de fin</label>
-          <input type="date" className="input" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
-        </div>
+        <DatePicker label="Date de début" value={form.start_date} onChange={v => set('start_date', v)} />
+        <DatePicker label="Date de fin" value={form.end_date} onChange={v => set('end_date', v)} />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Début candidatures</label>
-          <input type="date" className="input" value={form.candidature_start} onChange={e => set('candidature_start', e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Fin candidatures</label>
-          <input type="date" className="input" value={form.candidature_end} onChange={e => set('candidature_end', e.target.value)} />
-        </div>
+        <DatePicker label="Début candidatures" value={form.candidature_start} onChange={v => set('candidature_start', v)} />
+        <DatePicker label="Fin candidatures" value={form.candidature_end} onChange={v => set('candidature_end', v)} />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Début inscriptions</label>
-          <input type="date" className="input" value={form.admin_enrollment_start} onChange={e => set('admin_enrollment_start', e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Fin inscriptions</label>
-          <input type="date" className="input" value={form.admin_enrollment_end} onChange={e => set('admin_enrollment_end', e.target.value)} />
-        </div>
+        <DatePicker label="Début inscriptions" value={form.admin_enrollment_start} onChange={v => set('admin_enrollment_start', v)} />
+        <DatePicker label="Fin inscriptions" value={form.admin_enrollment_end} onChange={v => set('admin_enrollment_end', v)} />
       </div>
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" checked={form.is_current} onChange={e => set('is_current', e.target.checked)}

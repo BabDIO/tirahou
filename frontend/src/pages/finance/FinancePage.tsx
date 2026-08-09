@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Search, Plus, CreditCard, CheckCircle, Download, Gift, TrendingUp, AlertCircle, Calendar, Clock } from 'lucide-react'
 import { financeApi } from '../../api'
-import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Progress, Alert } from '../../components/ui'
+import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Progress, Alert, DatePicker } from '../../components/ui'
 import { formatCurrency, formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import { useDownload } from '../../hooks/useDownload'
@@ -289,8 +289,8 @@ function InstallmentsPanel({ invoice }: { invoice: Invoice }) {
             onChange={e => setForm(f => ({ ...f, number: e.target.value }))} />
           <input type="number" placeholder="Montant" className="input" value={form.amount}
             onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
-          <input type="date" className="input" value={form.due_date}
-            onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
+          <DatePicker value={form.due_date}
+            onChange={v => setForm(f => ({ ...f, due_date: v }))} />
         </div>
         <Button className="w-full mt-3" size="sm" icon={<Plus className="w-3.5 h-3.5" />}
           loading={createMut.isPending}
@@ -517,10 +517,7 @@ function InvoiceCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
           placeholder="150000" min={0} value={form.total_amount} onChange={e => set('total_amount', e.target.value)} />
         {errors.total_amount && <p className="mt-1 text-xs text-red-600">{errors.total_amount}</p>}
       </div>
-      <div>
-        <label className="label">Date d'échéance</label>
-        <input type="date" className="input" value={form.due_date} onChange={e => set('due_date', e.target.value)} />
-      </div>
+      <DatePicker label="Date d'échéance" value={form.due_date} onChange={v => set('due_date', v)} />
       <div>
         <label className="label">Notes</label>
         <textarea className="input min-h-[60px] resize-none" placeholder="Observations..."

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, BookOpen, Plus, Eye, CheckCircle, XCircle, Calendar, Users, FileText, Upload, ShieldAlert, Award } from 'lucide-react'
-import { Button, Input, Badge, Spinner, Empty, Card, StatsCard, Modal, Alert, Tabs } from '../../components/ui'
+import { Button, Input, Badge, Spinner, Empty, Card, StatsCard, Modal, Alert, Tabs, DatePicker } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
 import { studentsApi, academicApi, internshipsApi } from '../../api'
 import { useToast } from '../../hooks/useToast'
@@ -413,14 +413,8 @@ function InternshipForm({ onSuccess }: { onSuccess: () => void }) {
         <textarea className="input min-h-[70px] resize-none" value={form.subject} onChange={e => set('subject', e.target.value)} placeholder="Intitulé du sujet..." />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Date de début</label>
-          <input type="date" className="input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Date de fin</label>
-          <input type="date" className="input" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
-        </div>
+        <DatePicker label="Date de début" value={form.start_date} onChange={v => set('start_date', v)} />
+        <DatePicker label="Date de fin" value={form.end_date} onChange={v => set('end_date', v)} />
       </div>
       <Button className="w-full" onClick={handleSubmit} loading={loading} icon={<Plus className="w-4 h-4" />}>
         Enregistrer le stage

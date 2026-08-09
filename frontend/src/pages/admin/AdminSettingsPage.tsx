@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Settings, Building2, Calendar, Shield, Save, Globe, Bell, Database, Webhook, Trash2, Send, CheckCircle2, XCircle } from 'lucide-react'
-import { Card, Spinner, Alert, Badge, Button } from '../../components/ui'
+import { Card, Spinner, Alert, Badge, Button, DatePicker } from '../../components/ui'
 import { academicApi } from '../../api'
 import api from '../../lib/axios'
 import { formatDate } from '../../lib/utils'
@@ -212,14 +212,8 @@ export default function AdminSettingsPage() {
                     <label className="label">Label *</label>
                     <input className="input" value={yearForm.label} onChange={e => setYearForm(f => ({ ...f, label: e.target.value }))} placeholder="Ex: 2025-2026" />
                   </div>
-                  <div>
-                    <label className="label">Date de début *</label>
-                    <input type="date" className="input" value={yearForm.start_date} onChange={e => setYearForm(f => ({ ...f, start_date: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="label">Date de fin *</label>
-                    <input type="date" className="input" value={yearForm.end_date} onChange={e => setYearForm(f => ({ ...f, end_date: e.target.value }))} />
-                  </div>
+                  <DatePicker label="Date de début *" value={yearForm.start_date} onChange={v => setYearForm(f => ({ ...f, start_date: v }))} />
+                  <DatePicker label="Date de fin *" value={yearForm.end_date} onChange={v => setYearForm(f => ({ ...f, end_date: v }))} />
                 </div>
                 <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
                   <input type="checkbox" checked={yearForm.is_current}

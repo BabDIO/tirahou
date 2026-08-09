@@ -239,7 +239,7 @@ export const Modal = ({ show, open, onClose, title, subtitle, children, size = '
         style={{ animation: 'fadeIn 0.15s ease-out' }}
       />
       <div
-        className={cn('relative bg-white rounded-2xl shadow-2xl w-full flex flex-col max-h-[90vh]', sizes[size])}
+        className={cn('relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full flex flex-col max-h-[90vh]', sizes[size])}
         style={{ animation: 'slideUp 0.2s ease-out' }}
       >
         {/* Header */}
@@ -250,7 +250,7 @@ export const Modal = ({ show, open, onClose, title, subtitle, children, size = '
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 transition-colors ml-4 flex-shrink-0"
+            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-4 flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -259,7 +259,7 @@ export const Modal = ({ show, open, onClose, title, subtitle, children, size = '
         <div className="p-6 overflow-y-auto flex-1">{children}</div>
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
+          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40 rounded-b-2xl flex-shrink-0">
             {footer}
           </div>
         )}
@@ -536,3 +536,4 @@ export { ThemeToggle } from './ThemeToggle'
 export { default as Breadcrumb } from './Breadcrumb'
 export { default as AnimatedPage } from './AnimatedPage'
 export * from './AnimatedPage' // Export des variantes d'animation
+export { DatePicker } from './DatePicker'

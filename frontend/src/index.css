@@ -201,6 +201,11 @@
   .dark .input {
     @apply bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-500
            focus:border-primary-500;
+    /* Sans ça, l'icône native de <input type="date"/time"> (calendrier,
+       flèches) reste rendue en noir par le navigateur — invisible sur un
+       fond sombre. Ne s'applique qu'aux inputs natifs restants ; le
+       nouveau composant DatePicker (calendrier custom) n'en a pas besoin. */
+    color-scheme: dark;
   }
 
   .dark .label {

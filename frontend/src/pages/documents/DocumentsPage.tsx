@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, FileText, Upload, CheckCircle, XCircle, Eye, Download, Plus, QrCode, Shield, Archive } from 'lucide-react'
 import { documentsApi } from '../../api'
-import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
+import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs, DatePicker } from '../../components/ui'
 import { formatDate, openProtectedFile } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import { saveAs } from 'file-saver'
@@ -418,10 +418,7 @@ function GenerateDocForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
               placeholder="Ex: Entretien disciplinaire" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Date *</label>
-              <input type="date" className="input" value={form.event_date} onChange={e => set('event_date', e.target.value)} />
-            </div>
+            <DatePicker label="Date *" value={form.event_date} onChange={v => set('event_date', v)} />
             <div>
               <label className="label">Lieu</label>
               <input className="input" value={form.event_location} onChange={e => set('event_location', e.target.value)} />

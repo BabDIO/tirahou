@@ -8,7 +8,7 @@ import {
 import { evaluationApi, academicApi, authApi } from '../../api'
 import {
   Button, Input, Badge, Spinner, Empty, Pagination,
-  Modal, Card, StatsCard, Alert, Tabs, Select
+  Modal, Card, StatsCard, Alert, Tabs, Select, DatePicker
 } from '../../components/ui'
 import { formatDate, statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
@@ -775,14 +775,8 @@ function CreateSessionForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
         </select>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Date de début</label>
-          <input type="date" className="input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Date de fin</label>
-          <input type="date" className="input" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
-        </div>
+        <DatePicker label="Date de début" value={form.start_date} onChange={v => set('start_date', v)} />
+        <DatePicker label="Date de fin" value={form.end_date} onChange={v => set('end_date', v)} />
       </div>
       <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>

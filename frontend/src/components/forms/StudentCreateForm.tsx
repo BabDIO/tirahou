@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
-import { Button, Input, Select } from '../ui'
+import { Button, Input, Select, DatePicker } from '../ui'
 import { studentsApi, programsApi } from '../../api'
 import { useToast } from '../../hooks/useToast'
 import api from '../../lib/axios'
@@ -130,7 +130,8 @@ export default function StudentCreateForm({ onSuccess, onCancel }: Props) {
             { value: 'M', label: 'Masculin' }, { value: 'F', label: 'Féminin' }, { value: 'A', label: 'Autre' }
           ]} value={form.gender} onChange={e => set('gender', e.target.value)} />
           <Input label="Nationalité" value={form.nationality} onChange={e => set('nationality', e.target.value)} />
-          <Input label="Date de naissance" type="date" value={form.birth_date} onChange={e => set('birth_date', e.target.value)} />
+          <DatePicker label="Date de naissance" max={new Date().toISOString().slice(0, 10)}
+            value={form.birth_date} onChange={v => set('birth_date', v)} />
           <Input label="Lieu de naissance" placeholder="Bamako" value={form.birth_place} onChange={e => set('birth_place', e.target.value)} />
           <Input label="N° pièce d'identité" value={form.national_id} onChange={e => set('national_id', e.target.value)} />
           <div>
