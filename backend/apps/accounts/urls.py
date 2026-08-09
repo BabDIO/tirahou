@@ -12,6 +12,7 @@ urlpatterns = [
     path('auth/mfa/setup/', views.MfaSetupView.as_view(), name='mfa_setup'),
     path('auth/mfa/verify-setup/', views.MfaVerifySetupView.as_view(), name='mfa_verify_setup'),
     path('auth/mfa/disable/', views.MfaDisableView.as_view(), name='mfa_disable'),
+    path('users/lookup/', views.lookup_user_by_email, name='user_lookup'),
     path('users/', views.UserListCreateView.as_view(), name='user_list'),
     path('users/<uuid:pk>/', views.UserDetailView.as_view(), name='user_detail'),
     path('users/<uuid:user_id>/roles/', views.assign_roles, name='assign_roles'),

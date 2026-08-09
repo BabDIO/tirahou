@@ -187,16 +187,23 @@ class VirtualClassSessionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def stats(self, request, pk=None):
         """Statistiques d'une session"""
+        from django.db.models import Avg
+
         session = self.get_object()
         participants = session.participants.all()
+        # 'onsite' n'existe pas dans SessionParticipant.JOIN_MODE_CHOICES
+        # (la valeur réelle est 'physical') et `duration_seconds` n'est pas
+        # un champ du modèle (seul `duration_minutes` existe) — cette action
+        # levait FieldError (500) au premier appel réel, et le compteur
+        # 'onsite' n'aurait de toute façon jamais compté personne.
         return Response({
             'total_invited': participants.count(),
             'total_present': participants.filter(is_present=True).count(),
             'online': participants.filter(join_mode='online', is_present=True).count(),
-            'onsite': participants.filter(join_mode='onsite', is_present=True).count(),
-            'avg_duration': participants.filter(
-                duration_seconds__gt=0
-            ).aggregate(avg=__import__('django.db.models', fromlist=['Avg']).Avg('duration_seconds'))['avg'] or 0,
+            'onsite': participants.filter(join_mode='physical', is_present=True).count(),
+            'avg_duration_minutes': participants.filter(
+                duration_minutes__gt=0
+            ).aggregate(avg=Avg('duration_minutes'))['avg'] or 0,
         })
 
     @action(detail=True, methods=['get'])

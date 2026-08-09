@@ -366,7 +366,12 @@ class ParentGuardianViewSet(viewsets.ModelViewSet):
         # Filtrer les parents
         queryset = self.get_queryset()
         if student_ids:
-            queryset = queryset.filter(student__uuid__in=student_ids)
+            # `Student` n'a pas de champ `uuid` (sa clé primaire s'appelle
+            # `id`) — ce filtre levait FieldError et faisait planter en 500
+            # toute notification ciblée sur des étudiants précis (le chemin
+            # "notifier tout le monde", sans student_ids, ne passait jamais
+            # par cette ligne et masquait le bug).
+            queryset = queryset.filter(student__id__in=student_ids)
         
         # Filtrer par préférences de notification
         eligible_parents = [

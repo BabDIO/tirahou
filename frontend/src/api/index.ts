@@ -136,6 +136,7 @@ export const enrollmentApi = {
   createEnrollment: (data: object) => api.post<AdminEnrollment>('/admin-enrollments/', data),
   reenroll: () => api.post<AdminEnrollment>('/admin-enrollments/reenroll/'),
   validateEnrollment: (id: string) => api.post(`/admin-enrollments/${id}/validate/`),
+  rejectEnrollment: (id: string, reason: string) => api.post(`/admin-enrollments/${id}/reject/`, { reason }),
   validatePayment: (id: string) => api.post(`/admin-enrollments/${id}/validate_payment/`),
   getPedaEnrollments: (params?: object) => api.get('/peda-enrollments/', { params }),
   createPedaEnrollment: (data: object) => api.post('/peda-enrollments/', data),

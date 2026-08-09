@@ -46,6 +46,7 @@ interface CourseDetail {
   students_count: number
   is_purchased: boolean
   is_owner: boolean
+  has_reviewed: boolean
   status: string
   lessons: Lesson[]
   reviews: Review[]
@@ -112,7 +113,7 @@ export default function MarketplaceCourseDetailPage() {
   if (!course) return <Alert type="error">Cours introuvable.</Alert>
 
   const hasAccess = course.is_purchased || course.is_owner
-  const alreadyReviewed = course.reviews.some((r) => r.student_name)
+  const alreadyReviewed = course.has_reviewed
 
   return (
     <div className="space-y-6">

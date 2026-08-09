@@ -242,7 +242,7 @@ export default function DocumentsPage() {
                           </div>
                         </td>
                         <td>
-                          <Badge label={doc.doc_type_display} className={statusDoc[doc.status] ?? 'badge-gray'} dot />
+                          <Badge label={doc.status_display} className={statusDoc[doc.status] ?? 'badge-gray'} dot />
                         </td>
                         <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(doc.created_at)}</td>
                         <td className="text-xs text-gray-400 dark:text-gray-500">

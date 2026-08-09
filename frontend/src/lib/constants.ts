@@ -37,7 +37,7 @@ export const INVOICE_STATUS = {
 
 // ── Statuts de notes ──────────────────────────────────────────────────────────
 export const GRADE_STATUS = {
-  en_attente: { label: 'En attente', color: 'yellow', badge: 'badge-yellow' },
+  saisie: { label: 'Saisie', color: 'yellow', badge: 'badge-yellow' },
   validee: { label: 'Validée', color: 'green', badge: 'badge-green' },
   contestee: { label: 'Contestée', color: 'red', badge: 'badge-red' },
   publiee: { label: 'Publiée', color: 'blue', badge: 'badge-blue' },

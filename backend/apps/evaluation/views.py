@@ -306,7 +306,7 @@ class GradeContestViewSet(viewsets.ModelViewSet):
         if new_grade:
             contest.new_grade = new_grade
             contest.grade.final_grade = new_grade
-            contest.grade.save()
+            contest.grade.save(skip_recalc=True)
         contest.save()
         return Response({'detail': 'Réclamation acceptée.'})
 

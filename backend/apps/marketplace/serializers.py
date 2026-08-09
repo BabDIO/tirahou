@@ -111,6 +111,7 @@ class MarketplaceCourseSerializer(serializers.ModelSerializer):
 class MarketplaceCourseDetailSerializer(MarketplaceCourseSerializer):
     lessons = serializers.SerializerMethodField()
     reviews = CourseReviewSerializer(many=True, read_only=True)
+    has_reviewed = serializers.SerializerMethodField()
 
     def get_lessons(self, obj):
         request = self.context.get('request')
@@ -119,6 +120,17 @@ class MarketplaceCourseDetailSerializer(MarketplaceCourseSerializer):
         if is_owner or (request and request.user.is_superuser):
             return CourseLessonSerializer(lessons, many=True, context=self.context).data
         return CourseLessonLockedSerializer(lessons, many=True, context=self.context).data
+
+    def get_has_reviewed(self, obj):
+        # Le frontend testait `reviews.some(r => r.student_name)` — comme
+        # student_name est toujours non-vide pour CHAQUE avis, ça
+        # équivalait à "au moins un avis existe", pas "j'ai déjà noté ce
+        # cours" : dès qu'un premier étudiant notait le cours, le
+        # formulaire d'avis disparaissait pour TOUS les autres étudiants.
+        request = self.context.get('request')
+        if not request or not hasattr(request.user, 'student_profile'):
+            return False
+        return obj.reviews.filter(student=request.user.student_profile).exists()
 
 
 class CoursePurchaseSerializer(serializers.ModelSerializer):

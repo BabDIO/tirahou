@@ -168,6 +168,43 @@ class GeneratedDocumentViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Réservé à la scolarité.")
         instance.delete()
 
+    @action(detail=False, methods=['post'])
+    def request_document(self, request):
+        """
+        Un étudiant DEMANDE un document officiel — le bouton "Demander un
+        document" de MyDocumentsPage.tsx appelait jusqu'ici POST direct sur
+        ce ViewSet, systématiquement rejeté (403) par perform_create, qui
+        réserve volontairement toute écriture sur GeneratedDocument à la
+        scolarité (fraude aux diplômes — voir le commentaire dessus). On ne
+        contourne pas cette restriction : la demande se traduit uniquement
+        par une notification à la scolarité, qui la traite ensuite via son
+        propre flux de génération (ScolariteGeneratedDocsPage.tsx).
+        """
+        if not hasattr(request.user, 'student_profile'):
+            return Response({'detail': 'Profil étudiant requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        doc_type = request.data.get('doc_type')
+        valid_types = dict(GeneratedDocument.DOC_TYPE_CHOICES)
+        if doc_type not in valid_types:
+            return Response({'detail': 'Type de document invalide.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        student = request.user.student_profile
+        from apps.accounts.models import User
+        from apps.communication.notification_service import NotificationService
+        staff = User.objects.filter(roles__name__in=DOCUMENT_MANAGER_ROLES, is_active=True).distinct()
+        for staff_user in staff:
+            NotificationService.send_notification(
+                recipient_id=staff_user.id,
+                title='Demande de document officiel',
+                message=f"{student.user.get_full_name()} ({student.student_id}) demande : {valid_types[doc_type]}.",
+                notif_type='document',
+                priority='normal',
+                channel='interne',
+                action_url='/scolarite/generated-docs',
+                icon='file-text',
+                color='blue',
+            )
+        return Response({'detail': 'Demande envoyée à la scolarité.'})
+
 
 @extend_schema(responses={200: OpenApiResponse(description='Résultat de vérification du document')})
 @api_view(['GET'])

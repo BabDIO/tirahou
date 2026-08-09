@@ -380,6 +380,7 @@ export interface GeneratedDocument {
   file: string | null
   verification_code: string
   status: string
+  status_display: string
   generated_by: string
   delivered_at: string | null
   valid_until: string | null

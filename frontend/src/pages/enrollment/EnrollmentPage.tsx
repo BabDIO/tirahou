@@ -56,6 +56,19 @@ export default function EnrollmentPage() {
     },
   })
 
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => enrollmentApi.rejectEnrollment(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['enrollments'] })
+      toast.success('Inscription rejetée')
+      setSelected(null)
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { detail?: string } } }
+      toast.error(e?.response?.data?.detail ?? 'Erreur lors du rejet')
+    },
+  })
+
   const validatePaymentMutation = useMutation({
     mutationFn: (id: string) => enrollmentApi.validatePayment(id),
     onSuccess: () => {
@@ -247,7 +260,13 @@ export default function EnrollmentPage() {
       {/* Detail Modal */}
       <Modal open={!!selected} onClose={() => setSelected(null)}
         title="Dossier d'inscription" subtitle={selected?.enrollment_number} size="md">
-        {selected && <EnrollmentDetail enrollment={selected} onValidate={() => validateMutation.mutate(selected.id)} />}
+        {selected && (
+          <EnrollmentDetail enrollment={selected} onValidate={() => validateMutation.mutate(selected.id)}
+            onReject={() => {
+              const reason = window.prompt('Motif du rejet :') ?? ''
+              rejectMutation.mutate({ id: selected.id, reason })
+            }} />
+        )}
       </Modal>
 
       {/* Create Modal */}
@@ -269,7 +288,7 @@ export default function EnrollmentPage() {
   )
 }
 
-function EnrollmentDetail({ enrollment, onValidate }: { enrollment: AdminEnrollment; onValidate: () => void }) {
+function EnrollmentDetail({ enrollment, onValidate, onReject }: { enrollment: AdminEnrollment; onValidate: () => void; onReject: () => void }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary-50 to-violet-50 rounded-2xl border border-primary-100">
@@ -303,7 +322,7 @@ function EnrollmentDetail({ enrollment, onValidate }: { enrollment: AdminEnrollm
 
       {enrollment.status === 'en_attente' && (
         <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-          <Button variant="danger" className="flex-1">Rejeter</Button>
+          <Button variant="danger" className="flex-1" onClick={onReject}>Rejeter</Button>
           <Button className="flex-1" icon={<CheckCircle className="w-4 h-4" />} onClick={onValidate}>
             Valider l'inscription
           </Button>

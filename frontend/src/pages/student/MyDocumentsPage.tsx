@@ -50,8 +50,12 @@ export default function MyDocumentsPage() {
   })
 
   const requestMut = useMutation({
-    mutationFn: (type: string) => api.post('/documents/generated-documents/', { doc_type: type }),
-    onSuccess: () => { toast.success('Demande soumise — la scolarité va générer votre document'); setShowRequest(false); qc.invalidateQueries({ queryKey: ['my-generated-docs'] }) },
+    // GeneratedDocumentViewSet.perform_create est volontairement réservé à
+    // la scolarité (anti-fraude aux diplômes) — un POST direct sur ce
+    // endpoint échouait donc toujours en 403 pour un étudiant. request_document
+    // notifie la scolarité au lieu d'écrire directement le document.
+    mutationFn: (type: string) => api.post('/documents/generated-documents/request_document/', { doc_type: type }),
+    onSuccess: () => { toast.success('Demande envoyée à la scolarité'); setShowRequest(false) },
     onError: () => toast.error('Erreur lors de la demande'),
   })
 

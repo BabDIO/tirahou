@@ -119,9 +119,17 @@ export default function CommunicationPage() {
   })
 
   const sendMessageMut = useMutation({
-    mutationFn: (d: object) => api.post('/messages/', d),
-    onSuccess: () => { toast.success('Message envoyé'); setShowCompose(false); qc.invalidateQueries({ queryKey: ['messages'] }) },
-    onError: () => toast.error('Erreur lors de l\'envoi'),
+    // Message.recipient est une ForeignKey(User) — le formulaire ne
+    // collecte qu'un email (voir le champ "Destinataire" plus bas), donc
+    // il faut d'abord le résoudre en id avant l'envoi (voir
+    // apps.accounts.views.lookup_user_by_email) : un POST direct avec
+    // l'email échouait systématiquement (400, UUID attendu).
+    mutationFn: async (d: { recipient: string; subject: string; body: string }) => {
+      const lookup = await api.get('/users/lookup/', { params: { email: d.recipient.trim() } })
+      return api.post('/messages/', { recipient: lookup.data.id, subject: d.subject, body: d.body })
+    },
+    onSuccess: () => { toast.success('Message envoyé'); setShowCompose(false); setComposeData({ recipient: '', subject: '', body: '' }); qc.invalidateQueries({ queryKey: ['messages'] }) },
+    onError: (e: any) => toast.error(e?.response?.data?.error ?? 'Erreur lors de l\'envoi'),
   })
 
   const createAnnounceMut = useMutation({

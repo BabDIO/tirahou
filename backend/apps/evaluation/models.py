@@ -217,8 +217,16 @@ class Grade(BaseModel):
         return self.final_grade
     
     def save(self, *args, **kwargs):
-        # Calculer automatiquement la note finale
-        if self.cc_grade is not None or self.exam_grade is not None:
+        # Calculer automatiquement la note finale — sauf lors d'une
+        # correction manuelle explicite (voir GradeContestViewSet.accept),
+        # où final_grade est volontairement fixée à une valeur différente
+        # de la formule CC/Examen : sans ce contournement, cette ligne
+        # écrasait silencieusement toute note corrigée manuellement en la
+        # recalculant depuis cc_grade/exam_grade juste avant l'enregistrement
+        # — la réclamation était marquée "acceptée" sans que la note
+        # affichée à l'étudiant ne change jamais réellement.
+        skip_recalc = kwargs.pop('skip_recalc', False)
+        if not skip_recalc and (self.cc_grade is not None or self.exam_grade is not None):
             self.calculate_final_grade()
         
         # Enregistrer l'historique des modifications

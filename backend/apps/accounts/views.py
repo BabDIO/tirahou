@@ -174,6 +174,30 @@ class MfaDisableView(APIView):
         return Response({'detail': 'Double authentification désactivée.'})
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def lookup_user_by_email(request):
+    """
+    Résout un email vers un identifiant utilisateur — utilisé par la
+    messagerie interne (CommunicationPage.tsx "Nouveau message"), dont le
+    formulaire demande un email en texte libre alors que Message.recipient
+    est une ForeignKey(User) : chaque envoi échouait avec un 400 DRF
+    (UUID attendu, pas un email), rendant la fonctionnalité inutilisable.
+    Ne renvoie que l'id et le nom complet — jamais de liste ni d'autre
+    donnée du compte — pour rester accessible à tout utilisateur
+    authentifié sans ouvrir un annuaire complet (réservé aux rôles admin
+    via UserListCreateView ci-dessous).
+    """
+    email = request.query_params.get('email', '').strip()
+    if not email:
+        return Response({'error': 'email requis'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(email__iexact=email, is_active=True)
+    except User.DoesNotExist:
+        return Response({'error': 'Aucun compte actif avec cet email.'}, status=status.HTTP_404_NOT_FOUND)
+    return Response({'id': str(user.id), 'full_name': user.get_full_name()})
+
+
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.filter(is_active=True).prefetch_related('roles')
     permission_classes = [permissions.IsAuthenticated, HasModulePermission]
