@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Search, Plus, Eye, GraduationCap, Filter, Download } from 'lucide-react'
-import { studentsApi, analyticsApi } from '../../api'
-import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Avatar, Alert, Tabs, SkeletonTable } from '../../components/ui'
-import { formatDate, statusColor } from '../../lib/utils'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Search, Plus, Eye, Pencil, GraduationCap, Filter, Download, CreditCard } from 'lucide-react'
+import { studentsApi, analyticsApi, financeApi } from '../../api'
+import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Avatar, Alert, Tabs, SkeletonTable, DatePicker, Select } from '../../components/ui'
+import { formatDate, formatCurrency, statusColor } from '../../lib/utils'
 import { useDebounce } from '../../hooks/useDebounce'
 import { useDownload } from '../../hooks/useDownload'
+import { useToast } from '../../hooks/useToast'
 import StudentCreateForm from '../../components/forms/StudentCreateForm'
-import type { Student } from '../../types'
+import type { Student, Invoice } from '../../types'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous les statuts' },
@@ -43,6 +44,8 @@ export default function StudentsPage() {
   const [selected, setSelected] = useState<Student | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [editStudent, setEditStudent] = useState<Student | null>(null)
+  const queryClient = useQueryClient()
 
   const debouncedSearch = useDebounce(search, 400)
   const { downloadExcel } = useDownload()
@@ -141,7 +144,7 @@ export default function StudentsPage() {
             message="Aucun étudiant trouvé"
             description="Essayez de modifier vos critères de recherche"
             icon={<GraduationCap className="w-8 h-8" />}
-            action={<Button variant="secondary" size="sm" onClick={() => { setSearch(''); setStatusFilter(''); setLevelFilter('') }}>Réinitialiser</Button>}
+            action={<Button variant="secondary" size="sm" onClick={() => { setSearch(''); setStatusFilter(''); setLevelFilter(''); setPage(1) }}>Réinitialiser</Button>}
           />
         ) : (
           <>
@@ -217,18 +220,85 @@ export default function StudentsPage() {
         subtitle={selected?.student_id}
         size="lg"
       >
-        {selected && <StudentDetail student={selected} />}
+        {selected && <StudentDetail student={selected} onEdit={() => { setEditStudent(selected); setSelected(null) }} />}
       </Modal>
 
       {/* Create Modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouvel étudiant" size="xl">
         <StudentCreateForm onSuccess={() => setCreateOpen(false)} onCancel={() => setCreateOpen(false)} />
       </Modal>
+
+      {/* Edit Modal */}
+      <Modal open={!!editStudent} onClose={() => setEditStudent(null)} title="Modifier l'étudiant" subtitle={editStudent?.student_id} size="lg">
+        {editStudent && (
+          <StudentEditForm student={editStudent}
+            onSuccess={() => { setEditStudent(null); queryClient.invalidateQueries({ queryKey: ['students'] }) }}
+            onCancel={() => setEditStudent(null)} />
+        )}
+      </Modal>
     </div>
   )
 }
 
-function StudentDetail({ student }: { student: Student }) {
+function StudentEditForm({ student, onSuccess, onCancel }: { student: Student; onSuccess: () => void; onCancel: () => void }) {
+  const toast = useToast()
+  const [form, setForm] = useState({
+    gender: student.gender, nationality: student.nationality, birth_date: student.birth_date ?? '',
+    birth_place: student.birth_place ?? '', national_id: student.national_id ?? '',
+    address: student.address ?? '', current_level: student.current_level,
+    status: student.status, baccalaureate_year: student.baccalaureate_year ?? '',
+    baccalaureate_series: student.baccalaureate_series ?? '',
+    emergency_contact_name: student.emergency_contact_name ?? '',
+    emergency_contact_phone: student.emergency_contact_phone ?? '',
+  })
+  const set = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }))
+
+  const updateMut = useMutation({
+    mutationFn: () => studentsApi.updateStudent(student.id, form as Partial<Student>),
+    onSuccess: () => { toast.success('Étudiant modifié'); onSuccess() },
+    onError: (e: any) => toast.error(e?.response?.data?.detail ?? 'Erreur lors de la modification'),
+  })
+
+  return (
+    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+      <div className="grid grid-cols-2 gap-3">
+        <Select label="Genre" value={form.gender} onChange={e => set('gender', e.target.value)} options={[
+          { value: 'M', label: 'Masculin' }, { value: 'F', label: 'Féminin' }, { value: 'A', label: 'Autre' },
+        ]} />
+        <Select label="Statut" value={form.status} onChange={e => set('status', e.target.value)} options={[
+          { value: 'candidat', label: 'Candidat' }, { value: 'admis', label: 'Admis' },
+          { value: 'inscrit', label: 'Inscrit' }, { value: 'reinscrit', label: 'Réinscrit' },
+          { value: 'diplome', label: 'Diplômé' }, { value: 'abandonne', label: 'Abandonné' },
+          { value: 'exclu', label: 'Exclu' }, { value: 'suspendu', label: 'Suspendu' },
+        ]} />
+        <Input label="Nationalité" value={form.nationality} onChange={e => set('nationality', e.target.value)} />
+        <DatePicker label="Date de naissance" max={new Date().toISOString().slice(0, 10)}
+          value={form.birth_date} onChange={v => set('birth_date', v)} />
+        <Input label="Lieu de naissance" value={form.birth_place} onChange={e => set('birth_place', e.target.value)} />
+        <Input label="N° pièce d'identité" value={form.national_id} onChange={e => set('national_id', e.target.value)} />
+        <div>
+          <label className="label">Niveau</label>
+          <select className="input bg-white dark:bg-slate-900" value={form.current_level} onChange={e => set('current_level', Number(e.target.value))}>
+            {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>Niveau {n}</option>)}
+          </select>
+        </div>
+        <Input label="Année bac" type="number" value={form.baccalaureate_year} onChange={e => set('baccalaureate_year', e.target.value)} />
+        <Input label="Série bac" value={form.baccalaureate_series} onChange={e => set('baccalaureate_series', e.target.value)} />
+      </div>
+      <Input label="Adresse" value={form.address} onChange={e => set('address', e.target.value)} />
+      <div className="grid grid-cols-2 gap-3">
+        <Input label="Contact urgence — nom" value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} />
+        <Input label="Contact urgence — téléphone" value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} />
+      </div>
+      <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+        <Button variant="secondary" className="flex-1" onClick={onCancel}>Annuler</Button>
+        <Button className="flex-1" loading={updateMut.isPending} onClick={() => updateMut.mutate()}>Enregistrer</Button>
+      </div>
+    </div>
+  )
+}
+
+function StudentDetail({ student, onEdit }: { student: Student; onEdit: () => void }) {
   const [tab, setTab] = useState('info')
 
   const { data: history } = useQuery({
@@ -242,14 +312,27 @@ function StudentDetail({ student }: { student: Student }) {
     enabled: tab === 'notes',
   })
 
+  const { data: invoices } = useQuery({
+    queryKey: ['student-invoices', student.id],
+    queryFn: () => financeApi.getInvoices({ student: student.id }).then(r => r.data),
+    enabled: tab === 'finances',
+  })
+
   return (
     <div className="space-y-5">
       {/* Identity header */}
       <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-primary-50 to-violet-50 rounded-2xl border border-primary-100">
         <Avatar name={student.user.full_name} src={student.photo} size="xl" color="bg-primary-100 text-primary-700" />
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-50">{student.user.full_name}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{student.user.email}</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-50">{student.user.full_name}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{student.user.email}</p>
+            </div>
+            <Button variant="secondary" size="sm" icon={<Pencil className="w-3.5 h-3.5" />} onClick={onEdit}>
+              Modifier
+            </Button>
+          </div>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <Badge label={student.status_display} className={statusColor(student.status)} dot />
             <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">#{student.student_id}</span>
@@ -265,6 +348,7 @@ function StudentDetail({ student }: { student: Student }) {
         tabs={[
           { key: 'info', label: 'Informations' },
           { key: 'parcours', label: 'Parcours académique' },
+          { key: 'finances', label: 'Finances' },
           { key: 'notes', label: 'Notes' },
         ]}
         active={tab}
@@ -308,6 +392,30 @@ function StudentDetail({ student }: { student: Student }) {
           )) : (
             <Alert type="info">Aucun historique académique disponible.</Alert>
           )}
+        </div>
+      )}
+
+      {/* Finances tab */}
+      {tab === 'finances' && (
+        <div className="space-y-2">
+          {!invoices ? <Spinner size="sm" /> :
+            (invoices.results ?? []).length > 0 ? (invoices.results as Invoice[]).map(inv => (
+              <div key={inv.id} className="flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  <div>
+                    <p className="font-semibold text-sm text-gray-900 dark:text-gray-50">{inv.invoice_number}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                      {formatCurrency(Number(inv.paid_amount))} / {formatCurrency(Number(inv.total_amount))} · Échéance {formatDate(inv.due_date)}
+                    </p>
+                  </div>
+                </div>
+                <Badge label={inv.status_display} className={statusColor(inv.status)} />
+              </div>
+            )) : (
+              <Alert type="info">Aucune facture pour cet étudiant.</Alert>
+            )
+          }
         </div>
       )}
 

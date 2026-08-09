@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Plus, Eye, BookMarked, Layers, Users, Clock, GraduationCap, Copy, UserCog } from 'lucide-react'
+import { Search, Plus, Eye, Pencil, Archive, BookMarked, Layers, Users, Clock, GraduationCap, Copy, UserCog } from 'lucide-react'
 import { programsApi, teachersApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
 import { statusColor, formatCurrency } from '../../lib/utils'
@@ -31,6 +31,7 @@ export default function ProgramsPage() {
   const [modeFilter, setModeFilter] = useState('')
   const [selected, setSelected] = useState<Program | null>(null)
   const [showMaquette, setShowMaquette] = useState(false)
+  const [editProgram, setEditProgram] = useState<Program | null>(null)
   const [tab, setTab] = useState('table')
 
   const { data, isLoading } = useQuery({
@@ -60,6 +61,18 @@ export default function ProgramsPage() {
     const code = window.prompt('Code du nouveau programme (année suivante) :', `${prog.code}-${new Date().getFullYear() + 1}`)
     if (!code) return
     duplicateMut.mutate({ id: prog.id, code })
+  }
+
+  const archiveMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateProgram(id, { is_active: false } as never),
+    onSuccess: () => { toast.success('Programme archivé'); qc.invalidateQueries({ queryKey: ['programs'] }); setSelected(null) },
+    onError: () => toast.error("Erreur lors de l'archivage"),
+  })
+
+  const handleArchive = (prog: Program) => {
+    if (window.confirm(`Archiver le programme "${prog.name}" ? Il n'apparaîtra plus dans les listes actives (les inscriptions existantes ne sont pas affectées).`)) {
+      archiveMut.mutate(prog.id)
+    }
   }
 
   const actifs = data?.results?.filter(p => p.status === 'active').length ?? 0
@@ -157,8 +170,12 @@ export default function ProgramsPage() {
                               onClick={() => { setSelected(prog); setShowMaquette(false) }} />
                             <Button variant="ghost" size="sm" icon={<Layers className="w-3.5 h-3.5" />}
                               onClick={() => { setSelected(prog); setShowMaquette(true) }} />
+                            <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                              onClick={() => setEditProgram(prog)} />
                             <Button variant="ghost" size="sm" icon={<Copy className="w-3.5 h-3.5" />}
                               loading={duplicateMut.isPending} onClick={() => handleDuplicate(prog)} />
+                            <Button variant="ghost" size="sm" icon={<Archive className="w-3.5 h-3.5" />}
+                              loading={archiveMut.isPending} onClick={() => handleArchive(prog)} />
                           </div>
                         </td>
                       </tr>
@@ -220,18 +237,24 @@ export default function ProgramsPage() {
         title="Détail du programme" subtitle={selected?.code} size="md">
         {selected && (
           <div className="space-y-5">
-            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary-50 to-violet-50 rounded-2xl border border-primary-100">
-              <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <BookMarked className="w-6 h-6 text-primary-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 dark:text-gray-50">{selected.name}</h3>
-                <p className="text-xs font-mono text-primary-600">{selected.code}</p>
-                <div className="flex gap-2 mt-1.5">
-                  <Badge label={selected.type_display} className={typeColor[selected.type] ?? 'badge-gray'} />
-                  <Badge label={selected.status} className={statusColor(selected.status)} dot />
+            <div className="flex items-start justify-between gap-3 p-4 bg-gradient-to-r from-primary-50 to-violet-50 rounded-2xl border border-primary-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <BookMarked className="w-6 h-6 text-primary-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-50">{selected.name}</h3>
+                  <p className="text-xs font-mono text-primary-600">{selected.code}</p>
+                  <div className="flex gap-2 mt-1.5">
+                    <Badge label={selected.type_display} className={typeColor[selected.type] ?? 'badge-gray'} />
+                    <Badge label={selected.status} className={statusColor(selected.status)} dot />
+                  </div>
                 </div>
               </div>
+              <Button variant="secondary" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                onClick={() => { setEditProgram(selected); setSelected(null) }}>
+                Modifier
+              </Button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -255,6 +278,13 @@ export default function ProgramsPage() {
       {/* Create Modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau programme" size="lg">
         <ProgramCreateForm onSuccess={() => setCreateOpen(false)} onCancel={() => setCreateOpen(false)} />
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal open={!!editProgram} onClose={() => setEditProgram(null)} title="Modifier le programme" subtitle={editProgram?.code} size="lg">
+        {editProgram && (
+          <ProgramCreateForm program={editProgram} onSuccess={() => setEditProgram(null)} onCancel={() => setEditProgram(null)} />
+        )}
       </Modal>
 
       {/* Maquette Modal */}

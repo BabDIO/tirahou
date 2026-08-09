@@ -97,7 +97,7 @@ export default function AdmissionsPage() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => setSelected(app)}>Voir</Button>
                           {app.status === 'soumise' && (
-                            <Button variant="secondary" size="sm" loading={startReview.isPending}
+                            <Button variant="secondary" size="sm" loading={startReview.isPending && startReview.variables === app.id}
                               onClick={() => startReview.mutate(app.id)}>Instruire</Button>
                           )}
                         </div>

@@ -5,6 +5,7 @@ from .models import Program, Semester, UE, EC, Group
 class ECSerializer(serializers.ModelSerializer):
     activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
     teacher_names = serializers.SerializerMethodField()
+    ue_name = serializers.CharField(source='ue.name', read_only=True)
 
     class Meta:
         model = EC

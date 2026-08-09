@@ -52,6 +52,18 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 class ScholarshipSerializer(serializers.ModelSerializer):
+    # `student` (comme tous les FK via fields='__all__') sérialise en UUID
+    # brut par défaut — FinanceScholarshipsPage.tsx affichait donc cet UUID
+    # dans la colonne "Étudiant" au lieu d'un nom, contrairement à
+    # InvoiceSerializer/PaymentSerializer dans ce même fichier qui ont
+    # déjà ce même correctif.
+    student_name = serializers.SerializerMethodField()
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    academic_year_label = serializers.CharField(source='academic_year.label', read_only=True)
+
     class Meta:
         model = Scholarship
         fields = '__all__'
+
+    def get_student_name(self, obj):
+        return obj.student.user.get_full_name()

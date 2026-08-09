@@ -57,8 +57,8 @@ export default function MyVirtualClassesPage() {
                 <p className="font-bold text-gray-900 dark:text-gray-50">{s.title}</p>
                 {s.course_space_title && <p className="text-xs text-gray-500 dark:text-gray-400">{s.course_space_title}</p>}
               </div>
-              <button onClick={() => joinMut.mutate(s.id)}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition animate-pulse">
+              <button onClick={() => joinMut.mutate(s.id)} disabled={joinMut.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition animate-pulse disabled:opacity-60 disabled:cursor-not-allowed disabled:animate-none">
                 <ExternalLink className="w-4 h-4" /> Rejoindre maintenant
               </button>
             </div>
@@ -102,8 +102,8 @@ export default function MyVirtualClassesPage() {
                           </div>
                         </div>
                       </div>
-                      <button onClick={() => joinMut.mutate(s.id)}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition flex-shrink-0">
+                      <button onClick={() => joinMut.mutate(s.id)} disabled={joinMut.isPending}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed">
                         <ExternalLink className="w-4 h-4" /> Rejoindre
                       </button>
                     </div>

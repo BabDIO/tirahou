@@ -104,7 +104,10 @@ class ECViewSet(viewsets.ModelViewSet):
     queryset = EC.objects.filter(is_active=True).select_related('ue')
     serializer_class = ECSerializer
     permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
-    filterset_fields = ['ue', 'activity_type']
+    # 'teachers' ajouté pour l'onglet "Cours assignés" d'une fiche
+    # enseignant (TeachersPage.tsx) — filtre sur EC.teachers (M2M vers
+    # User, pas vers Teacher : utiliser teacher.user.id côté frontend).
+    filterset_fields = ['ue', 'activity_type', 'teachers']
     search_fields = ['code', 'name']
 
 

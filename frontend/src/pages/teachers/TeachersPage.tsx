@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Plus, Eye, UserCheck, Download, Mail, Phone, BookOpen, X, Clock, Trash2 } from 'lucide-react'
-import { teachersApi, academicApi, teacherAvailabilityApi } from '../../api'
+import { Search, Plus, Eye, Pencil, UserCheck, Download, Mail, Phone, BookOpen, Send, Clock, Trash2 } from 'lucide-react'
+import { teachersApi, academicApi, teacherAvailabilityApi, programsApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Avatar, Alert, Tabs, Select } from '../../components/ui'
 import { statusColor } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
@@ -35,6 +35,8 @@ export default function TeachersPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [selected, setSelected] = useState<Teacher | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [editTeacher, setEditTeacher] = useState<Teacher | null>(null)
+  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: ['teachers', page, search, gradeFilter, statusFilter],
@@ -154,8 +156,12 @@ export default function TeachersPage() {
                       <td className="text-sm text-gray-600 dark:text-gray-400">{teacher.department_name ?? '—'}</td>
                       <td className="text-xs text-gray-400 dark:text-gray-500 max-w-[180px] truncate">{teacher.specialities || '—'}</td>
                       <td className="text-right">
-                        <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
-                          onClick={() => setSelected(teacher)}>Voir</Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" icon={<Eye className="w-3.5 h-3.5" />}
+                            onClick={() => setSelected(teacher)}>Voir</Button>
+                          <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                            onClick={() => setEditTeacher(teacher)} />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -169,33 +175,48 @@ export default function TeachersPage() {
 
       <Modal open={!!selected} onClose={() => setSelected(null)} title="Dossier enseignant"
         subtitle={selected?.teacher_id} size="md">
-        {selected && <TeacherDetail teacher={selected} />}
+        {selected && <TeacherDetail teacher={selected} onEdit={() => { setEditTeacher(selected); setSelected(null) }} />}
       </Modal>
 
       {/* Create Modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouvel enseignant" size="lg">
         <TeacherCreateForm onSuccess={() => setCreateOpen(false)} onCancel={() => setCreateOpen(false)} />
       </Modal>
+
+      {/* Edit Modal */}
+      <Modal open={!!editTeacher} onClose={() => setEditTeacher(null)} title="Modifier l'enseignant" subtitle={editTeacher?.teacher_id} size="lg">
+        {editTeacher && (
+          <TeacherCreateForm teacher={editTeacher}
+            onSuccess={() => { setEditTeacher(null); queryClient.invalidateQueries({ queryKey: ['teachers'] }) }}
+            onCancel={() => setEditTeacher(null)} />
+        )}
+      </Modal>
     </div>
   )
 }
 
-function TeacherDetail({ teacher }: { teacher: Teacher }) {
+function TeacherDetail({ teacher, onEdit }: { teacher: Teacher; onEdit: () => void }) {
   const [tab, setTab] = useState('info')
+  const [showMessage, setShowMessage] = useState(false)
   const isExternal = teacher.status === 'vacataire' || teacher.status === 'invite'
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
-        <Avatar name={teacher.user.full_name} size="xl" color="bg-emerald-100 text-emerald-700" />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-50">{teacher.user.full_name}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{teacher.user.email}</p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Badge label={teacher.grade_display} className={gradeColors[teacher.grade] ?? 'badge-gray'} />
-            <Badge label={teacher.status} className={statusColor(teacher.status)} dot />
+      <div className="flex items-start justify-between gap-3 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
+        <div className="flex items-start gap-4 min-w-0">
+          <Avatar name={teacher.user.full_name} size="xl" color="bg-emerald-100 text-emerald-700" />
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-50">{teacher.user.full_name}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{teacher.user.email}</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Badge label={teacher.grade_display} className={gradeColors[teacher.grade] ?? 'badge-gray'} />
+              <Badge label={teacher.status} className={statusColor(teacher.status)} dot />
+            </div>
           </div>
         </div>
+        <Button variant="secondary" size="sm" icon={<Pencil className="w-3.5 h-3.5" />} onClick={onEdit}>
+          Modifier
+        </Button>
       </div>
 
       <Tabs tabs={[
@@ -226,21 +247,89 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
 
       {tab === 'dispo' && <TeacherAvailabilityPanel teacher={teacher} />}
 
-      {tab === 'cours' && (
-        <Alert type="info">Les cours assignés seront affichés ici depuis le module LMS.</Alert>
-      )}
+      {tab === 'cours' && <TeacherCoursesPanel teacher={teacher} />}
 
       <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-        <Button variant="secondary" size="sm" icon={<Mail className="w-3.5 h-3.5" />} className="flex-1">
+        <Button variant="secondary" size="sm" icon={<Mail className="w-3.5 h-3.5" />} className="flex-1"
+          onClick={() => setShowMessage(true)}>
           Envoyer un message
         </Button>
-        <Button variant="secondary" size="sm" icon={<Phone className="w-3.5 h-3.5" />} className="flex-1">
-          Appeler
-        </Button>
-        <Button variant="secondary" size="sm" icon={<BookOpen className="w-3.5 h-3.5" />} className="flex-1">
+        {teacher.user.phone ? (
+          <a href={`tel:${teacher.user.phone}`} className="flex-1">
+            <Button variant="secondary" size="sm" icon={<Phone className="w-3.5 h-3.5" />} className="w-full">
+              Appeler
+            </Button>
+          </a>
+        ) : (
+          <Button variant="secondary" size="sm" icon={<Phone className="w-3.5 h-3.5" />} className="flex-1" disabled>
+            Appeler
+          </Button>
+        )}
+        <Button variant="secondary" size="sm" icon={<BookOpen className="w-3.5 h-3.5" />} className="flex-1"
+          onClick={() => setTab('cours')}>
           Voir les cours
         </Button>
       </div>
+
+      <Modal open={showMessage} onClose={() => setShowMessage(false)} title="Envoyer un message" subtitle={teacher.user.full_name} size="sm">
+        <SendMessageForm recipientId={teacher.user.id} onDone={() => setShowMessage(false)} />
+      </Modal>
+    </div>
+  )
+}
+
+function TeacherCoursesPanel({ teacher }: { teacher: Teacher }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['teacher-ecs', teacher.user.id],
+    queryFn: () => programsApi.getECs({ teachers: teacher.user.id, page_size: 100 }).then(r => r.data),
+  })
+  const ecs = data?.results ?? []
+
+  if (isLoading) return <Spinner size="sm" />
+  if (!ecs.length) return <Alert type="info">Aucun cours (EC) assigné à cet enseignant pour l'instant.</Alert>
+
+  return (
+    <div className="space-y-2">
+      {ecs.map((ec: { id: string; code: string; name: string; credits: number; activity_type_display: string; ue_name?: string }) => (
+        <div key={ec.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+              <span className="font-mono text-primary-600 mr-1.5">{ec.code}</span>{ec.name}
+            </p>
+            {ec.ue_name && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{ec.ue_name}</p>}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+            <Badge label={ec.activity_type_display} className="badge-gray" />
+            <span>{ec.credits} cr.</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SendMessageForm({ recipientId, onDone }: { recipientId: string; onDone: () => void }) {
+  const toast = useToast()
+  const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
+
+  const sendMut = useMutation({
+    mutationFn: () => api.post('/messages/', { recipient: recipientId, subject, body }),
+    onSuccess: () => { toast.success('Message envoyé'); onDone() },
+    onError: () => toast.error("Erreur lors de l'envoi"),
+  })
+
+  return (
+    <div className="space-y-4">
+      <Input label="Sujet" value={subject} onChange={e => setSubject(e.target.value)} />
+      <div>
+        <label className="label">Message</label>
+        <textarea className="input min-h-[100px] resize-none" value={body} onChange={e => setBody(e.target.value)} />
+      </div>
+      <Button className="w-full" icon={<Send className="w-4 h-4" />} disabled={!body.trim()}
+        loading={sendMut.isPending} onClick={() => sendMut.mutate()}>
+        Envoyer
+      </Button>
     </div>
   )
 }
@@ -314,11 +403,17 @@ function TeacherAvailabilityPanel({ teacher }: { teacher: Teacher }) {
   )
 }
 
-function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+function TeacherCreateForm({ teacher, onSuccess, onCancel }: { teacher?: Teacher; onSuccess: () => void; onCancel: () => void }) {
   const toast = useToast()
   const queryClient = useQueryClient()
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(teacher ? {
+    email: teacher.user.email, first_name: teacher.user.first_name, last_name: teacher.user.last_name,
+    phone: teacher.user.phone ?? '', password: '',
+    grade: teacher.grade, status: teacher.status, specialities: teacher.specialities, bio: teacher.bio,
+    office: teacher.office, department: teacher.department ?? '', weekly_hours_quota: teacher.weekly_hours_quota,
+    hourly_rate: teacher.hourly_rate?.toString() ?? '', contract_reference: teacher.contract_reference,
+  } : {
     email: '', first_name: '', last_name: '', phone: '', password: '',
     grade: 'assistant', status: 'permanent', specialities: '', bio: '', office: '',
     department: '', weekly_hours_quota: 8, hourly_rate: '', contract_reference: '',
@@ -340,29 +435,33 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     if (!form.email.includes('@')) errs.email = 'Email invalide'
     if (!form.first_name.trim()) errs.first_name = 'Prénom requis'
     if (!form.last_name.trim()) errs.last_name = 'Nom requis'
-    if (form.password.length < 8) errs.password = 'Minimum 8 caractères'
+    if (!teacher && form.password.length < 8) errs.password = 'Minimum 8 caractères'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
   const create = useMutation({
     mutationFn: async () => {
+      const teacherPayload = {
+        grade: form.grade as never, status: form.status as never,
+        department: form.department || undefined, specialities: form.specialities,
+        bio: form.bio, office: form.office, weekly_hours_quota: form.weekly_hours_quota,
+        hourly_rate: (isExternal && form.hourly_rate) ? Number(form.hourly_rate) as never : undefined,
+        contract_reference: isExternal ? form.contract_reference : undefined,
+      }
+      if (teacher) {
+        return teachersApi.updateTeacher(teacher.id, teacherPayload as never)
+      }
       const userRes = await api.post('/users/', {
         email: form.email, first_name: form.first_name, last_name: form.last_name,
         phone: form.phone, username: `${form.email.split('@')[0]}_${Date.now()}`,
         password: form.password, role_ids: [],
       })
-      return teachersApi.createTeacher({
-        user: userRes.data.id, grade: form.grade as never, status: form.status as never,
-        department: form.department || undefined, specialities: form.specialities,
-        bio: form.bio, office: form.office, weekly_hours_quota: form.weekly_hours_quota,
-        hourly_rate: (isExternal && form.hourly_rate) ? Number(form.hourly_rate) as never : undefined,
-        contract_reference: isExternal ? form.contract_reference : undefined,
-      } as never)
+      return teachersApi.createTeacher({ user: userRes.data.id, ...teacherPayload } as never)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teachers'] })
-      toast.success('Enseignant créé avec succès')
+      toast.success(teacher ? 'Enseignant modifié avec succès' : 'Enseignant créé avec succès')
       onSuccess()
     },
     onError: (err: unknown) => {
@@ -376,20 +475,27 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Compte utilisateur</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Prénom *" placeholder="Jean" error={errors.first_name}
-            value={form.first_name} onChange={e => set('first_name', e.target.value)} />
-          <Input label="Nom *" placeholder="Dupont" error={errors.last_name}
-            value={form.last_name} onChange={e => set('last_name', e.target.value)} />
-          <Input label="Email *" type="email" error={errors.email}
-            value={form.email} onChange={e => set('email', e.target.value)} />
-          <Input label="Téléphone" value={form.phone} onChange={e => set('phone', e.target.value)} />
-          <Input label="Mot de passe *" type="password" error={errors.password}
-            className="sm:col-span-2" value={form.password} onChange={e => set('password', e.target.value)} />
+      {teacher ? (
+        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm">
+          <p className="font-semibold text-gray-900 dark:text-gray-50">{teacher.user.full_name}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{teacher.user.email} — les informations de compte se modifient depuis Administration → Utilisateurs</p>
         </div>
-      </div>
+      ) : (
+        <div>
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Compte utilisateur</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Prénom *" placeholder="Jean" error={errors.first_name}
+              value={form.first_name} onChange={e => set('first_name', e.target.value)} />
+            <Input label="Nom *" placeholder="Dupont" error={errors.last_name}
+              value={form.last_name} onChange={e => set('last_name', e.target.value)} />
+            <Input label="Email *" type="email" error={errors.email}
+              value={form.email} onChange={e => set('email', e.target.value)} />
+            <Input label="Téléphone" value={form.phone} onChange={e => set('phone', e.target.value)} />
+            <Input label="Mot de passe *" type="password" error={errors.password}
+              className="sm:col-span-2" value={form.password} onChange={e => set('password', e.target.value)} />
+          </div>
+        </div>
+      )}
       <div>
         <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Profil académique</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -438,7 +544,7 @@ function TeacherCreateForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
       <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={create.isPending} icon={<UserCheck className="w-4 h-4" />}>
-          Créer l'enseignant
+          {teacher ? 'Enregistrer' : "Créer l'enseignant"}
         </Button>
       </div>
     </form>

@@ -160,7 +160,7 @@ export default function AnalyticsPage() {
           { key: 'academic', label: 'Académique', icon: <Users className="w-4 h-4" /> },
           { key: 'finance', label: 'Finance', icon: <TrendingUp className="w-4 h-4" /> },
           { key: 'lms', label: 'LMS', icon: <FileText className="w-4 h-4" /> },
-          { key: 'risk', label: 'Risques', icon: <AlertTriangle className="w-4 h-4" />, count: Array.isArray(atRisk) ? atRisk.length : 0 },
+          { key: 'risk', label: 'Risques', icon: <AlertTriangle className="w-4 h-4" />, count: atRisk?.count ?? 0 },
           { key: 'trends', label: 'Tendances', icon: <TrendingUp className="w-4 h-4" /> },
         ]}
         active={tab}

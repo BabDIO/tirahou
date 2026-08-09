@@ -4,6 +4,7 @@ import { BookMarked } from 'lucide-react'
 import { Button, Input, Select, Alert } from '../ui'
 import { programsApi, academicApi } from '../../api'
 import { useToast } from '../../hooks/useToast'
+import type { Program } from '../../types'
 
 interface FormData {
   code: string
@@ -20,13 +21,18 @@ interface FormData {
   status: string
 }
 
-interface Props { onSuccess: () => void; onCancel: () => void }
+interface Props { program?: Program; onSuccess: () => void; onCancel: () => void }
 
-export default function ProgramCreateForm({ onSuccess, onCancel }: Props) {
+export default function ProgramCreateForm({ program, onSuccess, onCancel }: Props) {
   const toast = useToast()
   const queryClient = useQueryClient()
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
-  const [form, setForm] = useState<FormData>({
+  const [form, setForm] = useState<FormData>(program ? {
+    code: program.code, name: program.name, type: program.type, mode: program.mode,
+    department: program.department, duration_semesters: program.duration_semesters,
+    capacity: program.capacity, fees: program.fees, languages: program.languages,
+    prerequisites: program.prerequisites, description: program.description, status: program.status,
+  } : {
     code: '', name: '', type: 'licence', mode: 'hybride', department: '',
     duration_semesters: 6, capacity: 50, fees: 0,
     languages: 'Français', prerequisites: '', description: '', status: 'preparation',
@@ -54,15 +60,17 @@ export default function ProgramCreateForm({ onSuccess, onCancel }: Props) {
   }
 
   const create = useMutation({
-    mutationFn: () => programsApi.createProgram(form as never),
+    mutationFn: () => program
+      ? programsApi.updateProgram(program.id, form as never)
+      : programsApi.createProgram(form as never),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programs'] })
-      toast.success('Programme créé avec succès')
+      toast.success(program ? 'Programme modifié avec succès' : 'Programme créé avec succès')
       onSuccess()
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } } }
-      toast.error(e?.response?.data?.message ?? 'Erreur lors de la création')
+      toast.error(e?.response?.data?.message ?? (program ? 'Erreur lors de la modification' : 'Erreur lors de la création'))
     },
   })
 
@@ -143,7 +151,7 @@ export default function ProgramCreateForm({ onSuccess, onCancel }: Props) {
       <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button variant="secondary" className="flex-1" type="button" onClick={onCancel}>Annuler</Button>
         <Button className="flex-1" type="submit" loading={create.isPending} icon={<BookMarked className="w-4 h-4" />}>
-          Créer le programme
+          {program ? 'Enregistrer' : 'Créer le programme'}
         </Button>
       </div>
     </form>

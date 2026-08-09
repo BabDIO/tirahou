@@ -164,6 +164,8 @@ export const financeApi = {
   downloadReceipt: (id: string) => api.get(`/payments/${id}/receipt_pdf/`, { responseType: 'blob' }),
   getScholarships: (params?: object) => api.get('/scholarships/', { params }),
   createScholarship: (data: object) => api.post('/scholarships/', data),
+  updateScholarship: (id: string, data: object) => api.patch(`/scholarships/${id}/`, data),
+  deleteScholarship: (id: string) => api.delete(`/scholarships/${id}/`),
   getCashJournal: (params?: object) => api.get('/finance/cash-journal/', { params }),
   // Échéanciers
   getInstallments: (params?: object) => api.get('/installments/', { params }),

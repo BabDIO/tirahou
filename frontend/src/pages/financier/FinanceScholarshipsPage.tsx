@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Gift, Plus, Search, Users } from 'lucide-react'
+import { Gift, Plus, Search, Users, Pencil, Trash2 } from 'lucide-react'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Card, StatsCard, Modal, Alert } from '../../components/ui'
-import { financeApi, studentsApi } from '../../api'
+import { financeApi, studentsApi, academicApi } from '../../api'
 import { formatCurrency, formatDate } from '../../lib/utils'
+import { useToast } from '../../hooks/useToast'
+
+interface ScholarshipRow {
+  id: string; student: string; student_name: string; type: string; amount: number
+  reason: string; created_at: string; academic_year: string; percentage: number
+}
 
 const typeColor: Record<string, string> = {
   bourse: 'badge-blue', exoneration: 'badge-green', remise: 'badge-yellow', ristourne: 'badge-purple',
@@ -17,12 +23,26 @@ export default function FinanceScholarshipsPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
+  const [editScholarship, setEditScholarship] = useState<ScholarshipRow | null>(null)
   const queryClient = useQueryClient()
+  const toast = useToast()
 
   const { data, isLoading } = useQuery({
     queryKey: ['scholarships', page, search, typeFilter],
     queryFn: () => financeApi.getScholarships({ page, search, type: typeFilter || undefined }).then(r => r.data),
   })
+
+  const revokeMut = useMutation({
+    mutationFn: (id: string) => financeApi.deleteScholarship(id),
+    onSuccess: () => { toast.success('Bourse/exonération révoquée'); queryClient.invalidateQueries({ queryKey: ['scholarships'] }) },
+    onError: () => toast.error('Erreur lors de la révocation'),
+  })
+
+  const handleRevoke = (sc: ScholarshipRow) => {
+    if (window.confirm(`Révoquer cette ${sc.type === 'bourse' ? 'bourse' : 'réduction'} pour ${sc.student_name} ? Cette action est définitive.`)) {
+      revokeMut.mutate(sc.id)
+    }
+  }
 
   const scholarships = data?.results ?? []
   const totalAmount = scholarships.reduce((s: number, sc: { amount: number }) => s + sc.amount, 0)
@@ -74,16 +94,13 @@ export default function FinanceScholarshipsPage() {
                 <thead>
                   <tr>
                     <th>Étudiant</th><th>Type</th><th>Montant</th>
-                    <th>Motif</th><th>Accordé le</th>
+                    <th>Motif</th><th>Accordé le</th><th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {scholarships.map((sc: {
-                    id: string; student: string; type: string; amount: number
-                    reason: string; created_at: string
-                  }) => (
+                  {(scholarships as ScholarshipRow[]).map(sc => (
                     <tr key={sc.id}>
-                      <td className="font-semibold text-sm">{sc.student}</td>
+                      <td className="font-semibold text-sm">{sc.student_name}</td>
                       <td>
                         <span className="flex items-center gap-1.5">
                           <span>{typeIcon[sc.type] ?? '💰'}</span>
@@ -93,6 +110,14 @@ export default function FinanceScholarshipsPage() {
                       <td className="font-bold text-emerald-600">{formatCurrency(sc.amount)}</td>
                       <td className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{sc.reason || '—'}</td>
                       <td className="text-xs text-gray-400 dark:text-gray-500">{formatDate(sc.created_at)}</td>
+                      <td className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                            onClick={() => setEditScholarship(sc)} />
+                          <Button variant="ghost" size="sm" icon={<Trash2 className="w-3.5 h-3.5" />}
+                            loading={revokeMut.isPending} onClick={() => handleRevoke(sc)} />
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -109,12 +134,24 @@ export default function FinanceScholarshipsPage() {
           queryClient.invalidateQueries({ queryKey: ['scholarships'] })
         }} />
       </Modal>
+
+      <Modal open={!!editScholarship} onClose={() => setEditScholarship(null)} title="Modifier la bourse / exonération" size="md">
+        {editScholarship && (
+          <ScholarshipForm scholarship={editScholarship} onSuccess={() => {
+            setEditScholarship(null)
+            queryClient.invalidateQueries({ queryKey: ['scholarships'] })
+          }} />
+        )}
+      </Modal>
     </div>
   )
 }
 
-function ScholarshipForm({ onSuccess }: { onSuccess: () => void }) {
-  const [form, setForm] = useState({ student: '', academic_year: '', type: 'bourse', amount: 0, reason: '' })
+function ScholarshipForm({ scholarship, onSuccess }: { scholarship?: ScholarshipRow; onSuccess: () => void }) {
+  const [form, setForm] = useState(scholarship ? {
+    student: scholarship.student, academic_year: scholarship.academic_year,
+    type: scholarship.type, amount: scholarship.amount, reason: scholarship.reason,
+  } : { student: '', academic_year: '', type: 'bourse', amount: 0, reason: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }))
@@ -124,13 +161,23 @@ function ScholarshipForm({ onSuccess }: { onSuccess: () => void }) {
     queryFn: () => studentsApi.getStudents({ page_size: 200 }).then(r => r.data),
   })
 
+  // `academic_year` est un champ obligatoire côté modèle (aucune valeur par
+  // défaut) — ce formulaire ne le collectait pas du tout jusqu'ici, donc
+  // toute création de bourse/exonération échouait silencieusement (le
+  // formulaire n'affichait qu'un message d'erreur générique).
+  const { data: years } = useQuery({
+    queryKey: ['academic-years-for-scholarship'],
+    queryFn: () => academicApi.getAcademicYears({ page_size: 50 }).then(r => r.data),
+  })
+
   const handleSubmit = async () => {
-    if (!form.student || !form.amount) { setError('Étudiant et montant requis'); return }
+    if (!form.student || !form.academic_year || !form.amount) { setError('Étudiant, année académique et montant requis'); return }
     setLoading(true); setError('')
     try {
-      await financeApi.createScholarship(form)
+      if (scholarship) await financeApi.updateScholarship(scholarship.id, form)
+      else await financeApi.createScholarship(form)
       onSuccess()
-    } catch { setError('Erreur lors de la création.') }
+    } catch { setError(scholarship ? 'Erreur lors de la modification.' : 'Erreur lors de la création.') }
     finally { setLoading(false) }
   }
 
@@ -143,6 +190,15 @@ function ScholarshipForm({ onSuccess }: { onSuccess: () => void }) {
           <option value="">— Sélectionner —</option>
           {students?.results?.map((s: { id: string; student_id: string; user: { full_name: string } }) => (
             <option key={s.id} value={s.id}>{s.user.full_name} ({s.student_id})</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Année académique *</label>
+        <select className="input bg-white dark:bg-slate-900" value={form.academic_year} onChange={e => set('academic_year', e.target.value)}>
+          <option value="">— Sélectionner —</option>
+          {years?.results?.map((y: { id: string; label: string }) => (
+            <option key={y.id} value={y.id}>{y.label}</option>
           ))}
         </select>
       </div>
@@ -178,7 +234,7 @@ function ScholarshipForm({ onSuccess }: { onSuccess: () => void }) {
           placeholder="Ex: Bourse d'excellence, situation sociale difficile..." />
       </div>
       <Button className="w-full" onClick={handleSubmit} loading={loading} icon={<Gift className="w-4 h-4" />}>
-        Accorder la réduction
+        {scholarship ? 'Enregistrer' : 'Accorder la réduction'}
       </Button>
     </div>
   )
