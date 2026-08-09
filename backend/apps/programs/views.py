@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -43,7 +44,14 @@ class ProgramViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def maquette(self, request, pk=None):
         program = self.get_object()
-        semesters = program.semesters.prefetch_related('ues__ecs')
+        # Les UE/EC "supprimées" côté frontend sont en fait archivées
+        # (is_active=False) — la maquette ne doit renvoyer que les
+        # éléments actifs pour que la suppression soit visible.
+        semesters = program.semesters.filter(is_active=True).prefetch_related(
+            Prefetch('ues', queryset=UE.objects.filter(is_active=True).prefetch_related(
+                Prefetch('ecs', queryset=EC.objects.filter(is_active=True))
+            ))
+        )
         return Response(SemesterSerializer(semesters, many=True).data)
 
     @action(detail=True, methods=['post'])
@@ -86,7 +94,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
 
 class SemesterViewSet(viewsets.ModelViewSet):
-    queryset = Semester.objects.all().select_related('program').order_by('id')
+    queryset = Semester.objects.filter(is_active=True).select_related('program').order_by('id')
     serializer_class = SemesterSerializer
     permission_classes = [permissions.IsAuthenticated, IsProgramStructureManager]
     filterset_fields = ['program', 'academic_year']

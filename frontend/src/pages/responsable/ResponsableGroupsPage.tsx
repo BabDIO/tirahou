@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Users, Plus, Edit, Search } from 'lucide-react'
+import { Users, Plus, Edit, Search, X } from 'lucide-react'
 import { Button, Input, Badge, Spinner, Empty, Card, StatsCard, Modal, Alert } from '../../components/ui'
 import { programsApi } from '../../api'
 import api from '../../lib/axios'
@@ -10,14 +11,22 @@ const typeColor: Record<string, string> = {
 }
 
 export default function ResponsableGroupsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const programFilter = searchParams.get('program') ?? ''
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [editGroup, setEditGroup] = useState<{ id: string; name: string; type: string; capacity: number } | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['groups', search],
-    queryFn: () => programsApi.getGroups({ search }).then(r => r.data),
+    queryKey: ['groups', search, programFilter],
+    queryFn: () => programsApi.getGroups({ search, program: programFilter || undefined }).then(r => r.data),
+  })
+
+  const { data: filteredProgram } = useQuery({
+    queryKey: ['program', programFilter],
+    queryFn: () => programsApi.getProgram(programFilter).then(r => r.data),
+    enabled: !!programFilter,
   })
 
   const deleteGroup = useMutation({
@@ -41,6 +50,17 @@ export default function ResponsableGroupsPage() {
           Nouveau groupe
         </Button>
       </div>
+
+      {programFilter && (
+        <Alert type="info">
+          <div className="flex items-center justify-between gap-3">
+            <span>Groupes filtrés sur le programme <strong>{filteredProgram?.name ?? '…'}</strong></span>
+            <button onClick={() => setSearchParams({})} className="flex items-center gap-1 text-xs font-semibold hover:underline flex-shrink-0">
+              <X className="w-3.5 h-3.5" /> Retirer le filtre
+            </button>
+          </div>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatsCard title="Promotions" value={promotions}
@@ -72,13 +92,13 @@ export default function ResponsableGroupsPage() {
               </thead>
               <tbody>
                 {groups.map((g: {
-                  id: string; name: string; type: string; program: string
+                  id: string; name: string; type: string; program: string; program_name?: string
                   capacity: number; academic_year: string
                 }) => (
                   <tr key={g.id}>
                     <td className="font-semibold text-sm">{g.name}</td>
                     <td><Badge label={g.type} className={typeColor[g.type] ?? 'badge-gray'} /></td>
-                    <td className="text-sm text-gray-600 dark:text-gray-400">{g.program}</td>
+                    <td className="text-sm text-gray-600 dark:text-gray-400">{g.program_name ?? g.program}</td>
                     <td className="text-sm">{g.capacity} places</td>
                     <td className="text-sm text-gray-500 dark:text-gray-400">{g.academic_year}</td>
                     <td className="text-right">
@@ -100,7 +120,8 @@ export default function ResponsableGroupsPage() {
       </Card>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau groupe" size="sm">
-        <GroupForm onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['groups'] }) }} />
+        <GroupForm defaultProgram={programFilter}
+          onSuccess={() => { setCreateOpen(false); queryClient.invalidateQueries({ queryKey: ['groups'] }) }} />
       </Modal>
 
       <Modal open={!!editGroup} onClose={() => setEditGroup(null)} title="Modifier le groupe" size="sm">
@@ -113,15 +134,16 @@ export default function ResponsableGroupsPage() {
   )
 }
 
-function GroupForm({ group, onSuccess }: {
+function GroupForm({ group, defaultProgram, onSuccess }: {
   group?: { id: string; name: string; type: string; capacity: number }
+  defaultProgram?: string
   onSuccess: () => void
 }) {
   const [form, setForm] = useState({
     name: group?.name ?? '',
     type: group?.type ?? 'promotion',
     capacity: group?.capacity ?? 30,
-    program: '', academic_year: '',
+    program: defaultProgram ?? '', academic_year: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

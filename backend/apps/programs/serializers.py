@@ -47,6 +47,9 @@ class ProgramDetailSerializer(ProgramSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    program_name = serializers.CharField(source='program.name', read_only=True)
+    academic_year_label = serializers.CharField(source='academic_year.label', read_only=True)
+
     class Meta:
         model = Group
         fields = '__all__'

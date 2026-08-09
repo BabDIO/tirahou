@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Video, Users, Clock, Play, Square, ExternalLink,
-  ArrowLeft, Monitor, Wifi, WifiOff, Calendar, Info
+  ArrowLeft, Monitor, Wifi, WifiOff, Calendar, Info, UserCheck, UserX
 } from 'lucide-react'
 import { virtualClassApi } from '../../api'
 import { Button, Badge, Spinner, Card, StatsCard, Alert, Modal } from '../../components/ui'
@@ -74,6 +74,24 @@ export default function VirtualClassDetailPage() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['virtual-session', id] }); toast.success('Session annulée') },
   })
 
+  const canManageSession = isEnseignant || isAdmin
+
+  const { data: participants, isLoading: participantsLoading } = useQuery({
+    queryKey: ['virtual-session-participants', id],
+    queryFn: () => virtualClassApi.getParticipants(id!).then(r => r.data as {
+      id: string; user: string; user_name: string; role: string; role_display?: string
+      is_present: boolean; join_mode: string; duration_minutes: number
+    }[]),
+    enabled: !!id && canManageSession,
+  })
+
+  const presenceMutation = useMutation({
+    mutationFn: ({ userId, present }: { userId: string; present: boolean }) =>
+      virtualClassApi.setParticipantPresence(id!, userId, present),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['virtual-session-participants', id] }) },
+    onError: () => toast.error('Erreur lors de la mise à jour de la présence'),
+  })
+
   if (isLoading) return <Spinner text="Chargement de la session..." />
   if (!session) return (
     <div className="space-y-4">
@@ -83,7 +101,7 @@ export default function VirtualClassDetailPage() {
   )
 
   const provider = providerInfo[session.provider] ?? providerInfo.autre
-  const canManage = isEnseignant || isAdmin
+  const canManage = canManageSession
   const isActive = session.status === 'en_cours'
   const isPlanned = session.status === 'planifiee'
   const isDone = session.status === 'terminee'
@@ -266,6 +284,47 @@ export default function VirtualClassDetailPage() {
           </div>
         </Card>
       </div>
+
+      {/* Participants & présence (enseignant/admin) */}
+      {canManage && (
+        <Card title="Participants" action={<Badge label={`${participants?.length ?? 0} inscrit(s)`} className="badge-gray" />}>
+          {participantsLoading ? <Spinner text="Chargement des participants..." /> : !participants?.length ? (
+            <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Aucun participant inscrit à cette session pour le moment.</p>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Participant</th><th>Rôle</th><th>Mode</th><th>Durée</th><th>Présence</th>
+                    <th className="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {participants.map(p => (
+                    <tr key={p.id}>
+                      <td className="font-semibold text-sm">{p.user_name}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400">{p.role_display ?? p.role}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400">{p.join_mode === 'physical' ? '🏫 En salle' : '💻 En ligne'}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400">{p.duration_minutes ? `${p.duration_minutes} min` : '—'}</td>
+                      <td>
+                        <Badge label={p.is_present ? 'Présent' : 'Absent'} className={p.is_present ? 'badge-green' : 'badge-gray'} dot />
+                      </td>
+                      <td className="text-right">
+                        <Button variant="ghost" size="sm"
+                          icon={p.is_present ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                          loading={presenceMutation.isPending && presenceMutation.variables?.userId === p.user}
+                          onClick={() => presenceMutation.mutate({ userId: p.user, present: !p.is_present })}>
+                          {p.is_present ? 'Marquer absent' : 'Marquer présent'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Join Modal */}
       <Modal open={joinOpen} onClose={() => setJoinOpen(false)} title="Rejoindre la session" size="sm">

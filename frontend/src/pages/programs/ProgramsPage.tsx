@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Plus, Eye, Pencil, Archive, BookMarked, Layers, Users, Clock, GraduationCap, Copy, UserCog } from 'lucide-react'
+import { Search, Plus, Eye, Pencil, Archive, BookMarked, Layers, Users, Clock, GraduationCap, Copy, UserCog, Trash2 } from 'lucide-react'
 import { programsApi, teachersApi } from '../../api'
 import { Button, Input, Badge, Spinner, Empty, Pagination, Modal, Card, StatsCard, Alert, Tabs } from '../../components/ui'
 import { statusColor, formatCurrency } from '../../lib/utils'
@@ -22,6 +22,7 @@ const typeColor: Record<string, string> = {
 }
 
 export default function ProgramsPage() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(searchParams.get('q') ?? '')
@@ -170,6 +171,8 @@ export default function ProgramsPage() {
                               onClick={() => { setSelected(prog); setShowMaquette(false) }} />
                             <Button variant="ghost" size="sm" icon={<Layers className="w-3.5 h-3.5" />}
                               onClick={() => { setSelected(prog); setShowMaquette(true) }} />
+                            <Button variant="ghost" size="sm" icon={<Users className="w-3.5 h-3.5" />}
+                              title="Groupes TD/TP" onClick={() => navigate(`/responsable/groups?program=${prog.id}`)} />
                             <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
                               onClick={() => setEditProgram(prog)} />
                             <Button variant="ghost" size="sm" icon={<Copy className="w-3.5 h-3.5" />}
@@ -251,10 +254,16 @@ export default function ProgramsPage() {
                   </div>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
-                onClick={() => { setEditProgram(selected); setSelected(null) }}>
-                Modifier
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" icon={<Users className="w-3.5 h-3.5" />}
+                  onClick={() => navigate(`/responsable/groups?program=${selected.id}`)}>
+                  Groupes
+                </Button>
+                <Button variant="secondary" size="sm" icon={<Pencil className="w-3.5 h-3.5" />}
+                  onClick={() => { setEditProgram(selected); setSelected(null) }}>
+                  Modifier
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -300,7 +309,8 @@ export default function ProgramsPage() {
 }
 
 interface MaquetteEC {
-  id: string; code: string; name: string; activity_type_display: string; volume_hours: number
+  id: string; code: string; name: string; activity_type: string; activity_type_display: string
+  credits: number; volume_hours: number
   teachers: string[]; teacher_names: string[]
 }
 interface MaquetteUE {
@@ -317,12 +327,21 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
   const [addingSemester, setAddingSemester] = useState(false)
   const [semForm, setSemForm] = useState({ number: String(maquette.length + 1), label: '', total_credits: '30' })
 
+  const [editingSemester, setEditingSemester] = useState<string | null>(null)
+  const [semEditForm, setSemEditForm] = useState({ number: '', label: '', total_credits: '' })
+
   const [addingUeFor, setAddingUeFor] = useState<string | null>(null)
   const [ueForm, setUeForm] = useState({ code: '', name: '', credits: '3', coefficient: '1' })
+
+  const [editingUe, setEditingUe] = useState<string | null>(null)
+  const [ueEditForm, setUeEditForm] = useState({ code: '', name: '', credits: '', coefficient: '' })
 
   const [addingEcFor, setAddingEcFor] = useState<string | null>(null)
   const [ecForm, setEcForm] = useState({ code: '', name: '', credits: '1', volume_hours: '15', activity_type: 'cm' })
   const [assigningEc, setAssigningEc] = useState<MaquetteEC | null>(null)
+
+  const [editingEc, setEditingEc] = useState<string | null>(null)
+  const [ecEditForm, setEcEditForm] = useState({ code: '', name: '', credits: '', volume_hours: '', activity_type: 'cm' })
 
   const createSemesterMut = useMutation({
     mutationFn: () => programsApi.createSemester({
@@ -331,6 +350,25 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
     }),
     onSuccess: () => { toast.success('Semestre ajouté'); setAddingSemester(false); setSemForm({ number: String(maquette.length + 2), label: '', total_credits: '30' }); invalidate() },
     onError: () => toast.error('Erreur — ce numéro de semestre existe peut-être déjà'),
+  })
+
+  const updateSemesterMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateSemester(id, {
+      number: Number(semEditForm.number), label: semEditForm.label, total_credits: Number(semEditForm.total_credits),
+    }),
+    onSuccess: () => { toast.success('Semestre modifié'); setEditingSemester(null); invalidate() },
+    onError: () => toast.error('Erreur lors de la modification du semestre'),
+  })
+
+  // Suppression douce (is_active=false) plutôt qu'un DELETE réel : un
+  // semestre peut porter des inscriptions, notes et séances déjà
+  // enregistrées (FK en CASCADE) — un DELETE définitif les effacerait
+  // silencieusement. La maquette (vue GET) ne renvoie que les éléments
+  // actifs, donc l'effet visuel est identique à une suppression.
+  const deleteSemesterMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateSemester(id, { is_active: false }),
+    onSuccess: () => { toast.success('Semestre supprimé'); invalidate() },
+    onError: () => toast.error('Erreur lors de la suppression du semestre'),
   })
 
   const createUeMut = useMutation({
@@ -342,6 +380,20 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
     onError: () => toast.error("Erreur lors de l'ajout de l'UE"),
   })
 
+  const updateUeMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateUE(id, {
+      code: ueEditForm.code, name: ueEditForm.name, credits: Number(ueEditForm.credits), coefficient: Number(ueEditForm.coefficient),
+    }),
+    onSuccess: () => { toast.success('UE modifiée'); setEditingUe(null); invalidate() },
+    onError: () => toast.error("Erreur lors de la modification de l'UE"),
+  })
+
+  const deleteUeMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateUE(id, { is_active: false }),
+    onSuccess: () => { toast.success('UE supprimée'); invalidate() },
+    onError: () => toast.error("Erreur lors de la suppression de l'UE"),
+  })
+
   const createEcMut = useMutation({
     mutationFn: (ueId: string) => programsApi.createEC({
       ue: ueId, code: ecForm.code, name: ecForm.name,
@@ -350,6 +402,34 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
     onSuccess: () => { toast.success('EC ajouté'); setAddingEcFor(null); setEcForm({ code: '', name: '', credits: '1', volume_hours: '15', activity_type: 'cm' }); invalidate() },
     onError: () => toast.error("Erreur lors de l'ajout de l'EC"),
   })
+
+  const updateEcMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateEC(id, {
+      code: ecEditForm.code, name: ecEditForm.name, credits: Number(ecEditForm.credits),
+      volume_hours: Number(ecEditForm.volume_hours), activity_type: ecEditForm.activity_type,
+    }),
+    onSuccess: () => { toast.success('EC modifié'); setEditingEc(null); invalidate() },
+    onError: () => toast.error("Erreur lors de la modification de l'EC"),
+  })
+
+  const deleteEcMut = useMutation({
+    mutationFn: (id: string) => programsApi.updateEC(id, { is_active: false }),
+    onSuccess: () => { toast.success('EC supprimé'); invalidate() },
+    onError: () => toast.error("Erreur lors de la suppression de l'EC"),
+  })
+
+  const startEditSemester = (sem: MaquetteSemester) => {
+    setSemEditForm({ number: String(sem.number), label: sem.label, total_credits: String(sem.total_credits) })
+    setEditingSemester(sem.id)
+  }
+  const startEditUe = (ue: MaquetteUE) => {
+    setUeEditForm({ code: ue.code, name: ue.name, credits: String(ue.credits), coefficient: String(ue.coefficient) })
+    setEditingUe(ue.id)
+  }
+  const startEditEc = (ec: MaquetteEC) => {
+    setEcEditForm({ code: ec.code, name: ec.name, credits: String(ec.credits), volume_hours: String(ec.volume_hours), activity_type: ec.activity_type })
+    setEditingEc(ec.id)
+  }
 
   return (
     <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
@@ -362,8 +442,29 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
             <div className="flex items-center gap-2">
               <Clock className="w-3.5 h-3.5 text-primary-400" />
               <span className="text-xs font-semibold text-primary-600">{sem.total_credits} crédits</span>
+              <button onClick={() => startEditSemester(sem)} className="text-primary-500 hover:text-primary-700" title="Modifier le semestre">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => { if (window.confirm(`Supprimer le semestre "${sem.label}" ainsi que ses UE et EC ?`)) deleteSemesterMut.mutate(sem.id) }}
+                className="text-red-400 hover:text-red-600" title="Supprimer le semestre">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
+          {editingSemester === sem.id && (
+            <div className="bg-primary-50/50 px-5 py-3 border-b border-primary-100 space-y-2">
+              <div className="grid grid-cols-3 gap-2">
+                <input type="number" className="input" placeholder="N°" value={semEditForm.number} onChange={e => setSemEditForm(f => ({ ...f, number: e.target.value }))} />
+                <input className="input col-span-2" placeholder="Libellé" value={semEditForm.label} onChange={e => setSemEditForm(f => ({ ...f, label: e.target.value }))} />
+              </div>
+              <input type="number" className="input" placeholder="Total crédits" value={semEditForm.total_credits} onChange={e => setSemEditForm(f => ({ ...f, total_credits: e.target.value }))} />
+              <div className="flex gap-2">
+                <Button variant="secondary" size="xs" onClick={() => setEditingSemester(null)}>Annuler</Button>
+                <Button size="xs" loading={updateSemesterMut.isPending} onClick={() => updateSemesterMut.mutate(sem.id)}>Enregistrer</Button>
+              </div>
+            </div>
+          )}
           <div className="divide-y divide-gray-50">
             {sem.ues?.map(ue => (
               <div key={ue.id} className="px-5 py-3">
@@ -372,28 +473,86 @@ function MaquetteEditor({ program, maquette }: { program: Program; maquette: Maq
                     <span className="font-mono text-xs font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded">{ue.code}</span>
                     <span className="font-semibold text-gray-900 dark:text-gray-50 text-sm">{ue.name}</span>
                   </div>
-                  <div className="flex gap-2 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
                     <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium">{ue.credits} cr.</span>
                     <span className="bg-gray-100 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">Coef. {ue.coefficient}</span>
+                    <button onClick={() => startEditUe(ue)} className="text-gray-400 hover:text-primary-600" title="Modifier l'UE">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { if (window.confirm(`Supprimer l'UE "${ue.name}" ainsi que ses EC ?`)) deleteUeMut.mutate(ue.id) }}
+                      className="text-gray-400 hover:text-red-600" title="Supprimer l'UE">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
+                {editingUe === ue.id && (
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 space-y-2 mb-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input className="input" placeholder="Code" value={ueEditForm.code} onChange={e => setUeEditForm(f => ({ ...f, code: e.target.value }))} />
+                      <input className="input" placeholder="Intitulé" value={ueEditForm.name} onChange={e => setUeEditForm(f => ({ ...f, name: e.target.value }))} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="number" className="input" placeholder="Crédits" value={ueEditForm.credits} onChange={e => setUeEditForm(f => ({ ...f, credits: e.target.value }))} />
+                      <input type="number" step="0.1" className="input" placeholder="Coefficient" value={ueEditForm.coefficient} onChange={e => setUeEditForm(f => ({ ...f, coefficient: e.target.value }))} />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="xs" onClick={() => setEditingUe(null)}>Annuler</Button>
+                      <Button size="xs" loading={updateUeMut.isPending} disabled={!ueEditForm.code || !ueEditForm.name}
+                        onClick={() => updateUeMut.mutate(ue.id)}>Enregistrer</Button>
+                    </div>
+                  </div>
+                )}
                 {ue.ecs?.length > 0 && (
                   <div className="ml-4 space-y-1 mb-2">
                     {ue.ecs.map(ec => (
-                      <div key={ec.id} className="flex justify-between items-center text-xs bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 gap-3">
-                        <span className="min-w-0">
-                          <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">{ec.code}</span>
-                          <span className="text-gray-500 dark:text-gray-400 ml-2">{ec.name}</span>
-                          <span className="block text-gray-400 dark:text-gray-500 mt-0.5">
-                            {ec.teacher_names?.length ? `👤 ${ec.teacher_names.join(', ')}` : 'Aucun enseignant affecté'}
+                      <div key={ec.id}>
+                        <div className="flex justify-between items-center text-xs bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 gap-3">
+                          <span className="min-w-0">
+                            <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">{ec.code}</span>
+                            <span className="text-gray-500 dark:text-gray-400 ml-2">{ec.name}</span>
+                            <span className="block text-gray-400 dark:text-gray-500 mt-0.5">
+                              {ec.teacher_names?.length ? `👤 ${ec.teacher_names.join(', ')}` : 'Aucun enseignant affecté'}
+                            </span>
                           </span>
-                        </span>
-                        <span className="text-gray-400 dark:text-gray-500 flex-shrink-0 flex items-center gap-2">
-                          {ec.activity_type_display} · <span className="font-medium">{ec.volume_hours}h</span>
-                          <button onClick={() => setAssigningEc(ec)} className="text-primary-600 hover:text-primary-700" title="Affecter un enseignant">
-                            <UserCog className="w-3.5 h-3.5" />
-                          </button>
-                        </span>
+                          <span className="text-gray-400 dark:text-gray-500 flex-shrink-0 flex items-center gap-2">
+                            {ec.activity_type_display} · <span className="font-medium">{ec.volume_hours}h</span>
+                            <button onClick={() => setAssigningEc(ec)} className="text-primary-600 hover:text-primary-700" title="Affecter un enseignant">
+                              <UserCog className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => startEditEc(ec)} className="hover:text-primary-600" title="Modifier l'EC">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => { if (window.confirm(`Supprimer l'EC "${ec.name}" ?`)) deleteEcMut.mutate(ec.id) }}
+                              className="hover:text-red-600" title="Supprimer l'EC">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        </div>
+                        {editingEc === ec.id && (
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 mt-1 space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input className="input" placeholder="Code" value={ecEditForm.code} onChange={e => setEcEditForm(f => ({ ...f, code: e.target.value }))} />
+                              <input className="input" placeholder="Intitulé" value={ecEditForm.name} onChange={e => setEcEditForm(f => ({ ...f, name: e.target.value }))} />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <select className="input bg-white dark:bg-slate-900" value={ecEditForm.activity_type} onChange={e => setEcEditForm(f => ({ ...f, activity_type: e.target.value }))}>
+                                <option value="cm">CM</option><option value="td">TD</option><option value="tp">TP</option>
+                                <option value="projet">Projet</option><option value="stage">Stage</option>
+                                <option value="seminaire">Séminaire</option><option value="classe_virtuelle">Classe virtuelle</option>
+                                <option value="asynchrone">Asynchrone</option>
+                              </select>
+                              <input type="number" className="input" placeholder="Crédits" value={ecEditForm.credits} onChange={e => setEcEditForm(f => ({ ...f, credits: e.target.value }))} />
+                              <input type="number" className="input" placeholder="Volume (h)" value={ecEditForm.volume_hours} onChange={e => setEcEditForm(f => ({ ...f, volume_hours: e.target.value }))} />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="secondary" size="xs" onClick={() => setEditingEc(null)}>Annuler</Button>
+                              <Button size="xs" loading={updateEcMut.isPending} disabled={!ecEditForm.code || !ecEditForm.name}
+                                onClick={() => updateEcMut.mutate(ec.id)}>Enregistrer</Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -65,8 +65,10 @@ export const programsApi = {
   getMaquette: (id: string) => api.get(`/programs/${id}/maquette/`),
   getSemesters: (params?: object) => api.get('/semesters/', { params }),
   createSemester: (data: object) => api.post('/semesters/', data),
+  updateSemester: (id: string, data: object) => api.patch(`/semesters/${id}/`, data),
   getUEs: (params?: object) => api.get('/ues/', { params }),
   createUE: (data: object) => api.post('/ues/', data),
+  updateUE: (id: string, data: object) => api.patch(`/ues/${id}/`, data),
   getECs: (params?: object) => api.get('/ecs/', { params }),
   createEC: (data: object) => api.post('/ecs/', data),
   updateEC: (id: string, data: object) => api.patch(`/ecs/${id}/`, data),
@@ -306,6 +308,9 @@ export const virtualClassApi = {
   joinSession: (id: string, mode?: string) =>
     api.post(`/virtual-sessions/${id}/join/`, { join_mode: mode ?? 'online' }),
   cancelSession: (id: string) => api.post(`/virtual-sessions/${id}/cancel/`),
+  getParticipants: (id: string) => api.get(`/virtual-sessions/${id}/participants/`),
+  setParticipantPresence: (id: string, userId: string, present: boolean) =>
+    api.post(`/virtual-sessions/${id}/participants/presence/`, { user_id: userId, present }),
 }
 
 // ── Présences ─────────────────────────────────────────────────────────────────

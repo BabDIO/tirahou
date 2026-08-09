@@ -4,6 +4,7 @@ from .models import VirtualClassSession, SessionParticipant
 
 class SessionParticipantSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
+    role_display = serializers.CharField(source='get_role_display', read_only=True)
 
     class Meta:
         model = SessionParticipant

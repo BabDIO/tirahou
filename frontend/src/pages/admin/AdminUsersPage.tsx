@@ -27,6 +27,7 @@ export default function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editUser, setEditUser] = useState<User | null>(null)
   const [createStaffOpen, setCreateStaffOpen] = useState(false)
+  const [editStaff, setEditStaff] = useState<AdminStaff | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -192,7 +193,7 @@ export default function AdminUsersPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Personnel</th><th>Matricule</th><th>Service</th><th>Poste</th><th className="text-right">Département</th>
+                    <th>Personnel</th><th>Matricule</th><th>Service</th><th>Poste</th><th>Département</th><th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,7 +211,11 @@ export default function AdminUsersPage() {
                       <td className="font-mono text-xs text-gray-500 dark:text-gray-400">{s.staff_id}</td>
                       <td><Badge label={SERVICE_LABEL[s.service] ?? s.service} className="badge-blue" /></td>
                       <td className="text-sm text-gray-600 dark:text-gray-400">{s.position || '—'}</td>
-                      <td className="text-right text-sm text-gray-500 dark:text-gray-400">{s.department_name || '—'}</td>
+                      <td className="text-sm text-gray-500 dark:text-gray-400">{s.department_name || '—'}</td>
+                      <td className="text-right">
+                        <Button variant="ghost" size="sm" icon={<Edit className="w-3.5 h-3.5" />}
+                          onClick={() => setEditStaff(s)} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -244,19 +249,31 @@ export default function AdminUsersPage() {
           onSuccess={() => { setCreateStaffOpen(false); queryClient.invalidateQueries({ queryKey: ['admin-staff'] }) }}
         />
       </Modal>
+
+      <Modal open={!!editStaff} onClose={() => setEditStaff(null)} title="Modifier le personnel" subtitle={editStaff?.user.full_name} size="md">
+        {editStaff && (
+          <CreateStaffForm
+            staff={editStaff}
+            onSuccess={() => { setEditStaff(null); queryClient.invalidateQueries({ queryKey: ['admin-staff'] }) }}
+          />
+        )}
+      </Modal>
     </div>
   )
 }
 
-function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
+function CreateStaffForm({ staff, onSuccess }: { staff?: AdminStaff; onSuccess: () => void }) {
   const toast = useToast()
-  const [form, setForm] = useState({ user: '', service: 'scolarite', position: '', department: '' })
+  const [form, setForm] = useState(staff ? {
+    user: staff.user.id, service: staff.service, position: staff.position, department: staff.department ?? '',
+  } : { user: '', service: 'scolarite', position: '', department: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const { data: users } = useQuery({
     queryKey: ['users-for-staff'],
     queryFn: () => authApi.getUsers({ page_size: 200 }).then(r => r.data),
+    enabled: !staff,
   })
   const { data: departments } = useQuery({
     queryKey: ['departments-list'],
@@ -266,34 +283,49 @@ function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSubmit = async () => {
-    if (!form.user || !form.service) { setError('Compte utilisateur et service requis'); return }
+    if (!staff && !form.user) { setError('Compte utilisateur requis'); return }
+    if (!form.service) { setError('Service requis'); return }
     setLoading(true); setError('')
     try {
-      await adminStaffApi.createStaff({
-        user: form.user, service: form.service, position: form.position || undefined,
-        department: form.department || undefined,
-      })
-      toast.success('Personnel ajouté')
+      if (staff) {
+        await adminStaffApi.updateStaff(staff.id, {
+          service: form.service, position: form.position || undefined, department: form.department || undefined,
+        })
+        toast.success('Personnel mis à jour')
+      } else {
+        await adminStaffApi.createStaff({
+          user: form.user, service: form.service, position: form.position || undefined,
+          department: form.department || undefined,
+        })
+        toast.success('Personnel ajouté')
+      }
       onSuccess()
     } catch (e: unknown) {
       const err = e as { response?: { data?: Record<string, string[]> } }
       const msgs = Object.values(err?.response?.data ?? {}).flat().join(' ')
-      setError(msgs || "Erreur lors de la création — ce compte est peut-être déjà rattaché à un profil.")
+      setError(msgs || (staff ? "Erreur lors de la modification." : "Erreur lors de la création — ce compte est peut-être déjà rattaché à un profil."))
     } finally { setLoading(false) }
   }
 
   return (
     <div className="space-y-4">
       {error && <Alert type="error">{error}</Alert>}
-      <div>
-        <label className="label">Compte utilisateur *</label>
-        <select className="input bg-white dark:bg-slate-900" value={form.user} onChange={e => set('user', e.target.value)}>
-          <option value="">— Sélectionner un compte —</option>
-          {users?.results?.map((u: User) => (
-            <option key={u.id} value={u.id}>{u.full_name} — {u.email}</option>
-          ))}
-        </select>
-      </div>
+      {staff ? (
+        <div className="p-3 bg-primary-50 rounded-xl">
+          <p className="font-semibold text-primary-800">{staff.user.full_name}</p>
+          <p className="text-xs text-primary-600">{staff.user.email} — {staff.staff_id}</p>
+        </div>
+      ) : (
+        <div>
+          <label className="label">Compte utilisateur *</label>
+          <select className="input bg-white dark:bg-slate-900" value={form.user} onChange={e => set('user', e.target.value)}>
+            <option value="">— Sélectionner un compte —</option>
+            {users?.results?.map((u: User) => (
+              <option key={u.id} value={u.id}>{u.full_name} — {u.email}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div>
         <label className="label">Service *</label>
         <select className="input bg-white dark:bg-slate-900" value={form.service} onChange={e => set('service', e.target.value)}>
@@ -317,7 +349,7 @@ function CreateStaffForm({ onSuccess }: { onSuccess: () => void }) {
         </select>
       </div>
       <Button className="w-full" onClick={handleSubmit} loading={loading} icon={<Briefcase className="w-4 h-4" />}>
-        Ajouter le personnel
+        {staff ? 'Enregistrer' : 'Ajouter le personnel'}
       </Button>
     </div>
   )
